@@ -1,4 +1,4 @@
-//the "file:///loan_full.csv" must be placed in the import folder of the Neo4j database, e.g.:
+//the "file:///loan_sample.csv" must be placed in the import folder of the Neo4j database, e.g.:
 //C:\Users\username\.Neo4jDesktop\neo4jDatabases\database-9d1700fa-03f9-48e7-b8ad-6b7c25890ee2\installation-3.5.4\import
 
 
@@ -9,7 +9,7 @@ CREATE CONSTRAINT ON (r:Resource) ASSERT r.name IS UNIQUE;
 
 //1 create case nodes with case attributes (Added 31509 labels, created 31509 nodes, set 157545 properties, completed after 15973 ms.)
 USING PERIODIC COMMIT 1000
-LOAD CSV WITH HEADERS FROM "file:///loan_full.csv" as line
+LOAD CSV WITH HEADERS FROM "file:///loan_sample.csv" as line
 WITH line.case as case, 
 	line.LoanGoal as loanGoal, 
 	line.ApplicationType as applicationType, 	
@@ -21,7 +21,7 @@ MERGE (c:Case {name: case, variant: vIndex, loangoal: loanGoal, applicationtype:
 
 //2 create event nodes with event attributes and relationships to cases (Added 561671 labels, created 561671 nodes, set 6029756 properties, created 561671 relationships, completed after 38875 ms.)
 USING PERIODIC COMMIT 1000
-LOAD CSV WITH HEADERS FROM "file:///loan_full.csv" as line
+LOAD CSV WITH HEADERS FROM "file:///loan_sample.csv" as line
 WITH line.case as case, 
 	line.EventID as event,  
 	line.EventOrigin as eventClass,
@@ -45,7 +45,7 @@ CREATE (e) -[:EVENT_TO_CASE]-> (c)
 
 //3 create nodes for each resource and edges to event nodes (Added 145 labels, created 145 nodes, set 145 properties, created 561671 relationships, completed after 17200 ms.)
 USING PERIODIC COMMIT 1000
-LOAD CSV WITH HEADERS FROM "file:///loan_full.csv" as line
+LOAD CSV WITH HEADERS FROM "file:///loan_sample.csv" as line
 WITH line.resource as resource, line.EventID as event
 MATCH (e:Event {name: event})
 MERGE (r:Resource {name: resource})
@@ -60,7 +60,7 @@ CREATE (e2) -[:DF {timebetween: duration.between(e1.completetime, e2.starttime) 
 
 //5 create offers, relationships offer -> case (Added 42995 labels, created 42995 nodes, set 257970 properties, created 42995 relationships, completed after 10830 ms.)
 USING PERIODIC COMMIT 1000
-LOAD CSV WITH HEADERS FROM "file:///loan_full.csv" as line
+LOAD CSV WITH HEADERS FROM "file:///loan_sample.csv" as line
 WITH line.case as case, 
 	line.event as activity,
 	line.RequestedAmount as requestedAmount,
