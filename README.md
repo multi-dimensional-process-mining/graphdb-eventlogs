@@ -4,7 +4,7 @@ This repository is a supplement to the Capita Selecta report over "[Using Graph 
 
 ## Software
 The following software is recommended to be used for experiment replication:
-- Python 3.6.8 (see [requirements.txt](https://github.com/multi-dimensional-process-mining/graphdb-eventlogs/blob/master/requeriments.txt) for libraries)
+- Python 3.6.8 (see [requirements.txt](https://github.com/multi-dimensional-process-mining/graphdb-eventlogs/blob/master/requirements.txt) for libraries)
 - Neo4j Desktop with Neo4j Database version 3.5.4 or higher (get it [here](https://neo4j.com/download/?ref=product))
 - ProM Lite 1.2 (get it [here](http://promtools.org/doku.php?id=promlite12))
 
