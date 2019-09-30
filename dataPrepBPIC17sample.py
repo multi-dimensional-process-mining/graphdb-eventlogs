@@ -1,14 +1,30 @@
+#Research Assignment, 2IMI05
+#Student: Stefan Esser, Student ID: 1280163, s.esser@student.tue.nl
+#Supervisor: Dirk Fahland, d.fahland@tue.nl
+
 #python 3.6.5
 #for use with dataset: https://data.4tu.nl/repository/uuid:5f3067df-f10b-45da-b98b-86ae4c7a310b  (converted to CSV with ProM 1.2)
 
+
 import pandas as pd
+import random
+
 
 loan_raw = pd.read_csv('bpiChallenge17.csv', keep_default_na=False) #load full log from csv
 loan_raw.drop_duplicates(keep='first', inplace=True) #remove duplicates from the dataset
 loan_raw = loan_raw.reset_index(drop=True) #renew the index to close gaps of removed duplicates 
 
+file = 'BPIC17_clean.csv' 
+loan_raw.to_csv(file, index=False)
+
 cases = loan_raw.case.unique().tolist() # create a list of all cases in the dataset
 noOfCases = len(cases)
+
+######### uncomment for random cases #########
+#n_samples = 20 # select amount of samples
+#sampleIds = random.sample(cases, n_samples) #randomly choose n_sample cases 
+##############################################
+
 
 ######### uncomment for fixed cases ##########
 #hard coded case IDs to ease replication
@@ -35,6 +51,8 @@ sampleIds = ['Application_2045572635',
 ##############################################
 
 #for id in sampleIds:
+    
+
 sampleList = [] #create a list (of lists) for the sample data containing a list of events for each of the selected cases
 variants = [] # helper list for the variants
 for case in sampleIds:
@@ -88,6 +106,8 @@ loan_samples = loan_samples.assign(cHH=loan_samples['completeTime'].map(lambda x
 loan_samples = loan_samples.assign(cMM=loan_samples['completeTime'].map(lambda x: x.minute))
 loan_samples = loan_samples.assign(cSS=loan_samples['completeTime'].map(lambda x: x.second))
 loan_samples = loan_samples.assign(cMS=loan_samples['completeTime'].map(lambda x: x.microsecond))
+
+loan_samples.rename(columns={'org:resource':'resource'}, inplace=True)
 
 
 if not (any(loan_samples.offer_index == -1) or any(loan_samples.application_index == -1) or any(loan_samples.workflow_index == -1)):   #check if any event has an invalid index
