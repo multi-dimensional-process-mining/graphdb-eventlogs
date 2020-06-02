@@ -1,8 +1,18 @@
-#loan application
+# -*- coding: utf-8 -*-
+"""
+Created on Mon Jun 17 16:51:36 2019
 
+@author: 20175070
+"""
+
+#website click data, labour services process
 import pandas as pd
 import time, csv
 from neo4j import GraphDatabase
+
+
+
+
 
 ### begin config
 # connection to Neo4J database
@@ -15,59 +25,57 @@ driver = GraphDatabase.driver("bolt://localhost:7687", auth=("neo4j", "1234"))
 #    - EITHER change the variable path_to_neo4j_import_directory to <NEO4J_HOME>/import and move the input files to this directory
 #    - OR set the import directory in Neo4j's configuration file: dbms.directories.import=
 #    see https://neo4j.com/docs/cypher-manual/current/clauses/load-csv/#query-load-csv-introduction
-path_to_neo4j_import_directory = 'C:\\Temp\\Import\\'
+path_to_neo4j_import_directory = 'C:\\temp\\import\\'
 # ensure to allocate enough memory to your database: dbms.memory.heap.max_size=20G advised
 
+
 # the script supports loading a small sample or the full log
-step_Sample = False
-if(step_Sample):
-    fileName = 'BPIC17sample.csv' 
-    perfFileName = 'BPIC17samplePerformance.csv'
+step_Sample = True
+if (step_Sample):
+    logfiles = ['BPIC16sampleQuestions.csv', 'BPIC16sampleMessages.csv', 'BPIC16sampleComplaints.csv', 'BPIC16sampleClicks.csv']
+    perfFileName = 'BPIC16SamplePerformance.csv'
 else:
-    fileName = 'BPIC17full.csv'
-    perfFileName = 'BPIC17fullPerformance.csv'
+    logfiles = ['BPIC16Questions.csv', 'BPIC16Messages.csv', 'BPIC16Complaints.csv', 'BPIC16Clicks.csv']
+    perfFileName = 'BPIC16FullPerformance.csv'
+
+
+
     
-# data model specific to BPIC17
-dataSet = 'BPIC17'
-
-include_entities = ['Application','Workflow','Offer','Case_R','Case_AO','Case_AW','Case_WO']
-#include_entities = ['Application','Workflow','Offer','Case_R','Case_AO','Case_AW','Case_WO','Case_AWO']
+# data model specific to BPIC16
 
 
-model_entities = [['Application','case', 'WHERE e.EventOrigin = "Application"'], # individual entities
-                  ['Workflow', 'case', 'WHERE e.EventOrigin = "Workflow"'],
-                  ['Offer', 'OfferID', 'WHERE e.EventOrigin = "Offer"'],
-                  ['Case_R', 'resource', 'WHERE EXISTS(e.resource)'], # resource as entity
-                  ['Case_AWO','case', 'WHERE EXISTS(e.case)']] # original case notion
+
+# model_entities = pd.DataFrame(columns = logfiles)
+# model_entities['Questions.csv'] = [['Customer','CustomerID', 'WHERE EXISTS(e.CustomerID)']] 
+# model_entities['Messages.csv'] = [['Customer','CustomerID', 'WHERE EXISTS(e.CustomerID)']] 
+# model_entities['Complaints.csv'] = [['Customer','CustomerID', 'WHERE EXISTS(e.CustomerID)']]
+# model_entities['Clicks.csv'] = [['Customer','CustomerID', 'WHERE EXISTS(e.CustomerID)']] 
+                 
+model_entities = [['Customer','CustomerID', 'WHERE EXISTS(e.CustomerID)']]
 
 # specification of derived entities: 
 #    1 name of derived entity, 
 #    2 name of first entity, 
 #    3 name of second entity where events have an property referring to the first entity, i.e., a foreign key
 #    4 name of the foreign key property by which events of the second entity refer to the first entity
-model_entities_derived = [['Case_AO','Application','Offer','case'],
-                          ['Case_AW','Application','Workflow','case'],
-                          ['Case_WO','Workflow','Offer','case']]
+model_entities_derived = []
     
 # several steps of import, each can be switch on/off
 step_ClearDB = True           # entire graph shall be cleared before starting a new import
 step_LoadEventsFromCSV = True # import all (new) events from CSV file
-step_FilterEvents = True       # filter events prior to graph construction
 step_createLog = True         # create log nodes and relate events to log node
 step_createEntities = True          # create entities from identifiers in the data as specified in this script
-step_createEntityRelations = True   # create foreign-key relations between entities
-step_createEntitiesDerived = True   # create derived entities as specified in the script
-step_createDF = True            # compute directly-follows relation for all entities in the data
-step_deleteParallelDF = True    # remove directly-follows relations for derived entities that run in parallel with DF-relations for base entities
-step_createEventClasses = True  # aggregate events to event classes from data
+step_createEntitiesDerived = False   # create derived entities as specified in the script
+step_createDF = True           # compute directly-follows relation for all entities in the data
+step_createEventClasses = True # aggregate events to event classes from data
 step_createDFC = False          # aggregate directly-follows relation to event classes
 step_createHOWnetwork = False   # create resource activitiy classifier and HOW network
 
-option_filter_removeEventsWhere = 'WHERE e.lifecycle in ["SUSPEND","RESUME"]'
-
 option_DF_entity_type_in_label = False # set to False when step_createDFC is enabled
 
+option_Contains_Lifecycle_Information = False
 ### end config
+
 
 ######################################################
 ############# DEFAULT METHODS AND QUERIES ############
@@ -91,6 +99,7 @@ def LoadLog(localFile):
     
     return headerCSV, log
 
+
 # create events from CSV table: one event node per row, one property per column
 def CreateEventQuery(logHeader, fileName, LogID = ""):
     query = f'USING PERIODIC COMMIT LOAD CSV WITH HEADERS FROM \"file:///{fileName}\" as line'
@@ -103,7 +112,7 @@ def CreateEventQuery(logHeader, fileName, LogID = ""):
             column = 'line.'+col
         newLine = ''
         if (logHeader.index(col) == 0 and LogID != ""):
-            newLine = f' CREATE (e:Event {{Log: "{LogID}",{col}: {column},'
+            newLine = f' CREATE (e:Event {{Log: "BPIC16", SubLog: "{LogID}",{col}: {column},'
         elif (logHeader.index(col) == 0):
             newLine = f' CREATE (e:Event {{ {col}: {column},'
         else:
@@ -112,7 +121,9 @@ def CreateEventQuery(logHeader, fileName, LogID = ""):
             newLine = f' {col}: {column} }})'
             
         query = query + newLine
+        # print(query)
     return query;
+
 
 # run query for Neo4J database
 def runQuery(driver, query):
@@ -307,11 +318,14 @@ def aggregateDFrelationsFiltering(tx, entity_type, event_cl, df_threshold, relat
         MERGE ( c1 ) -[rel2:DF_C  {{EntityType:EType}}]-> ( c2 ) ON CREATE SET rel2.count=df_freq'''
     print(qCreateDFC)
     tx.run(qCreateDFC)
-    
-    
+
+
+
+
 ######################################################
-####################### BPIC 17 ######################
+####################### BPIC 16 ######################
 ######################################################
+    
 
 if step_ClearDB: ### delete all nodes and relations in the graph to start fresh
     print('Clearing DB...')
@@ -319,42 +333,43 @@ if step_ClearDB: ### delete all nodes and relations in the graph to start fresh
     qDeleteAllNodes = "MATCH (n) DELETE n"
     runQuery(driver,qDeleteAllRelations)
     runQuery(driver,qDeleteAllNodes)
-    
+
+
 # table to measure performance
 perf = pd.DataFrame(columns=['name', 'start', 'end', 'duration'])
 start = time.time()
 last = start
     
-if step_LoadEventsFromCSV:
-    print('Import events from CSV')
-    # load CSV tables
-    header, csvLog = LoadLog(path_to_neo4j_import_directory+fileName)
-    # convert each record in the CSV table into an Event node
-    qCreateEvents = CreateEventQuery(header, fileName, 'BPIC17') #generate query to create all events with all log columns as properties
-    runQuery(driver, qCreateEvents)
 
-    #create unique constraints
-    runQuery(driver, 'CREATE CONSTRAINT ON (e:Event) ASSERT e.ID IS UNIQUE;') #for implementation only (not required by schema or patterns)
-    runQuery(driver, 'CREATE CONSTRAINT ON (en:Entity) ASSERT en.uID IS UNIQUE;') #required by core pattern
-    runQuery(driver, 'CREATE CONSTRAINT ON (l:Log) ASSERT l.ID IS UNIQUE;') #required by core pattern
-
-    end = time.time()
-    perf = perf.append({'name':dataSet+'_event_import', 'start':last, 'end':end, 'duration':(end - last)},ignore_index=True)
-    print('Event nodes done: took '+str(end - last)+' seconds')
-    last = end
+for fileName in logfiles:
+    start = time.time() #per log
+    dataSet = fileName[:-4] #the filename without '.csv' becomes the logID    
+          
     
-if step_FilterEvents:
-    print('Filtering events')
-    with driver.session() as session:
-        session.write_transaction(filterEvents, option_filter_removeEventsWhere)
+    if step_LoadEventsFromCSV:
+        print(f'Import events from CSV {dataSet}')
+        # load CSV tables
+        header, csvLog = LoadLog(path_to_neo4j_import_directory+fileName)
         
-    end = time.time()
-    perf = perf.append({'name':dataSet+'_filter_events', 'start':last, 'end':end, 'duration':(end - last)},ignore_index=True)
-    print('Filter event nodes done: took '+str(end - last)+' seconds')
-    last = end
-
+        # convert each record in the CSV table into an Event node
+        qCreateEvents = CreateEventQuery(header, fileName, dataSet) #generate query to create all events with all log columns as properties
+        runQuery(driver, qCreateEvents)
+        
+        
+        
+        #create unique constraints
+        runQuery(driver, 'CREATE CONSTRAINT ON (e:Event) ASSERT e.ID IS UNIQUE;') #for implementation only (not required by schema or patterns)
+        runQuery(driver, 'CREATE CONSTRAINT ON (en:Entity) ASSERT en.uID IS UNIQUE;') #required by core pattern
+        runQuery(driver, 'CREATE CONSTRAINT ON (l:Log) ASSERT l.ID IS UNIQUE;') #required by core pattern
     
+        end = time.time()
+        perf = perf.append({'name':dataSet+'_event_import', 'start':last, 'end':end, 'duration':(end - last)},ignore_index=True)
+        print('Event nodes done: took '+str(end - last)+' seconds')
+        last = end
 
+
+dataSet = 'BPIC16'
+    
 ##create log node and :L_E relationships
 if step_createLog:
     with driver.session() as session:
@@ -368,75 +383,65 @@ if step_createLog:
 ##create entities
 if step_createEntities:
     for entity in model_entities: #per entity
-       if entity[0] in include_entities:
-            with driver.session() as session:
-                session.write_transaction(create_entity, entity[0], entity[1], entity[2])
-                print(f'{entity[0]} entity nodes done')
-                session.write_transaction(correlate_events_to_entity, entity[0], entity[1], entity[2])
-                print(f'{entity[0]} E_EN relationships done')
-
-            end = time.time()
-            perf = perf.append({'name':dataSet+'_create_entity '+entity[0], 'start':last, 'end':end, 'duration':(end - last)},ignore_index=True)
-            print('Entity '+entity[0]+' done: took '+str(end - last)+' seconds')
-            last = end
+   
+        with driver.session() as session:
+            session.write_transaction(create_entity, entity[0], entity[1], entity[2], dataSet)
+            print(f'{entity[0]} entity nodes done')
+            session.write_transaction(correlate_events_to_entity, entity[0], entity[1], entity[2], dataSet)
+            print(f'{entity[0]} E_EN relationships done')
+    
+        end = time.time()
+        perf = perf.append({'name':dataSet+'_create_entity '+entity[0], 'start':last, 'end':end, 'duration':(end - last)},ignore_index=True)
+        print('Entity '+entity[0]+' done: took '+str(end - last)+' seconds')
+        last = end
         
 if step_createEntitiesDerived:
     for entity in model_entities_derived: #per entity
    
-        if entity[0] in include_entities:
-            with driver.session() as session:
-               session.write_transaction(create_entity_derived_from2, entity[0], entity[1], entity[2], entity[3])
-               print(f'{entity[0]} entity nodes done')
-               session.write_transaction(correlate_events_to_entity_derived2, entity[0], entity[1], entity[2])
-               print(f'{entity[0]} E_EN relationships done')
-        
-            end = time.time()
-            perf = perf.append({'name':dataSet+'_create_entity '+entity[0], 'start':last, 'end':end, 'duration':(end - last)},ignore_index=True)
-            print('Entity '+entity[0]+' done: took '+str(end - last)+' seconds')
-            last = end
+        with driver.session() as session:
+            session.write_transaction(create_entity_derived_from2, entity[0], entity[1], entity[2], entity[3])
+            print(f'{entity[0]} entity nodes done')
+            session.write_transaction(correlate_events_to_entity_derived2, entity[0], entity[1], entity[2])
+            print(f'{entity[0]} E_EN relationships done')
+    
+        end = time.time()
+        perf = perf.append({'name':dataSet+'_create_entity '+entity[0], 'start':last, 'end':end, 'duration':(end - last)},ignore_index=True)
+        print('Entity '+entity[0]+' done: took '+str(end - last)+' seconds')
+        last = end
 
 if step_createDF:
-    for entity in include_entities: #per entity
+    # collect all entities, explicit and derived
+    all_entities = []
+    for entity in model_entities:
+        all_entities.append(entity[0])
+    for entity in model_entities_derived:
+        all_entities.append(entity[0])
+    
+    for entity in all_entities: #per entity
         with driver.session() as session:
-            session.write_transaction(createDirectlyFollows,entity,option_DF_entity_type_in_label)
+            session.write_transaction(createDirectlyFollows,entity,option_DF_entity_type_in_label,dataSet)
             
         end = time.time()
         perf = perf.append({'name':dataSet+'_create_df '+entity, 'start':last, 'end':end, 'duration':(end - last)},ignore_index=True)
         print('DF for Entity '+entity+' done: took '+str(end - last)+' seconds')
         last = end
         
-if step_deleteParallelDF:
-    for derived_entity in model_entities_derived: #per derived entity
-        if derived_entity[0] not in include_entities:
-            continue
-        
-        with driver.session() as session:
-            # entities are derived from 2 other entities, delete parallel relations wrt. to those
-            session.write_transaction(deleteParallelDirectlyFollows_Derived, derived_entity[0], derived_entity[1])
-            session.write_transaction(deleteParallelDirectlyFollows_Derived, derived_entity[0], derived_entity[2])
-
-        end = time.time()
-        perf = perf.append({'name':dataSet+'_delete_parallel_df '+derived_entity[0], 'start':last, 'end':end, 'duration':(end - last)},ignore_index=True)
-        print('Remove parallel DF for Entity '+derived_entity[0]+' done: took '+str(end - last)+' seconds')
-        last = end
-
-        
 if step_createEventClasses:
         with driver.session() as session:
-            #session.write_transaction(createEventClass_Activity)
-            session.write_transaction(createEventClass_ActivityANDLifeCycle)
-
+            session.write_transaction(createEventClass_Activity)
+            if option_Contains_Lifecycle_Information:
+                session.write_transaction(createEventClass_ActivityANDLifeCycle)
+    
         end = time.time()
         perf = perf.append({'name':dataSet+'_create_classes', 'start':last, 'end':end, 'duration':(end - last)},ignore_index=True)
         print('Event classes done: took '+str(end - last)+' seconds')
         last = end
 
 if step_createDFC:
-    for entity in include_entities:
+    all_entities = ["Applicaiton"]
+    for entity in all_entities:
         with driver.session() as session:
-            #session.write_transaction(aggregateDFrelationsFiltering,entity,"Activity+Lifecycle",5000,3)
-            #session.write_transaction(aggregateDFrelationsFiltering,entity,"Activity+Lifecycle",1,3)
-            session.write_transaction(aggregateDFrelations,entity,"Activity+Lifecycle")
+            session.write_transaction(aggregateDFrelationsFiltering,entity,"Activity+Lifecycle",10000,3)
             
             
         end = time.time()
@@ -447,10 +452,7 @@ if step_createDFC:
 if step_createHOWnetwork:        
     with driver.session() as session:
         session.write_transaction(createEventClass_Resource)
-        # create HOW relations along all process entities, except Case_R
-        how_entities = include_entities
-        how_entities.remove("Case_R")
-        session.write_transaction(aggregateDFrelationsForEntities,how_entities,"Resource")
+        session.write_transaction(aggregateDFrelations,"POI","Resource")
             
     end = time.time()
     perf = perf.append({'name':dataSet+'_create_how', 'start':start, 'end':end, 'duration':(end - last)},ignore_index=True)
@@ -461,4 +463,6 @@ end = time.time()
 perf = perf.append({'name':dataSet+'_total', 'start':start, 'end':end, 'duration':(end - start)},ignore_index=True)
  
 perf.to_csv(perfFileName)
-driver.close()
+driver.close()    
+
+

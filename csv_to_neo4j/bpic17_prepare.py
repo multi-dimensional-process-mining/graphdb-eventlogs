@@ -6,9 +6,8 @@ import time, os, csv
 #config
 
 sample = False
-createNewFile = True
-
-path_to_neo4j_import_directory = 'D:\\data\\neo4j\\neo4jDatabases\\database-b77846a6-9c03-4576-aac2-eb602d3220ad\\installation-3.5.14\\import\\'
+inputpath = '.\\BPIC17\\'
+path_to_neo4j_import_directory = 'C:\\Temp\\Import\\'
 
 def LoadLog(localFile):
     datasetList = []
@@ -27,8 +26,8 @@ def LoadLog(localFile):
     
     return headerCSV, log
 
-def CreateBPI17(path,fileName,sample):
-    csvLog = pd.read_csv(os.path.realpath('BPI_Challenge_2017.csv'), keep_default_na=True) #load full log from csv                  
+def CreateBPI17(inputpath, path_to_neo4j_import_directory, fileName, sample):
+    csvLog = pd.read_csv(os.path.realpath(inputpath+'BPI_Challenge_2017.csv'), keep_default_na=True) #load full log from csv                  
     csvLog.drop_duplicates(keep='first', inplace=True) #remove duplicates from the dataset
     csvLog = csvLog.reset_index(drop=True) #renew the index to close gaps of removed duplicates 
     
@@ -84,7 +83,7 @@ def CreateBPI17(path,fileName,sample):
     logSamples.sort_values(['case','timestamp'], inplace=True)
     logSamples['timestamp'] = logSamples['timestamp'].map(lambda x: x.strftime('%Y-%m-%dT%H:%M:%S.%f')[0:-3]+'+0100')
     
-    logSamples.to_csv(path+fileName, index=True, index_label="idx",na_rep="Unknown")
+    logSamples.to_csv(path_to_neo4j_import_directory+fileName, index=True, index_label="idx",na_rep="Unknown")
 
 
 if(sample):
@@ -95,11 +94,7 @@ else:
     perfFileName = 'BPIC17fullPerformance.csv'
     
 
-if(createNewFile):
-    start = time.time()
-    CreateBPI17(path_to_neo4j_import_directory,fileName,sample)
-    end = time.time()
-    print("Prepared data for import in: "+str((end - start))+" seconds.") 
-    
-# measure performance
-perf = pd.DataFrame(columns=['name', 'start', 'end', 'duration'])
+start = time.time()
+CreateBPI17(inputpath, path_to_neo4j_import_directory, fileName, sample)
+end = time.time()
+print("Prepared data for import in: "+str((end - start))+" seconds.") 

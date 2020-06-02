@@ -1,7 +1,0 @@
-Install Python/Anaconda
-Install neo4j-python-driver
-	pip install neo4j
-		OR
-	conda install -c conda-forge neo4j-python-driver
-
-ensure to allocate enough memory to your database, advised: dbms.memory.heap.max_size=20G
