@@ -13,5 +13,5 @@ Implementation of an explorative case study to model the BPI Challenge 2017 data
 
 ### csv_to_neo4j
 Generalization of **exploration_bpic2017** providing a generalized event data model for multi-dimensional event data and generic query templates for importing evente data into Neo4J. Publications:
-- Esser, Stefan. (2020, February 19). A Schema Framework for Graph Event Data. Master thesis. Eindhoven University of Technology. [https://doi.org/10.5281/zenodo.3820037]
+- Esser, Stefan. (2020, February 19). A Schema Framework for Graph Event Data. Master thesis. Eindhoven University of Technology. https://doi.org/10.5281/zenodo.3820037
 - Stefan Esser, Dirk Fahland: Multi-Dimensional Event Data in Graph Databases. [CoRR abs/2005.14552](https://arxiv.org/abs/2005.14552) (2020)
