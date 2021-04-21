@@ -1,6 +1,6 @@
 #municipalities, building permit applications
 import pandas as pd
-
+import time, os, csv
 
 ## config
 sample = False
@@ -30,8 +30,8 @@ def CreateBPI15(path,sample=False):
             log = log.drop(log[['action_code','endDatePlanned','activityNameNL','case_type']], axis=1)
 
         log.rename(columns={'case':'cID',
-                                   'activityNameEN':'Activity',
-                                     'org:resource':'resource',
+                                   'event':'Activity',
+                                   'org:resource':'resource',
                                    'startTime':'start',
                                    'completeTime':'timestamp'}, inplace=True)
     
@@ -55,6 +55,7 @@ def CreateBPI15(path,sample=False):
             log.to_csv(path+fileName, index=True, index_label="idx",na_rep="Unknown")
             
     
-
+start = time.time()
 CreateBPI15(path_to_neo4j_import_directory,sample)
-
+end = time.time()
+print("Prepared data for import in: "+str((end - start))+" seconds.") 

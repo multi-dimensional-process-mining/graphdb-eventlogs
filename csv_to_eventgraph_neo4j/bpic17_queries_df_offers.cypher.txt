@@ -1,0 +1,4 @@
+// query how often two events related to any Offer entity directly follow each other in the global case notion "Case_AWO"
+MATCH (en:Entity {EntityType:"Offer"}) <-[:E_EN]- (e:Event) -[df:DF]-> (e2:Event) -[:E_EN]-> (en2:Entity {EntityType:"Offer"})
+WHERE df.EntityType = "Case_AWO"
+RETURN count(df)

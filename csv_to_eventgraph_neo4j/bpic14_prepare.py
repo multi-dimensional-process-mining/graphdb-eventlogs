@@ -6,7 +6,8 @@ Created on Mon Jul  1 14:02:29 2019
 """
 #incidents
 import pandas as pd
-import random
+import math,random
+import time, os, csv
 
 #config
 sample = False
@@ -14,7 +15,7 @@ inputpath = '.\\BPIC14\\'
 path_to_neo4j_import_directory = 'C:\\Temp\\Import\\' # where prepared files will be stored
 
 
-
+start = time.time()
 
 ### data prep
 
@@ -34,7 +35,7 @@ change.rename(columns={'Service Component WBS (aff)':'ServiceComponentAff',#samp
                        'CI Type (aff)':'CITypeAff',
                        'CI Subtype (aff)':'CISubTypeAff',
                        'Change ID':'ChangeID',
-                       'Change Type':'Activity',
+                       'Change Type':'Activity', # activity name
                        'Risk Assessment':'RiskAssessment',
                        'Emergency Change':'EmergencyChange',
                        'CAB-approval needed':'CABApprovalNeeded',
@@ -42,11 +43,11 @@ change.rename(columns={'Service Component WBS (aff)':'ServiceComponentAff',#samp
                        'Planned End':'PlannedEnd',
                        'Scheduled Downtime Start':'ScheduledDowntimeStart',
                        'Scheduled Downtime End':'ScheduledDowntimeEnd',
-                       'Actual Start':'ActualStart',
-                       'Actual End':'ActualEnd',
+                       'Actual Start':'start', # start timestamp of the activity
+                       'Actual End':'timestamp', # complete timestamp of the activity
                        'Requested End Date':'RequestedEndDate',
-                       'Change record Open Time':'start',#only 2 timestamps with no null values
-                       'Change record Close Time':'timestamp',#only 2 timestamps with no null values
+                       'Change record Open Time':'ChangeRecordOpenTime',#only 2 timestamps with no null values
+                       'Change record Close Time':'ChangeRecordCloseTime',#only 2 timestamps with no null values
                        'Originated from':'OriginatedFrom',
                        '# Related Interactions':'NoRelatedInteractions',
                        '# Related Incidents':'NoRelatedIncidents'
@@ -58,7 +59,7 @@ change.rename(columns={'Service Component WBS (aff)':'ServiceComponentAff',#samp
 incident.rename(columns={'Service Component WBS (aff)':'ServiceComponentAff',#sample by
                          'CI Name (aff)':'CINameAff',
                          'CI Type (aff)':'CITypeAff',
-                         'CI Subtype (aff)':'Activity',
+                         'CI Subtype (aff)':'CISubTypeAff',
                          'Incident ID':'IncidentID',
                          'KM number':'KMNo',
                          'Alert Status':'AlertStatus',
@@ -100,7 +101,7 @@ interaction.rename(columns={'Service Comp WBS (aff)':'ServiceComponentAff',#samp
                             'First Call Resolution':'FirstCallResolution',
                             'Handle Time (secs)':'HandleTime',
                             'Related Incident':'RelatedIncident',
-                            'Category':'Activity'}, inplace=True)
+                            'Category':'Category'}, inplace=True)
     
     
     
@@ -113,14 +114,18 @@ if sample: ## global sample params
     interaction = interaction[interaction['ServiceComponentAff'].isin(random.sample(interaction.ServiceComponentAff.unique().tolist(),10))]
 
 
-
-
-
+# Actual Start (start)/Actual End (timestamp) are not always defined: impute missing values from ChangeRecord attributes
+for i in change.index:
+    if change.at[i ,'start'] != change.at[i ,'start']:
+        change.at[i ,'start'] = change.at[i,'ChangeRecordOpenTime']
+    if change.at[i ,'timestamp'] != change.at[i ,'timestamp']:
+        change.at[i ,'timestamp'] = change.at[i,'ChangeRecordCloseTime']
 
 change['start'] = pd.to_datetime(change['start'], format='%d-%m-%Y %H:%M')
 change['start'] = change['start'].map(lambda x: x.strftime('%Y-%m-%dT%H:%M')+':00.000+0100')
 change['timestamp'] = pd.to_datetime(change['timestamp'], format='%d-%m-%Y %H:%M')
 change['timestamp'] = change['timestamp'].map(lambda x: x.strftime('%Y-%m-%dT%H:%M')+':00.000+0100')
+
 change = change.reset_index(drop=True)
 
 if sample: #sample params for log file
@@ -131,6 +136,8 @@ else:
 change.to_csv(path_to_neo4j_import_directory+fileName, index=True, index_label="idx",na_rep="Unknown")
 
 
+for i in incident.index:
+    incident.at[i ,'Activity'] = str(incident.at[i ,'Category'])+": "+str(incident.at[i ,'ClosureCode'])
 
 incident = incident.replace(['#MULTIVALUE','#N/B'], 'Unknown')
 incident['start'] = pd.to_datetime(incident['start'], format='%d/%m/%Y %H:%M:%S')
@@ -158,6 +165,8 @@ else:
 incidentDetail.to_csv(path_to_neo4j_import_directory+fileName, index=True, index_label="idx",na_rep="Unknown")
 
 
+for i in interaction.index:
+    interaction.at[i ,'Activity'] = str(interaction.at[i ,'Category'])+": "+str(interaction.at[i ,'ClosureCode'])
 
 interaction['start'] = interaction['start'].astype('datetime64[ns]')
 interaction['start'] = interaction['start'].map(lambda x: x.strftime('%Y-%m-%dT%H:%M:%S')+'.000+0100')
@@ -173,4 +182,5 @@ else:
 interaction.to_csv(path_to_neo4j_import_directory+fileName, index=True, index_label="idx",na_rep="Unknown")
 
 
-
+end = time.time()
+print("Prepared data for import in: "+str((end - start))+" seconds.") 

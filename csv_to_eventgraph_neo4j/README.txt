@@ -1,6 +1,6 @@
 Datasets and scripts for modeling business process event log data in Neo4j.
 
-Copyright (C) 2019,2020
+Copyright (C) 2019-2021
 Stefan Esser, INFORM GmbH, Aachen, Germany and Eindhoven University of Technology, Eindhoven, the Netherlands
 Dirk Fahland, Eindhoven University of Technology, Eindhoven, the Netherlands
 
@@ -9,7 +9,9 @@ The work is licensed under the LGPL v3.0, see file LICENSE
 Supporting Publications
 -----------------------
 
-Esser, Stefan and Dirk Fahland. "Multi-Dimensional Event Data in Graph Databases." (2020). https://arxiv.org/pdf/2005.14552.pdf
+Esser, Stefan and Dirk Fahland. "Multi-Dimensional Event Data in Graph Databases." (2021)
+Journal on Data Semantics. DOI: 10.1007/s13740-021-00122-1
+arXiv pre-print: https://arxiv.org/pdf/2005.14552.pdf
 
 
 Requirements
@@ -65,13 +67,18 @@ bpicXX_import.py - script to let Neo4J read the normalized event table of
                    an event graph using 
                    - node types :Event, :Log, :Entity, :Class
                    - relationship types:
-                     - :E_L (Event to Log),
-                     - :E_EN (Event to Entity), 
+                     - :HAS (Log to Event, events recorded in a log),
+                     - :CORR (Event to Entity, describing to which entities
+                       an event is correlated), 
                      - :DF (directly-follows of events: temporal ordering of
-                            event nodes per related entity)
-                     - :E_C (Event to Event Class)
+                       event nodes per corelated entity)
+                     - :OBSERVED (Event to Event Class, which class of
+                       events was observed when the event occurred, 
+                       e.g., which activity)
                      - :DF_C (aggregated directly-follows relation between
-                              class nodes)
+                       class nodes)
+                     - :REL (Entity to Entity, which entities are structurally
+                       related)
 
 How to use
 ----------
@@ -82,10 +89,13 @@ For data import
 2. run bpicXX_prepare.py
 3. run bpicXX_import.py
 
-Examples of data querying
 
-bpic17_queries_....py 
-- several scripts that query the graph of the BPIC17 dataset for properties
+Examples of data querying
+-------------------------
+
+bpic17_queries_....py
+
+Python scripts that query the graph of the BPIC17 dataset for properties and return GraphViz Dot visualizations of the quried graph.
 
 - bpic17_queries_show_cases... assumes bpic17_import.py was run with
   - include_entities = ['Application','Workflow','Offer','Case_R','Case_AO','Case_AW','Case_WO']
@@ -95,6 +105,11 @@ bpic17_queries_....py
   - option_DF_entity_type_in_label = False
   - include_entities = ['Application','Workflow','Offer','Case_R','Case_AO','Case_AW','Case_WO','Case_AWO']
   - step_createDFC = True
+
+bpic17_queries_...cypher.txt
+
+Plain Cypher queries to query the BPIC17 graph for properties of the DF relationships.
+
         
 Configuration
 -------------

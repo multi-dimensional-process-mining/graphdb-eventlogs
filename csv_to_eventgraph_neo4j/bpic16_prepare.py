@@ -7,7 +7,7 @@ Created on Mon Jun 17 16:51:36 2019
 
 #website click data, labour services process
 import pandas as pd
-import  os
+import time, os, csv
 
 
 #config
@@ -136,4 +136,7 @@ if(sample):
 else:
     fileName = 'BPIC16full.csv'
 
+start = time.time()
 clicksLog, complaints, questions, messages = CreateBPI16(inputpath,path_to_neo4j_import_directory,fileName,sample)
+end = time.time()
+print("Prepared data for import in: "+str((end - start))+" seconds.") 

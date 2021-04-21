@@ -1,0 +1,9 @@
+// find all acitivties that are directly following each other in a single offer
+MATCH (e:Event) -[df:DF {EntityType:"Offer"}]-> (e2:Event)
+WITH distinct e.Activity as a,e2.Activity as a2
+// for which this directly-follows relation does not occur in the global directly-follows relation,
+// i.e., where the directly-follows relation cannot be seen in the case data
+MATCH (e:Event {Activity:a}) -[df:DF {EntityType:"Offer"}]-> (e2:Event {Activity:a2})
+WHERE NOT (e)-[df:DF {EntityType:"Case_AWO"}]-> (e2)
+// return how often this happens
+RETURN a,a2,count(df)

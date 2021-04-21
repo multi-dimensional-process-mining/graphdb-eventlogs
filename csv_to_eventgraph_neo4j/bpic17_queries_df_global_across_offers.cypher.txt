@@ -1,0 +1,11 @@
+// find all events e -> e2 ordered by the global directly-follows relation of the classical "Case_AWO"
+// that are related to two different Offer entities en <> en2
+MATCH (en:Entity {EntityType:"Offer"}) <-[:E_EN]- (e:Event) -[df:DF]-> (e2:Event) -[:E_EN]-> (en2:Entity {EntityType:"Offer"})
+WHERE df.EntityType = "Case_AWO" AND en <> en2
+// and return the pairs of activity names (a,a2)
+WITH distinct e.Activity as a,e2.Activity as a2
+// to count how often each pair of activities (a,a2) occurs in the global directly-follows relation of the classical "Case_AWO"
+// between two different Offer entities en <> en2
+MATCH (en:Entity {EntityType:"Offer"}) <-[:E_EN]- (e:Event {Activity:a}) -[df:DF]-> (e2:Event {Activity:a2}) -[:E_EN]-> (en2:Entity {EntityType:"Offer"})
+WHERE df.EntityType = "Case_AWO" AND en <> en2
+RETURN a,a2,count(df)

@@ -40,23 +40,29 @@ model_entities = [['Application','case', 'WHERE e.EventOrigin = "Application"'],
                   ['Case_R', 'resource', 'WHERE EXISTS(e.resource)'], # resource as entity
                   ['Case_AWO','case', 'WHERE EXISTS(e.case)']] # original case notion
 
-# specification of derived entities: 
-#    1 name of derived entity, 
+# specification of relations between entities
+#    1 name of the relation
 #    2 name of first entity, 
 #    3 name of second entity where events have an property referring to the first entity, i.e., a foreign key
 #    4 name of the foreign key property by which events of the second entity refer to the first entity
-model_entities_derived = [['Case_AO','Application','Offer','case'],
-                          ['Case_AW','Application','Workflow','case'],
-                          ['Case_WO','Workflow','Offer','case']]
+model_relations = [['Case_AO','Application','Offer','case'],
+                   ['Case_AW','Application','Workflow','case'],
+                   ['Case_WO','Workflow','Offer','case']]
+
+# specification of entities to derive by reifying relations: 
+#    1 name of the relation in 'model_relations' that shall be reified
+model_entities_derived = ['Case_AO',
+                          'Case_AW',
+                          'Case_WO']
     
 # several steps of import, each can be switch on/off
 step_ClearDB = True           # entire graph shall be cleared before starting a new import
 step_LoadEventsFromCSV = True # import all (new) events from CSV file
-step_FilterEvents = True       # filter events prior to graph construction
+step_FilterEvents = False       # filter events prior to graph construction
 step_createLog = True         # create log nodes and relate events to log node
 step_createEntities = True          # create entities from identifiers in the data as specified in this script
 step_createEntityRelations = True   # create foreign-key relations between entities
-step_createEntitiesDerived = True   # create derived entities as specified in the script
+step_reifyRelations = True      # reify relations into derived entities 
 step_createDF = True            # compute directly-follows relation for all entities in the data
 step_deleteParallelDF = True    # remove directly-follows relations for derived entities that run in parallel with DF-relations for base entities
 step_createEventClasses = True  # aggregate events to event classes from data
@@ -66,6 +72,8 @@ step_createHOWnetwork = False   # create resource activitiy classifier and HOW n
 option_filter_removeEventsWhere = 'WHERE e.lifecycle in ["SUSPEND","RESUME"]'
 
 option_DF_entity_type_in_label = False # set to False when step_createDFC is enabled
+
+option_Contains_Lifecycle_Information = True # whether events hold attribute "Lifecycle" to be used in event classifiers
 
 ### end config
 
@@ -112,7 +120,7 @@ def CreateEventQuery(logHeader, fileName, LogID = ""):
             newLine = f' {col}: {column} }})'
             
         query = query + newLine
-    return query;
+    return query
 
 # run query for Neo4J database
 def runQuery(driver, query):
@@ -136,7 +144,7 @@ def add_log(tx, log_id):
     qLinkEventsToLog = f'''
             MATCH (e:Event {{Log: "{log_id}" }}) 
             MATCH (l:Log {{ID: "{log_id}" }}) 
-            CREATE (l)-[:L_E]->(e)'''
+            CREATE (l)-[:HAS]->(e)'''
     print(qLinkEventsToLog)
     tx.run(qLinkEventsToLog)
 
@@ -147,43 +155,47 @@ def create_entity(tx, entity_type, entity_id, WHERE_event_property):
             MERGE (en:Entity {{ID:id, uID:("{entity_type}"+toString(id)), EntityType:"{entity_type}" }})'''
     print(qCreateEntity)
     tx.run(qCreateEntity)
-    
+
+def create_entity_relationships(tx, relation_type, entity_type1, entity_type2, reference_from1to2):
+    qCreateRelation = f'''
+            MATCH ( e1 : Event ) -[:CORR]-> ( n1:Entity ) WHERE n1.EntityType="{entity_type1}"
+            MATCH ( e2 : Event ) -[:CORR]-> ( n2:Entity ) WHERE n2.EntityType="{entity_type2}"
+                AND n1 <> n2 AND e2.{reference_from1to2} = n1.ID
+            WITH DISTINCT n1,n2
+            CREATE ( n1 ) <-[:REL {{Type:"{relation_type}"}} ]- ( n2 )'''
+    print(qCreateRelation)
+    tx.run(qCreateRelation)
+
+def reify_entity_relations(tx, relation_type):
+    qReifyRelation = f'''
+            MATCH ( n1 : Entity ) -[rel:REL {{Type:"{relation_type}"}}]-> ( n2:Entity )
+            CREATE (n1) <-[:REL {{Type:"Reified"}}]- (new : Entity {{ 
+                ID:toString(n1.ID)+"_"+toString(n2.ID),
+                EntityType: "{relation_type}",
+                uID:"{relation_type}"+toString(n1.ID)+"_"+toString(n2.ID) }} )
+                -[:REL {{Type:"Reified"}}]-> (n2)'''
+    print(qReifyRelation)
+    tx.run(qReifyRelation)
+
 def correlate_events_to_entity(tx, entity_type, entity_id, WHERE_event_property):
     qCorrelate = f'''
             MATCH (e:Event) {WHERE_event_property}
             MATCH (n:Entity {{EntityType: "{entity_type}" }}) WHERE e.{entity_id} = n.ID
-            CREATE (e)-[:E_EN]->(n)'''
+            CREATE (e)-[:CORR]->(n)'''
     print(qCorrelate)
     tx.run(qCorrelate)
-    
-def create_entity_derived_from2(tx, derived_entity_type, entity_type1, entity_type2, fk_2to1):
-    qCreateEntity = f'''
-            MATCH (e1:Event) -[:E_EN]-> (n1:Entity) WHERE n1.EntityType="{entity_type1}"
-            MATCH (e2:Event) -[:E_EN]-> (n2:Entity) WHERE n2.EntityType="{entity_type2}" AND n1 <> n2 AND e2.{fk_2to1} = n1.ID 
-            WITH DISTINCT n1.ID as n1_id, n2.ID as n2_id
-            WHERE n1_id <> "Unknown" AND n2_id <> "Unknown"
-            CREATE ( :Entity {{ {entity_type1}ID: n1_id, {entity_type2}ID: n2_id, EntityType : "{derived_entity_type}", uID :  '{derived_entity_type}_'+toString(n1_id)+'_'+toString(n2_id) }} )'''
-    print(qCreateEntity)
-    tx.run(qCreateEntity)
-    
-def correlate_events_to_entity_derived2(tx, derived_entity_type, entity_type1, entity_type2):
-    qCorrelate1 = f'''
-        MATCH ( e1 : Event ) -[:E_EN]-> (n1:Entity) WHERE n1.EntityType="{entity_type1}"
-        MATCH ( derived : Entity ) WHERE derived.EntityType = "{derived_entity_type}" AND n1.ID = derived.{entity_type1}ID
-        CREATE ( e1 ) -[:E_EN]-> ( derived )'''
-    print(qCorrelate1)
-    tx.run(qCorrelate1)
-    qCorrelate2 = f'''
-        MATCH ( e2 : Event ) -[:E_EN]-> (n2:Entity) WHERE n2.EntityType="{entity_type2}"
-        MATCH ( derived : Entity ) WHERE derived.EntityType = "{derived_entity_type}" AND n2.ID = derived.{entity_type2}ID
-        CREATE ( e2 ) -[:E_EN]-> ( derived )'''
-    print(qCorrelate2)
-    tx.run(qCorrelate2)
+
+def correlate_events_to_derived_entity(tx, derived_entity_type):
+    qCorrelate = f'''
+            MATCH (e:Event) -[:CORR]-> (n:Entity) <-[:REL {{Type:"Reified"}}]- (r:Entity {{EntityType:"{derived_entity_type}"}} )
+            CREATE (e)-[:CORR]->(r)'''
+    print(qCorrelate)
+    tx.run(qCorrelate)
     
 def createDirectlyFollows(tx, entity_type, option_DF_entity_type_in_label):
     qCreateDF = f'''
         MATCH ( n : Entity ) WHERE n.EntityType="{entity_type}"
-        MATCH ( n ) <-[:E_EN]- ( e )
+        MATCH ( n ) <-[:CORR]- ( e )
         
         WITH n , e as nodes ORDER BY e.timestamp,ID(e)
         WITH n , collect ( nodes ) as nodeList
@@ -225,7 +237,7 @@ def createEventClass_Activity(tx):
     qLinkEventToClass = f'''
         MATCH ( c : Class ) WHERE c.Type = "Activity"
         MATCH ( e : Event ) WHERE c.Name = e.Activity
-        CREATE ( e ) -[:E_C]-> ( c )'''
+        CREATE ( e ) -[:OBSERVED]-> ( c )'''
     print(qLinkEventToClass)
     tx.run(qLinkEventToClass)
     
@@ -240,7 +252,7 @@ def createEventClass_ActivityANDLifeCycle(tx):
     qLinkEventToClass = f'''
         MATCH ( c : Class ) WHERE c.Type = "Activity+Lifecycle"    
         MATCH ( e : Event ) where e.Activity = c.Name AND e.lifecycle = c.Lifecycle
-        CREATE ( e ) -[:E_C]-> ( c )'''
+        CREATE ( e ) -[:OBSERVED]-> ( c )'''
     print(qLinkEventToClass)
     tx.run(qLinkEventToClass)
     
@@ -254,15 +266,15 @@ def createEventClass_Resource(tx):
     qLinkEventToClass = f'''
         MATCH ( e : Event )
         MATCH ( c : Class ) WHERE c.Type = "Resource" AND c.ID = e.resource
-        CREATE ( e ) -[:E_C]-> ( c )'''
+        CREATE ( e ) -[:OBSERVED]-> ( c )'''
     print(qLinkEventToClass)
     tx.run(qLinkEventToClass)
 
 def aggregateAllDFrelations(tx):
     # most basic aggregation of DF: all DF edges between events of the same classifer between the same entity
     qCreateDFC = f'''
-        MATCH ( c1 : Class ) <-[:E_C]- ( e1 : Event ) -[df:DF]-> ( e2 : Event ) -[:E_C]-> ( c2 : Class )
-        MATCH (e1) -[:E_EN] -> (n) <-[:E_EN]- (e2)
+        MATCH ( c1 : Class ) <-[:OBSERVED]- ( e1 : Event ) -[df:DF]-> ( e2 : Event ) -[:OBSERVED]-> ( c2 : Class )
+        MATCH (e1) -[:CORR] -> (n) <-[:CORR]- (e2)
         WHERE c1.Type = c2.Type AND n.EntityType = df.EntityType
         WITH n.EntityType as EType,c1,count(df) AS df_freq,c2
         MERGE ( c1 ) -[rel2:DF_C {{EntityType:EType}}]-> ( c2 ) ON CREATE SET rel2.count=df_freq'''
@@ -273,8 +285,8 @@ def aggregateAllDFrelations(tx):
 def aggregateDFrelations(tx, entity_type, event_cl):
     # aggregate only for a specific entity type and event classifier
     qCreateDFC = f'''
-        MATCH ( c1 : Class ) <-[:E_C]- ( e1 : Event ) -[df:DF]-> ( e2 : Event ) -[:E_C]-> ( c2 : Class )
-        MATCH (e1) -[:E_EN] -> (n) <-[:E_EN]- (e2)
+        MATCH ( c1 : Class ) <-[:OBSERVED]- ( e1 : Event ) -[df:DF]-> ( e2 : Event ) -[:OBSERVED]-> ( c2 : Class )
+        MATCH (e1) -[:CORR] -> (n) <-[:CORR]- (e2)
         WHERE n.EntityType = "{entity_type}" AND df.EntityType = "{entity_type}" AND c1.Type = "{event_cl}" AND c2.Type="{event_cl}"
         WITH n.EntityType as EType,c1,count(df) AS df_freq,c2
         MERGE ( c1 ) -[rel2:DF_C {{EntityType:EType}}]-> ( c2 ) ON CREATE SET rel2.count=df_freq'''
@@ -284,8 +296,8 @@ def aggregateDFrelations(tx, entity_type, event_cl):
 def aggregateDFrelationsForEntities(tx, entity_types, event_cl):
     # aggregate only for a specific entity type and event classifier
     qCreateDFC = f'''
-        MATCH ( c1 : Class ) <-[:E_C]- ( e1 : Event ) -[df:DF]-> ( e2 : Event ) -[:E_C]-> ( c2 : Class )
-        MATCH (e1) -[:E_EN] -> (n) <-[:E_EN]- (e2)
+        MATCH ( c1 : Class ) <-[:OBSERVED]- ( e1 : Event ) -[df:DF]-> ( e2 : Event ) -[:OBSERVED]-> ( c2 : Class )
+        MATCH (e1) -[:CORR] -> (n) <-[:CORR]- (e2)
         WHERE n.EntityType = df.EntityType AND df.EntityType IN {entity_types} AND c1.Type = "{event_cl}" AND c2.Type="{event_cl}"
         WITH n.EntityType as EType,c1,count(df) AS df_freq,c2
         MERGE ( c1 ) -[rel2:DF_C {{EntityType:EType}}]-> ( c2 ) ON CREATE SET rel2.count=df_freq'''
@@ -296,12 +308,12 @@ def aggregateDFrelationsFiltering(tx, entity_type, event_cl, df_threshold, relat
     # aggregate only for a specific entity type and event classifier
     # include only edges with a minimum threshold, drop weak edges (similar to heuristics miner)
     qCreateDFC = f'''
-        MATCH ( c1 : Class ) <-[:E_C]- ( e1 : Event ) -[df:DF]-> ( e2 : Event ) -[:E_C]-> ( c2 : Class )
-        MATCH (e1) -[:E_EN] -> (n) <-[:E_EN]- (e2)
+        MATCH ( c1 : Class ) <-[:OBSERVED]- ( e1 : Event ) -[df:DF]-> ( e2 : Event ) -[:OBSERVED]-> ( c2 : Class )
+        MATCH (e1) -[:CORR] -> (n) <-[:CORR]- (e2)
         WHERE n.EntityType = "{entity_type}" AND df.EntityType = "{entity_type}" AND c1.Type = "{event_cl}" AND c2.Type="{event_cl}"
         WITH n.EntityType as EntityType,c1,count(df) AS df_freq,c2
         WHERE df_freq > {df_threshold}
-        OPTIONAL MATCH ( c2 : Class ) <-[:E_C]- ( e2b : Event ) -[df2:DF]-> ( e1b : Event ) -[:E_C]-> ( c1 : Class )
+        OPTIONAL MATCH ( c2 : Class ) <-[:OBSERVED]- ( e2b : Event ) -[df2:DF]-> ( e1b : Event ) -[:OBSERVED]-> ( c1 : Class )
         WITH EntityType as EType,c1,df_freq,count(df2) AS df_freq2,c2
         WHERE (df_freq*{relative_df_threshold} > df_freq2)
         MERGE ( c1 ) -[rel2:DF_C  {{EntityType:EType}}]-> ( c2 ) ON CREATE SET rel2.count=df_freq'''
@@ -309,15 +321,32 @@ def aggregateDFrelationsFiltering(tx, entity_type, event_cl, df_threshold, relat
     tx.run(qCreateDFC)
     
     
-######################################################
-####################### BPIC 17 ######################
-######################################################
+###############################################################################################
+####################### Standard Script for Loading CSV Files into Neo4j ######################
+####################### based on configuration at the top of this file   ######################
+###############################################################################################
 
 if step_ClearDB: ### delete all nodes and relations in the graph to start fresh
     print('Clearing DB...')
+
+    # run one delete transaction per relationship type: smaller transactions require less memory and execute faster
+    relationTypes = [":DF",":CORR",":OBSERVED",":HAS",":DF_C",":REL"]
+    for relType in relationTypes:
+        qDeleteRelation = f'''MATCH () -[r{relType}]- () DELETE r'''
+        print(qDeleteRelation)
+        runQuery(driver,qDeleteRelation)
+    # delete all remaining relationships
     qDeleteAllRelations = "MATCH () -[r]- () DELETE r"
-    qDeleteAllNodes = "MATCH (n) DELETE n"
     runQuery(driver,qDeleteAllRelations)
+
+    # run one delete transaction per node type type: smaller transactions require less memory and execute faster
+    nodeTypes = [":Event",":Entity",":Log",":Class"]
+    for nodeType in nodeTypes:
+        qDeleteNodes = f'''MATCH (n{nodeType}) DELETE n'''
+        print(qDeleteNodes)
+        runQuery(driver,qDeleteNodes)
+    # delete all remaining relationships
+    qDeleteAllNodes = "MATCH (n) DELETE n"
     runQuery(driver,qDeleteAllNodes)
     
 # table to measure performance
@@ -355,14 +384,14 @@ if step_FilterEvents:
 
     
 
-##create log node and :L_E relationships
+##create log node and :HAS relationships
 if step_createLog:
     with driver.session() as session:
         session.write_transaction(add_log, dataSet)
 
     end = time.time()
     perf = perf.append({'name':dataSet+'_create_log', 'start':last, 'end':end, 'duration':(end - last)},ignore_index=True)
-    print('Log and :L_E relationships done: took '+str(end - last)+' seconds')
+    print('Log and :HAS relationships done: took '+str(end - last)+' seconds')
     last = end
     
 ##create entities
@@ -379,22 +408,34 @@ if step_createEntities:
             perf = perf.append({'name':dataSet+'_create_entity '+entity[0], 'start':last, 'end':end, 'duration':(end - last)},ignore_index=True)
             print('Entity '+entity[0]+' done: took '+str(end - last)+' seconds')
             last = end
-        
-if step_createEntitiesDerived:
-    for entity in model_entities_derived: #per entity
-   
-        if entity[0] in include_entities:
+
+## create relationships between entities
+if step_createEntityRelations:
+    for relation in model_relations: #per relation
+        with driver.session() as session:
+            session.write_transaction(create_entity_relationships, relation[0], relation[1], relation[2], relation[3])
+            print(f'{relation[0]} relationships created')
+    
+        end = time.time()
+        perf = perf.append({'name':dataSet+'_create_entity_relationships '+relation[0], 'start':last, 'end':end, 'duration':(end - last)},ignore_index=True)
+        print('Entity '+relation[0]+' done: took '+str(end - last)+' seconds')
+        last = end
+
+if step_reifyRelations:
+    for relation in model_relations: #per relation
+        derived_entity = relation[0]
+        if derived_entity in model_entities_derived and derived_entity in include_entities:
             with driver.session() as session:
-               session.write_transaction(create_entity_derived_from2, entity[0], entity[1], entity[2], entity[3])
-               print(f'{entity[0]} entity nodes done')
-               session.write_transaction(correlate_events_to_entity_derived2, entity[0], entity[1], entity[2])
-               print(f'{entity[0]} E_EN relationships done')
+                session.write_transaction(reify_entity_relations, derived_entity)
+                print(f'{derived_entity} relationships reified')
+                session.write_transaction(correlate_events_to_derived_entity, derived_entity)
+                print(f'{derived_entity} E_EN relationships created')
         
             end = time.time()
-            perf = perf.append({'name':dataSet+'_create_entity '+entity[0], 'start':last, 'end':end, 'duration':(end - last)},ignore_index=True)
-            print('Entity '+entity[0]+' done: took '+str(end - last)+' seconds')
+            perf = perf.append({'name':dataSet+'_reify_relationships '+derived_entity, 'start':last, 'end':end, 'duration':(end - last)},ignore_index=True)
+            print('Entity '+derived_entity+' done: took '+str(end - last)+' seconds')
             last = end
-
+        
 if step_createDF:
     for entity in include_entities: #per entity
         with driver.session() as session:
@@ -406,25 +447,30 @@ if step_createDF:
         last = end
         
 if step_deleteParallelDF:
-    for derived_entity in model_entities_derived: #per derived entity
-        if derived_entity[0] not in include_entities:
+    for relation in model_relations: #per relation
+        derived_entity = relation[0]
+        if derived_entity not in include_entities or derived_entity not in model_entities_derived:
             continue
-        
+
+        parent_entity = relation[1]
+        child_entity = relation[2]
+
         with driver.session() as session:
             # entities are derived from 2 other entities, delete parallel relations wrt. to those
-            session.write_transaction(deleteParallelDirectlyFollows_Derived, derived_entity[0], derived_entity[1])
-            session.write_transaction(deleteParallelDirectlyFollows_Derived, derived_entity[0], derived_entity[2])
+            session.write_transaction(deleteParallelDirectlyFollows_Derived, derived_entity, parent_entity)
+            session.write_transaction(deleteParallelDirectlyFollows_Derived, derived_entity, child_entity)
 
         end = time.time()
-        perf = perf.append({'name':dataSet+'_delete_parallel_df '+derived_entity[0], 'start':last, 'end':end, 'duration':(end - last)},ignore_index=True)
-        print('Remove parallel DF for Entity '+derived_entity[0]+' done: took '+str(end - last)+' seconds')
+        perf = perf.append({'name':dataSet+'_delete_parallel_df '+derived_entity, 'start':last, 'end':end, 'duration':(end - last)},ignore_index=True)
+        print('Remove parallel DF for Entity '+derived_entity+' done: took '+str(end - last)+' seconds')
         last = end
 
         
 if step_createEventClasses:
         with driver.session() as session:
-            #session.write_transaction(createEventClass_Activity)
-            session.write_transaction(createEventClass_ActivityANDLifeCycle)
+            session.write_transaction(createEventClass_Activity)
+            if option_Contains_Lifecycle_Information:
+                session.write_transaction(createEventClass_ActivityANDLifeCycle)
 
         end = time.time()
         perf = perf.append({'name':dataSet+'_create_classes', 'start':last, 'end':end, 'duration':(end - last)},ignore_index=True)
@@ -434,9 +480,13 @@ if step_createEventClasses:
 if step_createDFC:
     for entity in include_entities:
         with driver.session() as session:
-            #session.write_transaction(aggregateDFrelationsFiltering,entity,"Activity+Lifecycle",5000,3)
-            #session.write_transaction(aggregateDFrelationsFiltering,entity,"Activity+Lifecycle",1,3)
-            session.write_transaction(aggregateDFrelations,entity,"Activity+Lifecycle")
+            if option_Contains_Lifecycle_Information:
+                classifier = "Activity+Lifecycle"
+            else:
+                classifier = "Activity"
+            #session.write_transaction(aggregateDFrelationsFiltering,entity,classifier,5000,3)
+            #session.write_transaction(aggregateDFrelationsFiltering,entity,classifier,1,3)
+            session.write_transaction(aggregateDFrelations,entity,classifier)
             
             
         end = time.time()
