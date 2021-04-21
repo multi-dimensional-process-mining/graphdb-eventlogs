@@ -1,4 +1,6 @@
-Datasets and scripts for modeling business process event log data in Neo4j.
+Data model and generic query templates for translating and integrating a set
+of related CSV event logs into a single event graph over multiple behavioral
+dimensions, stored as labeled property graph in Neo4J.
 
 Copyright (C) 2019-2021
 Stefan Esser, INFORM GmbH, Aachen, Germany and Eindhoven University of Technology, Eindhoven, the Netherlands
