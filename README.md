@@ -8,10 +8,10 @@ The following projects are part of this repository
 
 
 ### csv_to_eventgraph_neo4j
-Data model and generic query templates for translating and integrating a set of related CSV event logs into single event graphs over multiple behavioral dimensions, stored as labeled property graph in [Neo4J](https://neo4j.com/). See [csv_to_eventgraph_neo4j/readme.txt]
+Data model and generic query templates for translating and integrating a set of related CSV event logs into single event graphs over multiple behavioral dimensions, stored as labeled property graph in [Neo4J](https://neo4j.com/). See [csv_to_eventgraph_neo4j/readme.txt](csv_to_eventgraph_neo4j/readme.txt)
 
 Publications:
-- Stefan Esser, Dirk Fahland: Multi-Dimensional Event Data in Graph Databases. [CoRR abs/2005.14552](https://arxiv.org/abs/2005.14552) [Journal on Data Semantics, DOI: 10.1007/s13740-021-00122-1](https://dx.doi.org/10.1007/s13740-021-00122-1) (2020)
+- Stefan Esser, Dirk Fahland: Multi-Dimensional Event Data in Graph Databases. [CoRR abs/2005.14552](https://arxiv.org/abs/2005.14552), [Journal on Data Semantics, DOI: 10.1007/s13740-021-00122-1](https://dx.doi.org/10.1007/s13740-021-00122-1) (2020)
 - Esser, Stefan. (2020, February 19). A Schema Framework for Graph Event Data. Master thesis. Eindhoven University of Technology. https://doi.org/10.5281/zenodo.3820037
 
 
