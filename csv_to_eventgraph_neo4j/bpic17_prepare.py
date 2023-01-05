@@ -1,100 +1,107 @@
-#loan application
+# loan application
+import sys
 
+import numpy as np
 import pandas as pd
-import time, os, csv
+import time
+import os
+import csv
 
-#config
+# config
+is_sample = True
+input_path = '..\\data\\BPIC17\\'
+path_to_neo4j_import_directory = 'C:\\Users\\avasw\\.Neo4jDesktop\\relate-data\\dbmss\\' \
+                                 'dbms-a742a5ee-d1bb-45c5-9bb1-afa291d5c34b\\import\\'
 
-sample = False
-inputpath = '.\\BPIC17\\'
-path_to_neo4j_import_directory = 'C:\\Temp\\Import\\'
 
-def LoadLog(localFile):
-    datasetList = []
-    headerCSV = []
-    i = 0
-    with open(localFile) as f:
-        reader = csv.reader(f)
-        for row in reader:
-            if (i==0):
-                headerCSV = list(row)
-                i +=1
-            else:
-               datasetList.append(row)
-        
-    log = pd.DataFrame(datasetList,columns=headerCSV)
-    
-    return headerCSV, log
-
-def CreateBPI17(inputpath, path_to_neo4j_import_directory, fileName, sample):
-    csvLog = pd.read_csv(os.path.realpath(inputpath+'BPI_Challenge_2017.csv'), keep_default_na=True) #load full log from csv                  
-    csvLog.drop_duplicates(keep='first', inplace=True) #remove duplicates from the dataset
-    csvLog = csvLog.reset_index(drop=True) #renew the index to close gaps of removed duplicates 
-    
-    
-    if (sample == True): 
-        sampleIds = ['Application_2045572635', 
-             'Application_2014483796', 
-             'Application_1973871032', 
-             'Application_1389621581', 
-             'Application_1564472847', 
-             'Application_430577010', 
-             'Application_889180637', 
-             'Application_1065734594', 
-             'Application_681547497', 
-             'Application_1020381296', 
-             'Application_180427873', 
-             'Application_2103964126', 
-             'Application_55972649', 
-             'Application_1076724533', 
-             'Application_1639247005', 
-             'Application_1465025013', 
-             'Application_1244956957', 
-             'Application_1974117177', 
-             'Application_797323371',
-             'Application_1631297810']
+def main():
+    if is_sample:
+        file_name = 'BPIC17sample.csv'
+        perf_file_name = 'BPIC17samplePerformance.csv'
     else:
-        sampleIds = [] #csvLog.case.unique().tolist() # create a list of all cases in the dataset
-    
+        file_name = 'BPIC17full.csv'
+        perf_file_name = 'BPIC17fullPerformance.csv'
+
+    start = time.time()
+    create_bpi17(file_name)
+    end = time.time()
+    print("Prepared data for import in: " + str((end - start)) + " seconds.")
+
+
+def create_bpi17(file_name: str):
+    csv_log = pd.read_csv(os.path.realpath(input_path + 'BPI_Challenge_2017.csv'),
+                          keep_default_na=True)  # load full log from csv
+    csv_log.drop_duplicates(keep='first', inplace=True)  # remove duplicates from the dataset
+    csv_log = csv_log.reset_index(drop=True)  # renew the index to close gaps of removed duplicates
+    csv_log["Log"] = 'BPIC17'
+
+    if is_sample:
+        sample_ids = ['Application_2045572635',
+                      'Application_2014483796',
+                      'Application_1973871032',
+                      'Application_1389621581',
+                      'Application_1564472847',
+                      'Application_430577010',
+                      'Application_889180637',
+                      'Application_1065734594',
+                      'Application_681547497',
+                      'Application_1020381296',
+                      'Application_180427873',
+                      'Application_2103964126',
+                      'Application_55972649',
+                      'Application_1076724533',
+                      'Application_1639247005',
+                      'Application_1465025013',
+                      'Application_1244956957',
+                      'Application_1974117177',
+                      'Application_797323371',
+                      'Application_1631297810']
+    else:
+        sample_ids = []  # csv_log.case.unique().tolist() # create a list of all cases in the dataset
+
     # rename CSV columns to standard value
     # Activity
     # timestamp
     # resource
-    # lifecycle for life-cycle transtiion
-    csvLog = csvLog.rename(columns={'event': 'Activity','time':'timestamp','org:resource':'resource','lifecycle:transition':'lifecycle'})
-    csvLog['EventIDraw'] = csvLog['EventID']
+    # lifecycle for life-cycle transition
+    csv_log = csv_log.rename(columns={'event': 'Activity', 'time': 'timestamp', 'org:resource': 'resource',
+                                      'lifecycle:transition': 'lifecycle'})
+    csv_log['EventIDraw'] = csv_log['EventID']
 
-    sampleList = [] #create a list (of lists) for the sample data containing a list of events for each of the selected cases
-    # fix missing entity identifier for one record: check all records in the list of sample cases (or the entire dataset)
-    for index, row in csvLog.iterrows():
-        if sampleIds == [] or row['case'] in sampleIds:
-            if row['Activity'] == "O_Create Offer": # this activity belongs to an offer but has no offer ID
-                if csvLog.loc[index+1]['Activity'] == 'O_Created':#if next activity is "O_Created" (always directly follows "O_Create Offer" [verified with Disco])
-                    row['OfferID'] = csvLog.loc[index+1]['OfferID'] #assign the offerID of the next event (O_Created) to this activity
-            rowList = list(row) #add the event data to rowList
-            sampleList.append(rowList) #add the extended, single row to the sample dataset
-    
-    header =  list(csvLog) #save the updated header data
-    logSamples = pd.DataFrame(sampleList,columns=header) #create pandas dataframe and add the samples  
+    # fix missing entity identifier for one record: check all records in the list of sample cases
+    # (or the entire dataset)
 
-    logSamples['timestamp'] = pd.to_datetime(logSamples['timestamp'], format='%Y/%m/%d %H:%M:%S.%f')
-    
-    logSamples.fillna(0)
-    logSamples.sort_values(['case','timestamp'], inplace=True)
-    logSamples['timestamp'] = logSamples['timestamp'].map(lambda x: x.strftime('%Y-%m-%dT%H:%M:%S.%f')[0:-3]+'+0100')
-    
-    logSamples.to_csv(path_to_neo4j_import_directory+fileName, index=True, index_label="idx",na_rep="Unknown")
+    # "O_Create Offer": this activity belongs to an offer but has no offer ID
+    # if next activity is "O_Created" (always directly follows "O_Create Offer" [verified with Disco])
+
+    # Shift both the activity and offerID one up to have the next activity and offer Id on the same line as the current ones
+    csv_log["Next_Activity"] = csv_log["Activity"].shift(periods=-1)
+    csv_log["Next_OfferID"] = csv_log["OfferID"].shift(periods=-1)
+
+    # check if the current activity and next activity match the activiy names
+    # if so, set offer ID to next offer ID
+    # if not, keep current offer ID
+    csv_log["OfferID"] = np.where((csv_log["Activity"] == "O_Create Offer")
+                                  & (csv_log["Next_Activity"] == "O_Created"),
+                                  csv_log["Next_OfferID"],
+                                  csv_log["OfferID"])
+
+    csv_log = csv_log.drop(columns=["Next_Activity", "Next_OfferID"])
+
+    if sample_ids:  # if there are values in sample ids, then we only take these cases
+        csv_log = csv_log[csv_log['case'].isin(sample_ids)]
+
+    csv_log['timestamp_dt'] = pd.to_datetime(csv_log['timestamp'], format='%Y/%m/%d %H:%M:%S.%f')
+
+    csv_log.fillna(0)
+    csv_log.sort_values(['case', 'timestamp_dt'], inplace=True)
+
+    # reformat in correct timestamp
+    csv_log['timestamp'] = csv_log['timestamp'].replace([' ', '/'], ['T', '-'], regex=True) + '+0100'
+    csv_log.drop(columns=["timestamp_dt"], inplace=True)
+
+    csv_log.to_csv(path_to_neo4j_import_directory + file_name, index=True, index_label="ID", na_rep="Unknown")
 
 
-if(sample):
-    fileName = 'BPIC17sample.csv' 
-    perfFileName = 'BPIC17samplePerformance.csv'
-else:
-    fileName = 'BPIC17full.csv'
-    perfFileName = 'BPIC17fullPerformance.csv'
-    
-
-start = time.time()
-CreateBPI17(inputpath, path_to_neo4j_import_directory, fileName, sample)
-end = time.time()
-print("Prepared data for import in: "+str((end - start))+" seconds.") 
+if __name__ == '__main__':
+    sys.exit(main())
