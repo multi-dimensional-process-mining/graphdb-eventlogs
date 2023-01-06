@@ -1,4 +1,7 @@
+import csv
+import math
 import os
+from tqdm import tqdm
 from typing import Optional, List, Sequence, Dict, Set, Any, Tuple
 
 import neo4j
@@ -7,14 +10,16 @@ from pandas import DataFrame
 
 from neo4j import GraphDatabase
 
+
 class EventKnowledgeGraph:
-    def __init__(self, batch_size, path, option_df_entity_type_in_label, verbose):
+    def __init__(self, uri: str, user: str, password: str, batch_size: int,
+                 option_df_entity_type_in_label: bool,
+                 verbose: bool):
 
         self.batch_size = batch_size
 
-        self.driver = self.start_connection()
+        self.driver = self.start_connection(uri, user, password)
         # ensure to allocate enough memory to your database: dbms.memory.heap.max_size=20G advised
-        self.path_to_neo4j_import_directory = path
 
         self.option_df_entity_type_in_label = option_df_entity_type_in_label
         self.option_event_type_in_label = False
@@ -23,13 +28,13 @@ class EventKnowledgeGraph:
 
         # set_common_strings()
 
-    """METHODS TO CREATE A CONNECTION TO THE DB AND RUN QUERIES"""
+    # region CREATE CONNECTION TO DATABASE AND RUN QUERIES
 
     @staticmethod
-    def start_connection():
+    def start_connection(uri: str, user: str, password: str):
         # begin config
         # connection to Neo4J database
-        driver = GraphDatabase.driver("bolt://localhost:7687", auth=("neo4j", "1234"))
+        driver = GraphDatabase.driver(uri, auth=(user, password))
         # Neo4j can import local files only from its own import directory,
         # see https://neo4j.com/docs/cypher-manual/current/clauses/load-csv/
         # Neo4j's default configuration enables import from local file directory
@@ -74,7 +79,38 @@ class EventKnowledgeGraph:
             result = session.write_transaction(run_query, query, **kwargs)
             return result
 
-    """FUNCTIONS TO ENSURE SYNCHRONOUS NAMING"""
+    # endregion
+
+    # region DATABASE MAINTENANCE
+
+    def clear_db(self) -> None:
+
+        delete_query = f'''
+            CALL apoc.periodic.iterate(
+                'MATCH (n) RETURN n',
+                 'DETACH DELETE n',
+                  {{batchSize:1000, parallel:true}})
+        '''
+        self.exec_query(delete_query)
+
+    def set_constraints(self):
+        query_constraint_unique_event_id = f'''
+            CREATE CONSTRAINT unique_event_ids IF NOT EXISTS 
+            FOR (e:Event) REQUIRE e.ID IS UNIQUE'''  # for implementation only (not required by schema or patterns)
+        query_constraint_unique_entity_uid = f'''
+                    CREATE CONSTRAINT unique_entity_ids IF NOT EXISTS 
+                    FOR (en:Entity) REQUIRE en.uID IS UNIQUE'''  # required by core pattern
+        query_constraint_unique_log_id = f'''
+                    CREATE CONSTRAINT unique_entity_ids IF NOT EXISTS 
+                    FOR (l:Log) REQUIRE l.ID IS UNIQUE'''  # required by core pattern
+
+        self.exec_query(query_constraint_unique_event_id)
+        self.exec_query(query_constraint_unique_entity_uid)
+        self.exec_query(query_constraint_unique_log_id)
+
+    # endregion
+
+    # region CONSISTENT NAMING FOR LABELS
 
     def get_df_label(self, label: str):
         """
@@ -83,10 +119,11 @@ class EventKnowledgeGraph:
         @param label: str, label that should be created in the DF
         @return:
         """
+
         if self.option_df_entity_type_in_label:
             return f'DF_{label.upper()}'
         else:
-            return f'DF {{EntityType: "{label}"}} '
+            return f'DF'
 
     def get_dfc_label(self, label: str):
         """
@@ -98,7 +135,7 @@ class EventKnowledgeGraph:
         if self.option_df_entity_type_in_label:
             return f'DF_C_{label.upper()}'
         else:
-            return f'DF_C {{EntityType: "{label}"}} '
+            return f'DF_C'
 
     def get_event_label(self, label: str, properties: Optional[Dict[str, Any]] = None):
         """
@@ -128,6 +165,9 @@ class EventKnowledgeGraph:
             else:
                 return f'Event {{EventType: "{label}", {conditions}}} '
 
+    # endregion
+
+    # region FUNCTIONS TO RETRIEVE ALL REL TYPES AND NODE LABELS
     """Define all queries and return their results (if required)"""
 
     def get_all_rel_types(self) -> List[str]:
@@ -170,48 +210,67 @@ class EventKnowledgeGraph:
         result = set([record for sublist in result for record in sublist["label"]])
         return result
 
-    def clear_db(self) -> None:
-        # request all relation types, then we can delete them one by one
-        relation_types = self.get_all_rel_types()
-        # run one delete transaction per relationship type: smaller transactions require less memory and execute faster
-        for rel_type in relation_types:
-            q_delete_relation = f'''MATCH () -[r:{rel_type}]- () DELETE r'''
-            self.exec_query(q_delete_relation)
+    # endregion
 
-        # delete all remaining relationships
-        q_delete_all_relations = "MATCH () -[r]- () DELETE r"
-        self.exec_query(q_delete_all_relations)
+    # region IMPORT EVENTS
 
-        # request all node labels, then we can delete them one by one
-        node_types = self.get_all_node_labels()
+    @staticmethod
+    def get_headers(local_file):
+        dataset_list = []
+        header_csv = []
+        i = 0
+        with open(local_file) as f:
+            reader = csv.reader(f)
+            for row in reader:
+                if i == 0:
+                    header_csv = list(row)
+                    i += 1
+                else:
+                    dataset_list.append(row)
 
-        # run one delete transaction per node type type: smaller transactions require less memory and execute faster
-        for node_type in node_types:
-            q_delete_nodes = f'''MATCH (n:{node_type}) DELETE n'''
-            self.exec_query(q_delete_nodes)
-
-        # delete all remaining nodes
-        q_delete_all_nodes = "MATCH (n) DELETE n"
-        self.exec_query(q_delete_all_nodes)
-
-    def set_constraints(self):
-        query_constraint_unique_event_id = f'''
-            CREATE CONSTRAINT unique_event_ids IF NOT EXISTS 
-            FOR (e:Event) REQUIRE e.ID IS UNIQUE'''  # for implementation only (not required by schema or patterns)
-        query_constraint_unique_entity_uid = f'''
-                    CREATE CONSTRAINT unique_entity_ids IF NOT EXISTS 
-                    FOR (en:Entity) REQUIRE en.uID IS UNIQUE'''   # required by core pattern
-        query_constraint_unique_log_id = f'''
-                    CREATE CONSTRAINT unique_entity_ids IF NOT EXISTS 
-                    FOR (l:Log) REQUIRE l.ID IS UNIQUE'''   # required by core pattern
-
-        self.exec_query(query_constraint_unique_event_id)
-        self.exec_query(query_constraint_unique_entity_uid)
-        self.exec_query(query_constraint_unique_log_id)
-
-    """IMPORT EVENTS"""
+        return header_csv
 
     def create_events(self, input_path: str, labels: Optional[List[str]] = None) -> None:
+
+        # header = EventKnowledgeGraph.get_headers(input_path + file_name)
+        #
+        # map = [f'{attribute}: line.{attribute}' for attribute in header]
+        # map_string = ", ".join(map)
+        #
+        # query = f'''
+        #     :auto LOAD CSV WITH HEADERS from "file:///{file_name}\" as line
+        #     CALL {{
+        #         WITH line
+        #         CREATE (e:Event {{{map_string}}})
+        #     }} IN TRANSACTIONS OF 500 ROWS
+        # '''
+        #
+        # self.exec_query(query)
+
+        # query = f'USING PERIODIC COMMIT LOAD CSV WITH HEADERS FROM \"file:///{file_name}\" as line'
+        # for col in log_header:
+        #     if col == 'idx':
+        #         column = f'toInt(line.{col})'
+        #     elif col in ['timestamp', 'start', 'end']:
+        #         column = f'datetime(line.{col})'
+        #     else:
+        #         column = 'line.' + col
+        #
+        #     if log_header.index(col) == 0 and log_id != "":
+        #         new_line = f' CREATE (e:Event {{Log: "{log_id}",{col}: {column},'
+        #     elif log_header.index(col) == 0:
+        #         new_line = f' CREATE (e:Event {{ {col}: {column},'
+        #     else:
+        #         new_line = f' {col}: {column},'
+        #     if log_header.index(col) == len(log_header) - 1:
+        #         new_line = f' {col}: {column} }})'
+        #
+        #     query = query + new_line
+        # return query
+        #
+        #
+        #
+        #
         # Cypher does not recognize pd date times, therefore we convert the date times to the correct string format
         df_log: DataFrame = pd.read_csv(os.path.realpath(input_path), keep_default_na=True)
         df_log = df_log.rename(columns={"timestamp": "str_timestamp"})
@@ -225,13 +284,17 @@ class EventKnowledgeGraph:
 
         # start with batch 0 and increment until everything is imported
         batch = 0
+        print("\n")
+        pbar = tqdm(total=math.ceil(len(df_log) / self.batch_size), position=0)
         while batch * self.batch_size < len(df_log):
+            pbar.set_description(f"Loading events from batch {batch}")
             # import the events in batches, use the records of the log
             self.create_events_batch(
                 batch=df_log[batch * self.batch_size:(batch + 1) * self.batch_size].to_dict('records'),
                 labels=labels)
+            pbar.update(1)
             batch += 1
-
+        pbar.close()
         # once all events are imported, we convert the string timestamp to the timestamp as used in Cypher
         self.make_timestamp_date()
 
@@ -262,26 +325,13 @@ class EventKnowledgeGraph:
         @return: None
         """
         q_make_timestamp = f'''
-            MATCH (e:Event) WHERE e.timestamp IS NULL
-            SET e.timestamp = DATETIME(e.str_timestamp)
-            REMOVE e.str_timestamp
+            CALL apoc.periodic.iterate(
+            "MATCH (e:Event) WHERE e.timestamp IS NULL RETURN e",
+            "SET e.timestamp = DATETIME(e.str_timestamp)
+            REMOVE e.str_timestamp",
+            {{batchSize:10000, parallel:true}})
         '''
         self.exec_query(q_make_timestamp)
-
-    @staticmethod
-    def change_timestamp_to_string(df_log: DataFrame) -> DataFrame:
-        """
-        @param df_log: Dataframe, log of which the timestamps need to be converted to string
-        @return: DataFrame with a str_timestamp instead of pandas datetime timestamp
-        """
-        df_log_timestamp_as_string = df_log.copy()
-        # reformat the timestamp to a string which can be read as input for the Cypher graph
-        # string is such that it can be converted to Timestamp within the graph environment
-        df_log_timestamp_as_string["str_timestamp"] = df_log_timestamp_as_string["timestamp"].dt.strftime(
-            '%Y-%m-%dT%H:%M:%S.%f')
-        # remove the pd.datetime column
-        df_log_timestamp_as_string.drop(["timestamp"], axis=1, inplace=True)
-        return df_log_timestamp_as_string
 
     def filter_events_by_property(self, prop: str, values: Optional[List[str]] = None) -> None:
         if values is None:  # match all events that have a specific property
@@ -294,7 +344,9 @@ class EventKnowledgeGraph:
         # execute query
         self.exec_query(q_filter_events)
 
-    """CREATE LOG AND CONNECT TO EVENTS"""
+    # endregion
+
+    # region CREATE LOG AND CONNECT TO EVENTS
 
     def create_log(self):
         # create :log node with log_id as id and sublog id as sublogid
@@ -313,7 +365,9 @@ class EventKnowledgeGraph:
 
         self.exec_query(q_link_events_to_log)
 
-    """CREATE ENTITIES"""
+    # endregion
+
+    # region CREATE ENTITIES
 
     def create_entity(self, property_name_id: str, entity_label: str, additional_label: Optional[str] = None,
                       properties: Optional[Dict[str, Any]] = None) -> None:
@@ -322,7 +376,7 @@ class EventKnowledgeGraph:
         # create a new entity node if it not exists yet with properties
         additional_label = ':' + additional_label if additional_label is not None else ""
         q_create_entity = f'''
-                    MATCH (e:Event) WHERE {EventKnowledgeGraph.create_condition("e" , properties)}
+                    MATCH (e:Event) WHERE {EventKnowledgeGraph.create_condition("e", properties)}
                     WITH e.{property_name_id} AS id
                     MERGE (en:Entity:{entity_label}{additional_label} 
                             {{ID:id, uID:("{entity_label}_"+toString(id)), 
@@ -331,13 +385,22 @@ class EventKnowledgeGraph:
 
         self.exec_query(q_create_entity)
 
-    def correlate_events_to_entity(self, property_name_id: str, entity_label: str, properties: Optional[Dict[str, Any]] = None) -> None:
+    def correlate_events_to_entity(self, property_name_id: str, entity_label: str,
+                                   properties: Optional[Dict[str, Any]] = None) -> None:
         # correlate events that contain a reference from an entity to that entity node
 
         q_correlate = f'''
-            MATCH (e:Event) WHERE {EventKnowledgeGraph.create_condition("e" , properties)}
+            MATCH (e:Event) WHERE {EventKnowledgeGraph.create_condition("e", properties)}
             MATCH (n:{entity_label}) WHERE e.{property_name_id} = n.ID 
             MERGE (e)-[:CORR]->(n)'''
+        self.exec_query(q_correlate)
+
+    def correlate_events_to_derived_entity(self, derived_entity: str) -> None:
+        # correlate events that are related to an entity which is reified into a new entity to the new reified entity
+        q_correlate = f'''
+            MATCH (e:Event) -[:CORR]-> (n:Entity) <-[:REIFIED ]- (r:Entity {{EntityType:"{derived_entity}"}} )
+            MATCH (e:Event) -[:CORR]-> (n:Entity) <-[:REIFIED ]- (r:Entity {{EntityType:"{derived_entity}"}} )
+            MERGE (e)-[:CORR]->(r)'''
         self.exec_query(q_correlate)
 
     def create_entity_relationships(self, relation_type: str, entity_name1: str, entity_name2: str,
@@ -367,9 +430,182 @@ class EventKnowledgeGraph:
                         -[:REIFIED ]-> (n2)'''
         self.exec_query(q_reify_relation)
 
+    # endregion
+
+    # region CREATE DIRECTLY FOLLOWS RELATIONS
+
+    def create_directly_follows(self, entity_name: str) -> None:
+        # find the specific entities and events with a certain label correlated to that entity
+        # order all events by time, order_nr and id grouped by a node n
+        # collect the sorted nodes as a list
+        # unwind the list from 0 to the one-to-last node
+        # find neighbouring nodes and add a edge between
+        df_entity_string = self.get_df_label(entity_name)
+
+        q_create_df = f'''
+            MATCH ( n : {entity_name} ) <-[:CORR]- (e)
+            WITH n , e as nodes ORDER BY e.timestamp,e.order_nr, ID(e)
+            WITH n , collect ( nodes ) as nodeList
+            UNWIND range(0,size(nodeList)-2) AS i
+            WITH n , nodeList[i] as first, nodeList[i+1] as second
+            CREATE ( first ) -[:{df_entity_string} {{EntityType: "{entity_name}"}}]->( second )
+        '''
+
+        self.exec_query(q_create_df)
+
+    def merge_duplicate_df(self, entity_name: str) -> None:
+
+        df_entity_string = self.get_df_label(entity_name)
+
+        q_merge_duplicate_rel = f'''
+                    MATCH (n1:Event)-[r:{df_entity_string} {{EntityType: "{entity_name}"}}]->(n2:Event)
+                    WITH n1, n2, collect(r) AS rels
+                    WHERE size(rels) > 1
+                    UNWIND rels AS r // only include this and the next line if you want to remove the existing relationships
+                    DELETE r
+                    MERGE (n1)-[:{df_entity_string} {{EntityType: "{entity_name}", count:size(rels)}}]->(n2)
+                '''
+        self.exec_query(q_merge_duplicate_rel)
+
+    def delete_parallel_directly_follows_derived(self, derived_entity_type, original_entity_type):
+        df_derived_entity = self.get_df_label(derived_entity_type)
+        df_original_entity = self.get_df_label(original_entity_type)
+
+        q_delete_df = f'''
+            MATCH (e1:Event) -[df:{df_derived_entity} {{EntityType: "{derived_entity_type}"}}]-> (e2:Event)
+            WHERE (e1:Event) -[:{df_original_entity} {{EntityType: "{original_entity_type}"}}]-> (e2:Event)
+            DELETE df'''
+
+        self.exec_query(q_delete_df)
+
+    def aggregate_df_relations(self, entity_type: Optional[str] = None, event_cl: Optional[str] = None,
+                               df_threshold: int = 0, relative_df_threshold: float = 0) -> None:
+        # add relations between classes when desired
+        if entity_type is None and event_cl is None:
+            q_create_dfc = f'''
+                   MATCH ( c1 : Class ) <-[:OBSERVED]- ( e1 : Event ) -[df]-> ( e2 : Event ) -[:OBSERVED]-> ( c2 : Class )
+                   MATCH (e1) -[:CORR] -> (n) <-[:CORR]- (e2)
+                   WHERE c1.Type = c2.Type AND n.EntityType = df.EntityType
+                   WITH n.EntityType as EType,c1 AS c1,count(df) AS df_freq,c2 AS c2
+                   MERGE ( c1 ) -[rel2:DF_C {{EntityType:EType}}]-> ( c2 ) ON CREATE SET rel2.count=df_freq
+                   '''
+
+            q_change_label = f'''
+                MATCH ( c1 ) -[rel2:DF_C]-> ( c2 ) 
+                WITH rel2, rel2.EntityType as EType, rel2.count AS df_freq, c1, c2
+                   CALL apoc.do.when(
+                    {self.option_df_entity_type_in_label},
+                    "RETURN 'DF_C_'+EType as DFLabel",
+                    "RETURN 'DF_C' as DFLabel",
+                    {{EType:EType}})
+                    YIELD value
+                      
+               CALL apoc.refactor.setType(rel2, value.DFLabel)
+               YIELD input, output
+               RETURN input, output
+            '''
+            self.exec_query(q_create_dfc)
+            self.exec_query(q_change_label)
+
+        elif df_threshold == 0 and relative_df_threshold == 0:  # corresponds to aggregateDFrelations &  aggregateDFrelationsForEntities in graphdb-eventlogs
+            # aggregate only for a specific entity type and event classifier
+
+            df_label = self.get_df_label(entity_type)
+            dfc_label = self.get_dfc_label(entity_type)
+            q_create_dfc = f'''
+                    MATCH ( c1 : Class ) <-[:OBSERVED]- ( e1 : Event ) -[df:{df_label} {{EntityType: '{entity_type}'}}]-> ( e2 : Event ) -[:OBSERVED]-> ( c2 : Class )
+                    MATCH (e1) -[:CORR] -> (n) <-[:CORR]- (e2)
+                    WHERE n.EntityType = df.EntityType AND c1.Type = "{event_cl}" AND c2.Type="{event_cl}"
+                    WITH n.EntityType as EType,c1,count(df) AS df_freq,c2
+                    MERGE ( c1 ) -[rel2:{dfc_label} {{EntityType: '{entity_type}'}}]-> ( c2 ) 
+                    ON CREATE SET rel2.count=df_freq'''
+            self.exec_query(q_create_dfc)
+        else:
+            # aggregate only for a specific entity type and event classifier
+            # include only edges with a minimum threshold, drop weak edges (similar to heuristics miner)
+            df_label = self.get_df_label(entity_type)
+            dfc_label = self.get_dfc_label(entity_type)
+            q_create_dfc = f'''
+                    MATCH ( c1 : Class ) <-[:OBSERVED]- ( e1 : Event ) -[df:{df_label} {{EntityType: '{entity_type}'}}]-> ( e2 : Event ) -[:OBSERVED]-> ( c2 : Class )
+                    MATCH (e1) -[:CORR] -> (n) <-[:CORR]- (e2)
+                    WHERE n.EntityType = df.EntityType AND c1.Type = "{event_cl}" AND c2.Type="{event_cl}"
+                    WITH n.EntityType as EntityType,c1,count(df) AS df_freq,c2
+                    WHERE df_freq > {df_threshold}
+                    OPTIONAL MATCH ( c2 : Class ) <-[:OBSERVED]- ( e2b : Event ) -[df2:DF]-> ( e1b : Event ) -[:OBSERVED]-> ( c1 : Class )
+                    WITH EntityType as EType,c1,df_freq,count(df2) AS df_freq2,c2
+                    WHERE (df_freq*{relative_df_threshold} > df_freq2)
+                    MERGE ( c1 ) -[rel2:{dfc_label} {{EntityType: '{entity_type}'}}]-> ( c2 ) 
+                    ON CREATE SET rel2.count=df_freq'''
+            self.exec_query(q_create_dfc)
+
+    # endregion
+
+    # region CREATE CLASSES
+    def create_class(self, label: str = "Event", required_keys: Optional[Sequence[str]] = None,
+                     ids: Optional[Sequence[str]] = None) -> None:
+        # add values if those are None
+        required_keys = required_keys if required_keys else ["Activity", "Lifecycle"]
+        ids = ids if ids else ["cID", "Name", "Lifecycle"]
+
+        # make sure first element of id list is cID
+        if "cID" not in ids:
+            ids = ["cID"] + ids
+
+        # reformat to e.key with alias
+        alias_keys = [f"e.{key} AS {key}" for key in required_keys]
+
+        # create the where condition
+        with_condition = ' , '.join([f"{key}" for key in alias_keys])
+        # create a combined id in string format
+        ID = "+".join([f"{key}" for key in required_keys])
+        class_label = "_".join([f"{key}" for key in required_keys])
+        # add to the keys
+        required_keys = [ID] + required_keys
+
+        node_properties = ', '.join([f"{_id}: {key}" for _id, key in zip(ids, required_keys)])
+        node_properties += f", Type: '{ID}'"  # save ID also as string that captures the type
+
+        # create new class nodes for event nodes that match the condition
+        q_create_ec = f'''
+                MATCH ( e : {label} ) WITH distinct {with_condition}
+                MERGE ( c : Class : Class_{class_label} {{ {node_properties} }})'''
+        self.exec_query(q_create_ec)
+
+        # reformat to e.key
+        required_keys = [f"e.{key}" for key in required_keys]
+        where_link_condition = ' AND '.join([f"c.{_id} = {key}" for _id, key in zip(ids[1:], required_keys[1:])])
+
+        # Create :OBSERVED relation between the class and events
+        q_link_event_to_class = f'''
+                MATCH ( c : Class_{class_label})
+                MATCH ( e : Event ) WHERE {where_link_condition}
+                CREATE ( e ) -[:OBSERVED]-> ( c )'''
+        self.exec_query(q_link_event_to_class)
+
+    # endregion
+
+    # region CREATE STATIC NODES AND RELATIONS
     def create_static_nodes_and_relations(self):
         # TODO no implementation yet (see if needed)
         pass
+
+    # endregion
+
+    # region STATIC METHODS
+    @staticmethod
+    def change_timestamp_to_string(df_log: DataFrame) -> DataFrame:
+        """
+        @param df_log: Dataframe, log of which the timestamps need to be converted to string
+        @return: DataFrame with a str_timestamp instead of pandas datetime timestamp
+        """
+        df_log_timestamp_as_string = df_log.copy()
+        # reformat the timestamp to a string which can be read as input for the Cypher graph
+        # string is such that it can be converted to Timestamp within the graph environment
+        df_log_timestamp_as_string["str_timestamp"] = df_log_timestamp_as_string["timestamp"].dt.strftime(
+            '%Y-%m-%dT%H:%M:%S.%f')
+        # remove the pd.datetime column
+        df_log_timestamp_as_string.drop(["timestamp"], axis=1, inplace=True)
+        return df_log_timestamp_as_string
 
     @staticmethod
     def create_condition(name: str, properties: Dict[str, List[str]]) -> str:
@@ -386,3 +622,5 @@ class EventKnowledgeGraph:
                 condition_list.append(f"{name}.{key} {condition}")
         condition = " AND ".join(condition_list)
         return condition
+
+    # endregion
