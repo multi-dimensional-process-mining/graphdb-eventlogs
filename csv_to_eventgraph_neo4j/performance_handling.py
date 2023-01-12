@@ -9,18 +9,17 @@ from context_manager_tqdm import Nostdout
 
 
 class Performance:
-    def __init__(self, perf_file_name):
+    def __init__(self, perf_file_path: str, perf_file_name:str, number_of_steps:int):
         self.start = time.time()
         self.last = self.start
         self.perf = pd.DataFrame(columns=["name", "start", "end", "duration"])
-        self.path = perf_file_name
+        self.path = perf_file_path + perf_file_name
         self.count = 0
-        self.pbar = tqdm(total=64, file=sys.stdout)
+        self.pbar = tqdm(total=number_of_steps, file=sys.stdout)
         self.total = None
         # start python trickery
         self.ctx = Nostdout()
         self.ctx.__enter__()
-
 
     def string_time(self, epoch_time):
         return datetime.utcfromtimestamp(epoch_time).strftime("%H:%M:%S")

@@ -3,9 +3,9 @@ import pandas as pd
 import time, os, csv
 
 ## config
-sample = False
-inputpath = '.\\BPIC15\\'
-path_to_neo4j_import_directory = 'C:\\Temp\\Import\\' # where prepared files will be stored
+sample = True
+inputpath = '..\\data\\\\BPIC15\\'
+path_to_neo4j_import_directory = '..\\data\\\\BPIC15\\prepared\\' # where prepared files will be stored
 
 
 
@@ -23,11 +23,13 @@ def CreateBPI15(path,sample=False):
     for i in range(1,6):
         fileName = f'BPIC15_{i}.csv'
         log = pd.read_csv(inputpath+fileName, keep_default_na=True)
+
+        log['Log'] = 'BPIC15'
         
         if i == 2:
-            log = log.drop(log[['action_code','activityNameNL','case_type']], axis=1)
+            log = log.drop(columns=['action_code','activityNameNL','case_type'])
         else:
-            log = log.drop(log[['action_code','endDatePlanned','activityNameNL','case_type']], axis=1)
+            log = log.drop(columns=['action_code','endDatePlanned','activityNameNL','case_type'])
 
         log.rename(columns={'case':'cID',
                                    'event':'Activity',
@@ -47,12 +49,11 @@ def CreateBPI15(path,sample=False):
         log['start'] = log['start'].map(lambda x: x.strftime('%Y-%m-%dT%H:%M:%S%z'))
         log['timestamp'] = pd.to_datetime(log['timestamp'], format='%Y/%m/%d %H:%M:%S.%f')
         log['timestamp'] = log['timestamp'].map(lambda x: x.strftime('%Y-%m-%dT%H:%M:%S%z'))
-        log.to_csv(path+fileName, index=True, index_label="idx",na_rep="Unknown")
        
         if (sample):
-            log.to_csv(path+fileName[0:-4]+'_sample.csv', index=True, index_label="idx",na_rep="Unknown")
+            log.to_csv(path+fileName[0:-4]+'_sample.csv', index=True, index_label="idx")
         else:
-            log.to_csv(path+fileName, index=True, index_label="idx",na_rep="Unknown")
+            log.to_csv(path+fileName, index=True, index_label="idx")
             
     
 start = time.time()

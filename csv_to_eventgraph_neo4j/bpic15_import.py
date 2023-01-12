@@ -32,7 +32,7 @@ perfFileName = 'BPIC15Performance.csv'
 # data model specific to BPIC15
 logfiles = ['BPIC15_1.csv', 'BPIC15_2.csv', 'BPIC15_3.csv', 'BPIC15_4.csv', 'BPIC15_5.csv']
 
-include_entities = ['Application','Case_R','Responsible_actor','monitoringResource']
+include_entities = ['Application', 'Case_R','Responsible_actor','monitoringResource']
 
 model_entities = [['Application','cID', 'WHERE EXISTS(e.cID)'], # Original Case ID
                   ['Case_R', 'resource', 'WHERE EXISTS(e.resource)'],

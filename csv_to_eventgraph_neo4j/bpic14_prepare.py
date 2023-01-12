@@ -10,9 +10,9 @@ import math,random
 import time, os, csv
 
 #config
-sample = False
-inputpath = '.\\BPIC14\\'
-path_to_neo4j_import_directory = 'C:\\Temp\\Import\\' # where prepared files will be stored
+sample = True
+inputpath = '..\\data\\BPIC14\\'
+path_to_neo4j_import_directory = '..\\data\\BPIC14\\' # where prepared files will be stored
 
 
 start = time.time()
@@ -24,10 +24,13 @@ incident = pd.read_csv(inputpath+f'Detail_Incident.csv', keep_default_na=True, s
 incidentDetail = pd.read_csv(inputpath+f'Detail_Incident_Activity.csv', keep_default_na=True, sep=';')
 interaction = pd.read_csv(inputpath+f'Detail_Interaction.csv', keep_default_na=True, sep=';')
 
-
-
 incident.drop(incident.iloc[:, 28:78], inplace=True, axis=1) #drop all empty columns
 incident = incident.dropna(thresh=19) #drops all 'nan-only' rows
+
+change['Log'] = 'BPIC14'
+incident['Log'] = 'BPIC14'
+incidentDetail['Log'] = 'BPIC14'
+interaction['Log'] = 'BPIC14'
 
 
 change.rename(columns={'Service Component WBS (aff)':'ServiceComponentAff',#sample by
@@ -85,7 +88,7 @@ incidentDetail.rename(columns={'Incident ID':'IncidentID',#sample by
                                'DateStamp':'timestamp', #timestamp
                                'IncidentActivity_Number':'IncidentActivityNumber',
                                'IncidentActivity_Type':'Activity',
-                               'Assignment Group':'AssignmentGroup',
+                               'Assignment Group':'Resource',
                                'KM number':'KMNo',
                                'Interaction ID':'InteractionID'}, inplace=True)
 
@@ -134,7 +137,6 @@ else:
     fileName = 'BPIC14Change.csv'
  
 change.to_csv(path_to_neo4j_import_directory+fileName, index=True, index_label="idx",na_rep="Unknown")
-
 
 for i in incident.index:
     incident.at[i ,'Activity'] = str(incident.at[i ,'Category'])+": "+str(incident.at[i ,'ClosureCode'])
