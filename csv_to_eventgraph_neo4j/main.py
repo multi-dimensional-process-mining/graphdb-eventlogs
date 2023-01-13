@@ -11,7 +11,7 @@ import authentication
 from datasets import datasets, BPICNames
 
 connection = authentication.connections_map[authentication.Connections.LOCAL]
-dataset = datasets[BPICNames.BPIC15_FULL]
+dataset = datasets[BPICNames.BPIC16_FULL]
 
 use_preloaded_files = False  # if false, read/import files instead
 verbose = False
@@ -24,7 +24,7 @@ def create_graph_instance() -> EventKnowledgeGraph:
     """
 
     return EventKnowledgeGraph(db_name=connection.user, uri=connection.uri, user=connection.user,
-                               password=connection.password, batch_size=10000,
+                               password=connection.password, batch_size=5000,
                                option_df_entity_type_in_label=dataset.settings.option_df_entity_type_in_label,
                                verbose=verbose)
 
@@ -50,9 +50,10 @@ def populate_graph(file_name: str, graph: EventKnowledgeGraph, perf: Performance
 
     """  STEP C3: IMPORT EVENT NODES"""
     # import the events from all sublogs in the graph with the corresponding labels
-    for file_name in dataset.file_names:
-        graph.create_events(input_path=dataset.data_path, file_name=file_name, na_values=dataset.na_values, dtype_dict=dataset.dtype_dict)
-        perf.finished_step(activity=f"Imported events from event log", log_message=f"Event nodes for {file_name} done")
+    if settings.step_load_events_from_csv:
+        for file_name in dataset.file_names:
+            graph.create_events(input_path=dataset.data_path, file_name=file_name, na_values=dataset.na_values, dtype_dict=dataset.dtype_dict)
+            perf.finished_step(activity=f"Imported events from event log", log_message=f"Event nodes for {file_name} done")
 
     graph.set_constraints()
     perf.finished_step(activity=f"Set constraints", log_message=f"Constraints are set")
@@ -71,7 +72,6 @@ def populate_graph(file_name: str, graph: EventKnowledgeGraph, perf: Performance
 
     """  STEP C4: CREATE ENTITIES"""
     # for each entity, we add the entity nodes to graph and correlate them to the correct events
-    print("Creating Entities")
     if settings.step_create_entities:
         for entity in semantics.model_entities:
             entity_label = entity.entity_label
@@ -108,6 +108,11 @@ def populate_graph(file_name: str, graph: EventKnowledgeGraph, perf: Performance
                     graph.reify_entity_relations(entity_name1=entity_label_to_node, entity_name2=entity_label_from_node,
                                                  derived_entity=derived_entity)
                     graph.correlate_events_to_derived_entity(derived_entity=derived_entity)
+                    perf.finished_step(activity=f"Relation {relation_type} reified",
+                                       log_message=f"Relation {relation_type} reified")
+    else:
+        perf.finished_step(activity=f"No Relations created",
+                           log_message=f"No Relations created")
 
     if settings.step_create_df:
         for entity in semantics.include_entities:  # per entity
@@ -115,6 +120,9 @@ def populate_graph(file_name: str, graph: EventKnowledgeGraph, perf: Performance
 
             perf.finished_step(activity=f"create_df '{entity}'",
                                log_message=f"DF for Entity '{entity}' done")
+    else:
+        perf.finished_step(activity=f"No DF Relations created",
+                       log_message=f"No DF Relations created")
 
     if settings.step_delete_parallel_df:
         for relation in semantics.model_relations:  # per relation
@@ -129,8 +137,15 @@ def populate_graph(file_name: str, graph: EventKnowledgeGraph, perf: Performance
 
             graph.delete_parallel_directly_follows_derived(derived_entity_type=derived_entity,
                                                            original_entity_type=parent_entity)
+
+            perf.finished_step(activity=f"Deleted parallel DF between {derived_entity} and {parent_entity}'",
+                               log_message=f"Deleted parallel DF between {derived_entity} and {parent_entity}")
             graph.delete_parallel_directly_follows_derived(derived_entity_type=derived_entity,
                                                            original_entity_type=child_entity)
+
+
+            perf.finished_step(activity=f"Deleted parallel DF between {derived_entity} and {child_entity}'",
+                               log_message=f"Deleted parallel DF between {derived_entity} and {child_entity}")
 
     if settings.step_delete_duplicate_df:
         for entity in semantics.include_entities:  # per entity
@@ -146,6 +161,13 @@ def populate_graph(file_name: str, graph: EventKnowledgeGraph, perf: Performance
             required_keys = _class.required_keys
             ids = _class.ids
             graph.create_class(label=label, required_keys=required_keys, ids=ids)
+
+            perf.finished_step(activity=f"Created classes for {label}'",
+                               log_message=f"Created classes for {label}")
+    else:
+        perf.finished_step(activity=f"No classes created'",
+                           log_message=f"No classes created")
+
 
     if settings.step_create_dfc:
         for dfc_entity in semantics.dfc_entities:

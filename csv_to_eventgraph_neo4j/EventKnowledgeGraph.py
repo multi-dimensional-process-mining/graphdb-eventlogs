@@ -35,7 +35,7 @@ class EventKnowledgeGraph:
     def start_connection(uri: str, user: str, password: str):
         # begin config
         # connection to Neo4J database
-        driver = GraphDatabase.driver(uri, auth=(user, password))
+        driver = GraphDatabase.driver(uri, auth=(user, password), max_connection_lifetime=200)
         # Neo4j can import local files only from its own import directory,
         # see https://neo4j.com/docs/cypher-manual/current/clauses/load-csv/
         # Neo4j's default configuration enables import from local file directory
@@ -255,7 +255,7 @@ class EventKnowledgeGraph:
         # df_log: DataFrame = EventKnowledgeGraph.change_timestamp_to_string(df_log)
         # Replace all missing values with "None"  as string
         # na_values = "None" if na_values is None else na_values
-        df_log = df_log.fillna(value=-1)
+        df_log = df_log.fillna(value="None")
 
         # create a list of labels, "Event" is always a label of event nodes
         labels = ["Event"] + labels if labels is not None else ["Event"]
@@ -342,9 +342,13 @@ class EventKnowledgeGraph:
         '''
 
         q_link_events_to_log = f'''
-            MATCH (l:Log) 
-            MATCH (e:Event {{Log: l.ID}}) 
-            CREATE (l)-[:HAS]->(e)'''
+            CALL apoc.periodic.iterate(
+                'MATCH (l:Log) 
+                MATCH (e:Event {{Log: l.ID}})
+                RETURN e, l', 
+                'MERGE (l)-[:HAS]->(e)',
+                {{batchSize:{self.batch_size}}})
+            '''
 
         self.exec_query(q_create_log)
 
@@ -375,9 +379,14 @@ class EventKnowledgeGraph:
         # correlate events that contain a reference from an entity to that entity node
 
         q_correlate = f'''
-            MATCH (e:Event) WHERE {EventKnowledgeGraph.create_condition("e", properties)}
-            MATCH (n:{entity_label}) WHERE e.{property_name_id} = n.ID 
-            MERGE (e)-[:CORR]->(n)'''
+        
+            CALL apoc.periodic.iterate(
+                'MATCH (e:Event) WHERE {EventKnowledgeGraph.create_condition("e", properties)}
+                MATCH (n:{entity_label}) WHERE e.{property_name_id} = n.ID
+                RETURN e, n',
+                'MERGE (e)-[:CORR]->(n)',
+                {{batchSize: {self.batch_size}}})
+                '''
         self.exec_query(q_correlate)
 
     def correlate_events_to_derived_entity(self, derived_entity: str) -> None:
@@ -428,12 +437,15 @@ class EventKnowledgeGraph:
         df_entity_string = self.get_df_label(entity_name)
 
         q_create_df = f'''
-            MATCH ( n : {entity_name} ) <-[:CORR]- (e)
+         CALL apoc.periodic.iterate(
+            'MATCH ( n : {entity_name} ) <-[:CORR]- (e)
             WITH n , e as nodes ORDER BY e.timestamp,e.order_nr, ID(e)
             WITH n , collect ( nodes ) as nodeList
             UNWIND range(0,size(nodeList)-2) AS i
             WITH n , nodeList[i] as first, nodeList[i+1] as second
-            MERGE ( first ) -[:{df_entity_string} {{EntityType: "{entity_name}", Type:"DF"}}]->( second )
+            RETURN first, second',
+            'MERGE ( first ) -[:{df_entity_string} {{EntityType: "{entity_name}", Type:"DF"}}]->( second )',
+            {{batchSize: {self.batch_size}}})
         '''
 
         self.exec_query(q_create_df)
@@ -568,9 +580,13 @@ class EventKnowledgeGraph:
 
         # Create :OBSERVED relation between the class and events
         q_link_event_to_class = f'''
-                MATCH ( c : Class_{class_label})
+            CALL apoc.periodic.iterate(
+                'MATCH ( c : Class_{class_label})
                 MATCH ( e : Event ) WHERE {where_link_condition}
-                MERGE ( e ) -[:OBSERVED]-> ( c )'''
+                RETURN e, c',
+                'MERGE ( e ) -[:OBSERVED]-> ( c )',
+                {{batchSize: {self.batch_size}}})                
+            '''
         self.exec_query(q_link_event_to_class)
 
     # endregion

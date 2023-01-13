@@ -4,8 +4,8 @@ import time, csv, os
 ### config
 
 sample=False
-inputpath = '.\\BPIC19\\'
-path_to_neo4j_import_directory = 'C:\\Temp\\Import\\' # where prepared files will be stored
+inputpath = '..\\data\\BPIC19\\'
+path_to_neo4j_import_directory = '..\\data\\BPIC19\\prepared\\' # where prepared files will be stored
 
 
 
@@ -50,7 +50,7 @@ def CreateBPI19(inputpath, path_to_neo4j_import_directory, fileName, bSample):
     print('Changing DateTime format '+ str(time.time()))
     csvLog['timestamp'] = pd.to_datetime(csvLog['timestamp'], format='%d-%m-%Y %H:%M:%S.%f')
     csvLog['timestamp'] = csvLog['timestamp'].map(lambda x: x.strftime('%Y-%m-%dT%H:%M:%S.%f')[0:-3]+'+0100')
-
+    csvLog['Log'] = 'BPIC19'
 
     if (bSample == True): 
         sampleIds = ['4508062571',

@@ -46,10 +46,10 @@ class DFC:
 
 
 class Semantics:
-    def __init__(self, include_entities: List[str], model_entities: List[Type[ModelledEntity]],
-                 model_relations: List[Type[Relation]], model_entities_derived: List[str] = None,
-                 properties_of_events_to_be_filtered: List[Type[AttributeValuesPair]] = None,
-                 classes: List[Type[Class]] = None, dfc_entities: List[Type[DFC]] = None
+    def __init__(self, include_entities: List[str], model_entities: List[ModelledEntity],
+                 model_relations: List[Relation] = None, model_entities_derived: List[str] = None,
+                 properties_of_events_to_be_filtered: List[AttributeValuesPair] = None,
+                 classes: List[Class] = None, dfc_entities: List[DFC] = None
                  ) -> None:
 
         self.include_entities = include_entities
@@ -127,7 +127,7 @@ class Settings:
 
 class BPIC:
     def __init__(self, name: str, file_names: List[str], file_type: str, data_path: str, perf_file_path: str,
-                 semantics: Type[Semantics], settings: Type[Settings], number_of_steps: int, na_values:str = None, dtype_dict:Dict[str, str] = None):
+                 semantics: Semantics, settings: Settings, number_of_steps: int, na_values:str = None, dtype_dict:Dict[str, str] = None):
 
         self.name = name
         self.file_names = file_names

@@ -10,8 +10,7 @@ import csv
 # config
 is_sample = True
 input_path = '..\\data\\BPIC17\\'
-path_to_neo4j_import_directory = 'C:\\Users\\avasw\\.Neo4jDesktop\\relate-data\\dbmss\\' \
-                                 'dbms-a742a5ee-d1bb-45c5-9bb1-afa291d5c34b\\import\\'
+path_to_neo4j_import_directory = '..\\data\\BPIC17\\prepared\\'
 
 
 def main():
