@@ -21,35 +21,56 @@ semantics = Semantics(
     include_entities=['ConfigurationItem', 'ServiceComponent', 'Incident', 'Interaction', 'Change', 'Case_R', 'KM'],
     model_entities=[
         # Configuration Item
-        ModelledEntity(entity_label='ConfigurationItem', property_name_id='CINameAff'),
+        ModelledEntity(entity_label='ConfigurationItem', property_name_id='ciNameAff'),
         # Service Component
-        ModelledEntity(entity_label='ServiceComponent', property_name_id='ServiceComponentAff'),
+        ModelledEntity(entity_label='ServiceComponent', property_name_id='serviceComponentAff'),
         # Incident reported on a configuration item
-        ModelledEntity(entity_label='Incident', property_name_id='IncidentID'),
+        ModelledEntity(entity_label='Incident', property_name_id='incidentId'),
         # Interaction carried out in relation to a configuration item
-        ModelledEntity(entity_label='Interaction', property_name_id='InteractionID'),
-        ModelledEntity(entity_label='Change', property_name_id='ChangeID'),
+        ModelledEntity(entity_label='Interaction', property_name_id='interactionId'),
+        ModelledEntity(entity_label='Change', property_name_id='changeId'),
         # resource perspective
-        ModelledEntity(entity_label='Case_R', property_name_id='Resource'),
-        ModelledEntity(entity_label="KM", property_name_id="KMNo")
+        ModelledEntity(entity_label='Case_R', property_name_id='resource'),
+        ModelledEntity(entity_label="KM", property_name_id="kmNumber")
     ],
     model_relations=[
         Relation(relation_type='RelatedIncident', entity_label_from_node=' Interaction',
                  entity_label_to_node='Incident',
-                 reference_in_event_to_to_node='RelatedIncident'),
+                 reference_in_event_to_to_node='relatedIncident'),
         Relation(relation_type='PartOf', entity_label_from_node='ConfigurationItem',
                  entity_label_to_node='ServiceComponent',
-                 reference_in_event_to_to_node='ServiceComponentAff')
+                 reference_in_event_to_to_node='serviceComponentAff')
     ],
     classes=[
-        Class(label="Event", required_keys=["Activity"], ids=["Name"])
-        # Class(label="Event", required_keys=["Resource"], ids=["Name"])
+        Class(label="Event", required_keys=["activity"], ids=["name"])
+        # Class(label="Event", required_keys=["resource"], ids=["Name"])
     ],
     dfc_entities=[
-        DFC(classifiers=["Activity"])
-        # DFC(classifiers=["Resource"], entities=['Application', 'Workflow', 'Offer', 'Case_AO', 'Case_AW', 'Case_WO'])
+        DFC(classifiers=["activity"])
+        # DFC(classifiers=["resource"], entities=['Application', 'Workflow', 'Offer', 'Case_AO', 'Case_AW', 'Case_WO'])
     ]
 )
+
+mapping_columns_to_property_names = {
+    "BPIC14Change": {'changeType': 'activity',  # activity name
+                     'actualStart': 'start',  # start timestamp of the activity
+                     'actualEnd': 'timestamp',  # complete timestamp of the activity
+                     'serviceComponentWbsAff': 'serviceComponentAff',  # sample by
+                     # 'changeRecordOpenTime'  # only 2 timestamps with no null values
+                     # 'changeRecordCloseTime' # only 2 timestamps with no null values
+                     },
+    "BPIC14Incident": {'serviceComponentWbsAff': 'serviceComponentAff',  # sample by
+                       'openTime': 'start',  # only 2 timestamps with no null values
+                       'closeTime': 'timestamp',  # only 2 timestamps with no null values
+                       'serviceComp WBS (CBy)': 'serviceComponentCBy'},
+    "BPIC14IncidentDetail": {'dateStamp': 'timestamp',  # timestamp
+                             'incidentActivityType': 'activity',
+                             'assignmentGroup': 'resource'},
+    "BPIC14Interaction": {'serviceCompWbsAff': 'serviceComponentAff',  # sample by
+                          'openTimeFirstTouch': 'start',  # start timestamp
+                          'closeTime': 'timestamp',  # end timestamp
+                          }
+}
 
 # region BPIC14 files
 BPIC14_full = BPIC(
@@ -60,7 +81,8 @@ BPIC14_full = BPIC(
     perf_file_path='..\\perf\\BPIC14\\',
     settings=settings,
     semantics=semantics,
-    number_of_steps=30
+    number_of_steps=30,
+    mapping=mapping_columns_to_property_names
 )
 
 BPIC14_sample = BPIC(
@@ -72,6 +94,7 @@ BPIC14_sample = BPIC(
     perf_file_path='..\\perf\\BPIC14\\',
     settings=settings,
     semantics=semantics,
-    number_of_steps=30
+    number_of_steps=30,
+    mapping=mapping_columns_to_property_names
 )
 # endregion

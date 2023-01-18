@@ -127,8 +127,9 @@ class Settings:
 
 class BPIC:
     def __init__(self, name: str, file_names: List[str], file_type: str, data_path: str, perf_file_path: str,
-                 semantics: Semantics, settings: Settings, number_of_steps: int, na_values:str = None, dtype_dict:Dict[str, str] = None):
-
+                 semantics: Semantics, settings: Settings, number_of_steps: int, na_values: str = None,
+                 dtype_dict: Dict[str, str] = None,
+                 mapping: Dict[str, Dict[str, str]] = None):
         self.name = name
         self.file_names = file_names
         self.file_type = file_type
@@ -141,3 +142,4 @@ class BPIC:
         self.number_of_steps = number_of_steps
         self.na_values = na_values
         self.dtype_dict = dtype_dict
+        self.mapping = mapping

@@ -243,7 +243,7 @@ class EventKnowledgeGraph:
         return header_csv
 
     def create_events(self, input_path: str, file_name: str, na_values: str = None, dtype_dict: Dict[str, str] = None,
-                      labels: Optional[List[str]] = None) -> None:
+                      labels: Optional[List[str]] = None, mapping: Dict[str, str] = None) -> None:
         # Cypher does not recognize pd date times, therefore we convert the date times to the correct string format
         if dtype_dict is None:
             df_log: DataFrame = pd.read_csv(os.path.realpath(input_path + file_name), keep_default_na=True)
@@ -251,6 +251,8 @@ class EventKnowledgeGraph:
             df_log: DataFrame = pd.read_csv(os.path.realpath(input_path + file_name), keep_default_na=True,
                                             dtype=dtype_dict)
 
+        if mapping is not None:
+            df_log = df_log.rename(columns=mapping)
         df_log = df_log.rename(columns={"timestamp": "str_timestamp"})
         # df_log: DataFrame = EventKnowledgeGraph.change_timestamp_to_string(df_log)
         # Replace all missing values with "None"  as string
@@ -278,7 +280,7 @@ class EventKnowledgeGraph:
         # once all events are imported, we convert the string timestamp to the timestamp as used in Cypher
         self.make_timestamp_date()
 
-    def create_events_batch(self, batch: List[Dict[str, str]], na_values:str, labels: List[str]):
+    def create_events_batch(self, batch: List[Dict[str, str]], na_values: str, labels: List[str]):
         """
         Create event nodes for each row in the batch with labels
         The properties of each row are also the property of the node
@@ -542,8 +544,8 @@ class EventKnowledgeGraph:
     def create_class(self, label: str = "Event", required_keys: Optional[Sequence[str]] = None,
                      ids: Optional[Sequence[str]] = None) -> None:
         # add values if those are None
-        required_keys = required_keys if required_keys else ["Activity", "Lifecycle"]
-        ids = ids if ids else ["cID", "Name", "Lifecycle"]
+        required_keys = required_keys if required_keys else ["activity", "lifecycle"]
+        ids = ids if ids else ["c_id", "name", "lifecycle"]
 
         # make sure first element of id list is cID
         if "cID" not in ids:

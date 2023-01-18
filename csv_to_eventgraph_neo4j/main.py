@@ -11,7 +11,7 @@ import authentication
 from datasets import datasets, BPICNames
 
 connection = authentication.connections_map[authentication.Connections.LOCAL]
-dataset = datasets[BPICNames.BPIC16_FULL]
+dataset = datasets[BPICNames.BPIC14_FULL]
 
 use_preloaded_files = False  # if false, read/import files instead
 verbose = False
@@ -37,11 +37,11 @@ def clear_graph(graph: EventKnowledgeGraph, perf: Performance) -> None:
     """
 
     print("Clearing DB...")
-    graph.clear_db(db_name = connection.user)
+    graph.clear_db(db_name=connection.user)
     perf.finished_step(activity=f"Database cleared", log_message=f"Cleared Database")
 
 
-def populate_graph(file_name: str, graph: EventKnowledgeGraph, perf: Performance):
+def populate_graph(graph: EventKnowledgeGraph, perf: Performance):
     semantics = dataset.semantics
     settings = dataset.settings
 
@@ -52,8 +52,16 @@ def populate_graph(file_name: str, graph: EventKnowledgeGraph, perf: Performance
     # import the events from all sublogs in the graph with the corresponding labels
     if settings.step_load_events_from_csv:
         for file_name in dataset.file_names:
-            graph.create_events(input_path=dataset.data_path, file_name=file_name, na_values=dataset.na_values, dtype_dict=dataset.dtype_dict)
-            perf.finished_step(activity=f"Imported events from event log", log_message=f"Event nodes for {file_name} done")
+            short_file_name = file_name.replace("_sample.csv","") if dataset.file_type == "sample" \
+                else file_name.replace(".csv", "")
+            if short_file_name in dataset.mapping.keys():
+                mapping = dataset.mapping[short_file_name]
+            else:
+                mapping = None
+            graph.create_events(input_path=dataset.data_path, file_name=file_name, na_values=dataset.na_values,
+                                dtype_dict=dataset.dtype_dict, mapping=mapping)
+            perf.finished_step(activity=f"Imported events from event log",
+                               log_message=f"Event nodes for {file_name} done")
 
     graph.set_constraints()
     perf.finished_step(activity=f"Set constraints", log_message=f"Constraints are set")
@@ -122,7 +130,7 @@ def populate_graph(file_name: str, graph: EventKnowledgeGraph, perf: Performance
                                log_message=f"DF for Entity '{entity}' done")
     else:
         perf.finished_step(activity=f"No DF Relations created",
-                       log_message=f"No DF Relations created")
+                           log_message=f"No DF Relations created")
 
     if settings.step_delete_parallel_df:
         for relation in semantics.model_relations:  # per relation
@@ -142,7 +150,6 @@ def populate_graph(file_name: str, graph: EventKnowledgeGraph, perf: Performance
                                log_message=f"Deleted parallel DF between {derived_entity} and {parent_entity}")
             graph.delete_parallel_directly_follows_derived(derived_entity_type=derived_entity,
                                                            original_entity_type=child_entity)
-
 
             perf.finished_step(activity=f"Deleted parallel DF between {derived_entity} and {child_entity}'",
                                log_message=f"Deleted parallel DF between {derived_entity} and {child_entity}")
@@ -167,7 +174,6 @@ def populate_graph(file_name: str, graph: EventKnowledgeGraph, perf: Performance
     else:
         perf.finished_step(activity=f"No classes created'",
                            log_message=f"No classes created")
-
 
     if settings.step_create_dfc:
         for dfc_entity in semantics.dfc_entities:
@@ -202,7 +208,7 @@ def main() -> None:
         clear_graph(graph=graph, perf=perf)
 
     if dataset.settings.step_populate_graph:
-        populate_graph(file_name=dataset.file_names, graph=graph, perf=perf)
+        populate_graph(graph=graph, perf=perf)
 
     perf.finish()
     perf.save()
