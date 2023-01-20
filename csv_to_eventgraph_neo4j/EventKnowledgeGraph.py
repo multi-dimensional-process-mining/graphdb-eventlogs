@@ -243,7 +243,8 @@ class EventKnowledgeGraph:
         return header_csv
 
     def create_events(self, input_path: str, file_name: str, na_values: str = None, dtype_dict: Dict[str, str] = None,
-                      labels: Optional[List[str]] = None, mapping: Dict[str, str] = None) -> None:
+                      labels: Optional[List[str]] = None, mapping: Dict[str, str] = None,
+                      datetime_formats: Dict[str, str] = None) -> None:
         # Cypher does not recognize pd date times, therefore we convert the date times to the correct string format
         if dtype_dict is None:
             df_log: DataFrame = pd.read_csv(os.path.realpath(input_path + file_name), keep_default_na=True)
@@ -253,7 +254,11 @@ class EventKnowledgeGraph:
 
         if mapping is not None:
             df_log = df_log.rename(columns=mapping)
-        df_log = df_log.rename(columns={"timestamp": "str_timestamp"})
+
+        # rename coplumns that need to be converted to avoid duplicate conversion (will return in an error)
+        if datetime_formats is not None:
+            mapping_timestamps = {key: key + "NotConverted" for key in datetime_formats.keys()}
+            df_log = df_log.rename(columns=mapping_timestamps)
         # df_log: DataFrame = EventKnowledgeGraph.change_timestamp_to_string(df_log)
         # Replace all missing values with "None"  as string
         # na_values = "None" if na_values is None else na_values
@@ -269,16 +274,22 @@ class EventKnowledgeGraph:
         pbar = tqdm(total=math.ceil(len(df_log) / self.batch_size), position=0)
         while batch * self.batch_size < len(df_log):
             pbar.set_description(f"Loading events from {file_name} from batch {batch}")
+
             # import the events in batches, use the records of the log
+            batch_without_nans = [{k: v for k, v in m.items() if v == v and v is not None} for m in
+                                  df_log[batch * self.batch_size:(batch + 1) * self.batch_size].to_dict(
+                                      orient='records')]
             self.create_events_batch(
-                batch=df_log[batch * self.batch_size:(batch + 1) * self.batch_size].to_dict('records'),
+                batch=batch_without_nans,
                 na_values=na_values,
                 labels=labels)
             pbar.update(1)
             batch += 1
         pbar.close()
         # once all events are imported, we convert the string timestamp to the timestamp as used in Cypher
-        self.make_timestamp_date()
+        if datetime_formats is not None:
+            for attribute, datetime_format in datetime_formats.items():
+                self.make_timestamp_date(attribute, datetime_format)
 
     def create_events_batch(self, batch: List[Dict[str, str]], na_values: str, labels: List[str]):
         """
@@ -305,7 +316,7 @@ class EventKnowledgeGraph:
 
         self.exec_query(q_create_events_batch, batch=batch)
 
-    def make_timestamp_date(self):
+    def make_timestamp_date(self, attribute, datetimeObject):
         """
         Convert the strings of the timestamp to the datetime as used in cypher
         Remove the str_timestamp property
@@ -313,9 +324,12 @@ class EventKnowledgeGraph:
         """
         q_make_timestamp = f'''
             CALL apoc.periodic.iterate(
-            "MATCH (e:Event) WHERE e.timestamp IS NULL RETURN e",
-            "SET e.timestamp = DATETIME(e.str_timestamp)
-            REMOVE e.str_timestamp",
+            "MATCH (e:Event) WHERE e.{attribute}NotConverted IS NOT NULL 
+            WITH e, e.{attribute}NotConverted+'{datetimeObject.offset}' as timezoned_dt
+            WITH e, datetime(apoc.date.convertFormat(timezoned_dt, '{datetimeObject.format}', '{datetimeObject.convert_to}')) as converted
+            RETURN e, converted",
+            "SET e.{attribute} = converted
+            REMOVE e.{attribute}NotConverted",
             {{batchSize:10000, parallel:false}})
         '''
         self.exec_query(q_make_timestamp)
@@ -338,8 +352,8 @@ class EventKnowledgeGraph:
     def create_log(self):
         # create :log node with log_id as id and sublog id as sublogid
         q_create_log = f'''
-            MATCH (e:Event) WHERE e.Log IS NOT NULL AND e.Log <> "nan"
-            WITH e.Log AS log
+            MATCH (e:Event) WHERE e.log IS NOT NULL AND e.log <> "nan"
+            WITH e.log AS log
             MERGE (:Log {{ID:log}})
         '''
 

@@ -1,4 +1,4 @@
-from datatypes import ModelledEntity, Relation, AttributeValuesPair, Class, DFC, BPIC, Settings, Semantics
+from datatypes import ModelledEntity, Relation, AttributeValuesPair, Class, DFC, BPIC, Settings, Semantics, DatetimeObject
 
 settings = Settings(
     step_clear_db=True,
@@ -18,7 +18,7 @@ settings = Settings(
 )
 
 semantics = Semantics(
-    include_entities=['ConfigurationItem', 'ServiceComponent', 'Incident', 'Interaction', 'Change', 'Case_R', 'KM'],
+    include_entities=['ConfigurationItem', 'ServiceComponent', 'Incident', 'Interaction', 'Change', 'CaseR', 'KM'],
     model_entities=[
         # Configuration Item
         ModelledEntity(entity_label='ConfigurationItem', property_name_id='ciNameAff'),
@@ -30,14 +30,14 @@ semantics = Semantics(
         ModelledEntity(entity_label='Interaction', property_name_id='interactionId'),
         ModelledEntity(entity_label='Change', property_name_id='changeId'),
         # resource perspective
-        ModelledEntity(entity_label='Case_R', property_name_id='resource'),
+        ModelledEntity(entity_label='CaseR', property_name_id='resource'),
         ModelledEntity(entity_label="KM", property_name_id="kmNumber")
     ],
     model_relations=[
-        Relation(relation_type='RelatedIncident', entity_label_from_node=' Interaction',
+        Relation(relation_type='RELATED_INCIDENT', entity_label_from_node='Interaction',
                  entity_label_to_node='Incident',
                  reference_in_event_to_to_node='relatedIncident'),
-        Relation(relation_type='PartOf', entity_label_from_node='ConfigurationItem',
+        Relation(relation_type='PART_OF', entity_label_from_node='ConfigurationItem',
                  entity_label_to_node='ServiceComponent',
                  reference_in_event_to_to_node='serviceComponentAff')
     ],
@@ -62,7 +62,7 @@ mapping_columns_to_property_names = {
     "BPIC14Incident": {'serviceComponentWbsAff': 'serviceComponentAff',  # sample by
                        'openTime': 'start',  # only 2 timestamps with no null values
                        'closeTime': 'timestamp',  # only 2 timestamps with no null values
-                       'serviceComp WBS (CBy)': 'serviceComponentCBy'},
+                       'serviceCompWbsCby': 'serviceComponentCBy'},
     "BPIC14IncidentDetail": {'dateStamp': 'timestamp',  # timestamp
                              'incidentActivityType': 'activity',
                              'assignmentGroup': 'resource'},
@@ -70,6 +70,27 @@ mapping_columns_to_property_names = {
                           'openTimeFirstTouch': 'start',  # start timestamp
                           'closeTime': 'timestamp',  # end timestamp
                           }
+}
+
+
+
+
+datetime_formats = {
+    "BPIC14Change": {
+        'start': DatetimeObject(_format='d-M-y H:mX', offset="+01", convert_to="ISO_DATE_TIME"),
+        'timestamp': DatetimeObject(_format='d-M-y H:mX', offset="+01", convert_to="ISO_DATE_TIME"),
+    },
+    "BPIC14Incident": {
+        'start': DatetimeObject(_format='d/M/y H:m:sX', offset="+01", convert_to="ISO_DATE_TIME"),
+        'timestamp': DatetimeObject(_format='d/M/y H:m:sX', offset="+01", convert_to="ISO_DATE_TIME")
+    },
+    "BPIC14IncidentDetail":{
+        'timestamp': DatetimeObject(_format='d-M-y H:m:sX', offset="+01", convert_to="ISO_DATE_TIME")
+    },
+    "BPIC14Interaction":{
+        'start': DatetimeObject(_format='d-M-y H:mX', offset="+01", convert_to="ISO_DATE_TIME"),
+        'timestamp': DatetimeObject(_format='d-M-y H:mX', offset="+01", convert_to="ISO_DATE_TIME"),
+    }
 }
 
 # region BPIC14 files
@@ -82,7 +103,8 @@ BPIC14_full = BPIC(
     settings=settings,
     semantics=semantics,
     number_of_steps=30,
-    mapping=mapping_columns_to_property_names
+    mapping=mapping_columns_to_property_names,
+    datetime_formats=datetime_formats
 )
 
 BPIC14_sample = BPIC(
@@ -95,6 +117,7 @@ BPIC14_sample = BPIC(
     settings=settings,
     semantics=semantics,
     number_of_steps=30,
-    mapping=mapping_columns_to_property_names
+    mapping=mapping_columns_to_property_names,
+    datetime_formats=datetime_formats
 )
 # endregion

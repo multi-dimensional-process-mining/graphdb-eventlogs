@@ -125,11 +125,17 @@ class Settings:
         self.option_df_entity_type_in_label = option_df_entity_type_in_label
 
 
+class DatetimeObject:
+    def __init__(self, _format: str, offset: str, convert_to: str):
+        self.format = _format
+        self.offset = offset
+        self.convert_to = convert_to
+
 class BPIC:
     def __init__(self, name: str, file_names: List[str], file_type: str, data_path: str, perf_file_path: str,
                  semantics: Semantics, settings: Settings, number_of_steps: int, na_values: str = None,
                  dtype_dict: Dict[str, str] = None,
-                 mapping: Dict[str, Dict[str, str]] = None):
+                 mapping: Dict[str, Dict[str, str]] = None, datetime_formats: Dict[str, Dict[str, str]] = None):
         self.name = name
         self.file_names = file_names
         self.file_type = file_type
@@ -143,3 +149,18 @@ class BPIC:
         self.na_values = na_values
         self.dtype_dict = dtype_dict
         self.mapping = mapping
+        self.datetime_formats = datetime_formats
+
+    def get_mapping(self, file_name):
+        if self.mapping is None:
+            return None
+        if file_name in self.mapping.keys():
+            return self.mapping[file_name]
+        return None
+
+    def get_datetime_formats(self, file_name):
+        if self.datetime_formats is None:
+            return None
+        if file_name in self.datetime_formats.keys():
+            return self.datetime_formats[file_name]
+        return None

@@ -2,6 +2,8 @@
 import pandas as pd
 import time, os, csv
 
+from csv_to_eventgraph_neo4j.auxiliary_functions import convert_columns_into_camel_case
+
 ## config
 sample = False
 inputpath = '..\\data\\\\BPIC15\\'
@@ -38,34 +40,28 @@ def CreateBPI15(path, sample=False):
     for i in range(1, 6):
         fileName = f'BPIC15_{i}.csv'
         log = pd.read_csv(inputpath + fileName, keep_default_na=True, converters={'dateStop': convert_dtype})
-
-        log['Log'] = 'BPIC15'
+        log.columns = convert_columns_into_camel_case(log.columns.values)
+        log['log'] = 'BPIC15'
 
         if i == 2:
-            log = log.drop(columns=['action_code', 'activityNameNL', 'case_type'])
+            log = log.drop(columns=['actionCode', 'activityNameNl', 'caseType'])
         else:
-            log = log.drop(columns=['action_code', 'endDatePlanned', 'activityNameNL', 'case_type'])
-
-        log.rename(columns={'case': 'cID',
-                            'event': 'Activity',
-                            'org:resource': 'resource',
-                            'startTime': 'start',
-                            'completeTime': 'timestamp'}, inplace=True)
+            log = log.drop(columns=['actionCode', 'endDatePlanned', 'activityNameNl', 'caseType'])
 
         if (sample):
-            log = log[log['cID'].isin(sampleIDs[i - 1])]
+            log = log[log['case'].isin(sampleIDs[i - 1])]
 
-        log['IDofConceptCase'] = log.IDofConceptCase.astype('Int64', errors='ignore')
-        log['IDofConceptCase'] = log['IDofConceptCase'].fillna(-1)
-        log['Responsible_actor'] = log.Responsible_actor.astype('Int64', errors='ignore')
-        log['Responsible_actor'] = log['Responsible_actor'].fillna(-1)
-        log['landRegisterID'] = log.landRegisterID.astype('Int64', errors='ignore')
-        log['landRegisterID'] = log['landRegisterID'].fillna(-1)
+        log['idofConceptCase'] = log['idofConceptCase'].astype('Int64', errors='ignore')
+        log['idofConceptCase'] = log['idofConceptCase'].fillna(-1)
+        log['responsibleActor'] = log['responsibleActor'].astype('Int64', errors='ignore')
+        log['responsibleActor'] = log['responsibleActor'].fillna(-1)
+        log['landRegisterId'] = log['landRegisterId'].astype('Int64', errors='ignore')
+        log['landRegisterId'] = log['landRegisterId'].fillna(-1)
 
-        log['start'] = pd.to_datetime(log['start'], format='%Y/%m/%d %H:%M:%S.%f')
-        log['start'] = log['start'].map(lambda x: x.strftime('%Y-%m-%dT%H:%M:%S%z'))
-        log['timestamp'] = pd.to_datetime(log['timestamp'], format='%Y/%m/%d %H:%M:%S.%f')
-        log['timestamp'] = log['timestamp'].map(lambda x: x.strftime('%Y-%m-%dT%H:%M:%S%z'))
+        log['startTime'] = pd.to_datetime(log['startTime'], format='%Y/%m/%d %H:%M:%S.%f')
+        log['startTime'] = log['startTime'].map(lambda x: x.strftime('%Y-%m-%dT%H:%M:%S%z'))
+        log['completeTime'] = pd.to_datetime(log['completeTime'], format='%Y/%m/%d %H:%M:%S.%f')
+        log['completeTime'] = log['completeTime'].map(lambda x: x.strftime('%Y-%m-%dT%H:%M:%S%z'))
 
         if (sample):
             log.to_csv(path + fileName[0:-4] + '_sample.csv', index=True, index_label="idx", na_rep="Unknown")

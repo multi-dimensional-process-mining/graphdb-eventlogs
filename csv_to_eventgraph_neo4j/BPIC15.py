@@ -18,32 +18,59 @@ settings = Settings(
 )
 
 semantics = Semantics(
-    include_entities=['Application', 'Case_R', 'Responsible_actor', 'monitoringResource'],
+    include_entities=['Application', 'CaseR', 'ResponsibleActor', 'MonitoringResource'],
     # include_entities=['Application'],
     model_entities=[
         # Original Case ID
-        ModelledEntity(entity_label='Application', property_name_id='cID'),
-        ModelledEntity(entity_label='Case_R', property_name_id='resource'),
-        ModelledEntity(entity_label='Responsible_actor', property_name_id='Responsible_actor'),
-        ModelledEntity(entity_label='monitoringResource', property_name_id='monitoringResource')
+        ModelledEntity(entity_label='Application', property_name_id='caseId'),
+        ModelledEntity(entity_label='CaseR', property_name_id='resource'),
+        ModelledEntity(entity_label='ResponsibleActor', property_name_id='responsibleActor'),
+        ModelledEntity(entity_label='MonitoringResource', property_name_id='monitoringResource')
     ],
     model_relations=[
-        Relation(relation_type='Same_Resource', entity_label_from_node='Responsible_actor',
-                 entity_label_to_node='Case_R',
-                 reference_in_event_to_to_node='Responsible_actor'),
-        Relation(relation_type='Same_Resource', entity_label_from_node='monitoringResource',
-                 entity_label_to_node='Case_R',
+        Relation(relation_type='SAME_RESOURCE', entity_label_from_node='ResponsibleActor',
+                 entity_label_to_node='CaseR',
+                 reference_in_event_to_to_node='responsibleActor'),
+        Relation(relation_type='SAME_RESOURCE', entity_label_from_node='MonitoringResource',
+                 entity_label_to_node='CaseR',
                  reference_in_event_to_to_node='monitoringResource')
     ],
     classes=[
-        Class(label="Event", required_keys=["Activity"], ids=["Name"])
-        # Class(label="Event", required_keys=["Resource"], ids=["Name"])
-    ],
+        Class(label="Event", required_keys=["activity"], ids=["name"])
+    ]
     # dfc_entities=[
-    #     DFC(classifiers=["Activity"])
+    #     DFC(classifiers=["activity"])
     #     # DFC(classifiers=["Resource"], entities=['Application', 'Workflow', 'Offer', 'Case_AO', 'Case_AW', 'Case_WO'])
     # ]
 )
+
+mapping_columns_to_property_names = {
+    'BPIC15_1': {'case': 'caseId',
+                 'event': 'activity',
+                 'orgResource': 'resource',
+                 'startTime': 'start',
+                 'completeTime': 'timestamp'},
+    'BPIC15_2': {'case': 'caseId',
+                 'event': 'activity',
+                 'orgResource': 'resource',
+                 'startTime': 'start',
+                 'completeTime': 'timestamp'},
+    'BPIC15_3': {'case': 'caseId',
+                 'event': 'activity',
+                 'orgResource': 'resource',
+                 'startTime': 'start',
+                 'completeTime': 'timestamp'},
+    'BPIC15_4': {'case': 'caseId',
+                 'event': 'activity',
+                 'orgResource': 'resource',
+                 'startTime': 'start',
+                 'completeTime': 'timestamp'},
+    'BPIC15_5': {'case': 'caseId',
+                 'event': 'activity',
+                 'orgResource': 'resource',
+                 'startTime': 'start',
+                 'completeTime': 'timestamp'}
+}
 
 # region BPIC14 files
 BPIC15_full = BPIC(
@@ -53,10 +80,11 @@ BPIC15_full = BPIC(
     data_path='..\\data\\BPIC15\\prepared\\',
     perf_file_path='..\\perf\\BPIC15\\',
     na_values="Unknown",
-    dtype_dict =  {"Responsible_actor": "Int64"},
+    dtype_dict = {"responsibleActor": "Int64"},
     settings=settings,
     semantics=semantics,
-    number_of_steps=18
+    number_of_steps=18,
+    mapping=mapping_columns_to_property_names
 )
 
 BPIC15_sample = BPIC(
@@ -69,6 +97,7 @@ BPIC15_sample = BPIC(
     na_values="Unknown",
     settings=settings,
     semantics=semantics,
-    number_of_steps=18
+    number_of_steps=18,
+    mapping=mapping_columns_to_property_names
 )
 # endregion

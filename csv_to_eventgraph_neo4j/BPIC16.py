@@ -1,4 +1,5 @@
-from datatypes import ModelledEntity, Relation, AttributeValuesPair, Class, DFC, BPIC, Settings, Semantics
+from datatypes import ModelledEntity, Relation, AttributeValuesPair, Class, DFC, BPIC, Settings, Semantics, \
+    DatetimeObject
 
 settings = Settings(
     step_clear_db=True,
@@ -18,48 +19,80 @@ settings = Settings(
 )
 
 semantics = Semantics(
-    include_entities=['Customer', 'Office_U', 'Office_W', 'Complaint', 'ComplaintDossier', 'Session', 'IP'],
+    include_entities=['Customer', 'OfficeU', 'OfficeW', 'Complaint', 'ComplaintDossier', 'Session', 'IP'],
     # include_entities=['Application'],
     model_entities=[
         # Original Case ID
-        ModelledEntity(entity_label='Customer', property_name_id='CustomerID'),
-        ModelledEntity(entity_label='Office_U', property_name_id='Office_U'),
-        ModelledEntity(entity_label='Office_W', property_name_id='Office_W'),
-        ModelledEntity(entity_label='Complaint', property_name_id='ComplaintID'),
-        ModelledEntity(entity_label='ComplaintDossier', property_name_id='ComplaintDossierID'),
-        ModelledEntity(entity_label='Session', property_name_id='SessionID'),
-        ModelledEntity(entity_label='IP', property_name_id='IPID'),
+        ModelledEntity(entity_label='Customer', property_name_id='customerId'),
+        ModelledEntity(entity_label='OfficeU', property_name_id='officeU'),
+        ModelledEntity(entity_label='OfficeW', property_name_id='officeW'),
+        ModelledEntity(entity_label='Complaint', property_name_id='complaintId'),
+        ModelledEntity(entity_label='ComplaintDossier', property_name_id='complaintDossierId'),
+        ModelledEntity(entity_label='Session', property_name_id='sessionId'),
+        ModelledEntity(entity_label='IP', property_name_id='ipid'),
     ],
     classes=[
-        Class(label="Event", required_keys=["Activity"], ids=["Name"])
+        Class(label="Event", required_keys=["activity"], ids=["name"])
         # Class(label="Event", required_keys=["Resource"], ids=["Name"])
-    ],
-    # dfc_entities=[
-    #     DFC(classifiers=["Activity"])
-    #     # DFC(classifiers=["Resource"], entities=['Application', 'Workflow', 'Offer', 'Case_AO', 'Case_AW', 'Case_WO'])
-    # ]
+    ]
 )
+
+mapping_columns_to_property_names = {
+    "BPIC16Complaints": {
+        'contactDate': 'timestamp',
+        'complaintTheme': 'activity'},
+    "BPIC16Questions": {
+        'end': 'timestamp',
+        'questionTheme': 'activity'},
+    "BPIC16Messages": {
+        'eventDateTime': 'timestamp',
+        'eventType': 'activity'},
+    "BPIC16Clicks": {
+        'timestamp': 'timestamp',
+        'pageName': 'activity'}
+}
+
+datetime_formats = {
+    "BPIC16Complaints": {
+        'timestamp': DatetimeObject(_format='y-M-d', offset="", convert_to="ISO_DATE"),
+    },
+    "BPIC16Questions": {
+        'start': DatetimeObject(_format='y-M-d H:m:s.nX', offset="+01", convert_to="ISO_DATE_TIME"),
+        'timestamp': DatetimeObject(_format='y-M-d H:m:s.nX', offset="+01", convert_to="ISO_DATE_TIME")
+    },
+    "BPIC16Messages": {
+        'timestamp': DatetimeObject(_format='y-M-d H:m:s.nX', offset="+01", convert_to="ISO_DATE_TIME")
+    },
+    "BPIC16Clicks": {
+        'timestamp': DatetimeObject(_format='y-M-d H:m:s.nX', offset="+01", convert_to="ISO_DATE_TIME"),
+    }
+}
 
 # region BPIC14 files
 BPIC16_full = BPIC(
     name="BPIC16",
-    file_names=['BPIC16fullQuestions.csv', 'BPIC16fullMessages.csv', 'BPIC16fullComplaints.csv', 'BPIC16fullClicks.csv'],
+    file_names=['BPIC16Clicks.csv', 'BPIC16Questions.csv', 'BPIC16Messages.csv', 'BPIC16Complaints.csv'],
     file_type="full",
     data_path='..\\data\\BPIC16\\prepared\\',
     perf_file_path='..\\perf\\BPIC16\\',
     settings=settings,
     semantics=semantics,
-    number_of_steps=100
+    number_of_steps=100,
+    mapping=mapping_columns_to_property_names,
+    datetime_formats=datetime_formats
 )
 
 BPIC16_sample = BPIC(
     name="BPIC16",
-    file_names=['BPIC16sampleQuestions.csv', 'BPIC16sampleMessages.csv', 'BPIC16sampleComplaints.csv', 'BPIC16sampleClicks.csv'],
+    file_names=['BPIC16Questions_sample.csv', 'BPIC16Messages_sample.csv', 'BPIC16Complaints_sample.csv',
+                'BPIC16Clicks_sample.csv'],
     file_type="sample",
     data_path='..\\data\\BPIC16\\prepared\\',
     perf_file_path='..\\perf\\BPIC16\\',
     settings=settings,
     semantics=semantics,
-    number_of_steps=100
+    number_of_steps=100,
+    mapping=mapping_columns_to_property_names,
+    datetime_formats=datetime_formats
 )
 # endregion

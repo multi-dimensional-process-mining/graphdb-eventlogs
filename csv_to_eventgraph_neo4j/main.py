@@ -11,7 +11,7 @@ import authentication
 from datasets import datasets, BPICNames
 
 connection = authentication.connections_map[authentication.Connections.LOCAL]
-dataset = datasets[BPICNames.BPIC14_FULL]
+dataset = datasets[BPICNames.BPIC16_FULL]
 
 use_preloaded_files = False  # if false, read/import files instead
 verbose = False
@@ -54,12 +54,10 @@ def populate_graph(graph: EventKnowledgeGraph, perf: Performance):
         for file_name in dataset.file_names:
             short_file_name = file_name.replace("_sample.csv","") if dataset.file_type == "sample" \
                 else file_name.replace(".csv", "")
-            if short_file_name in dataset.mapping.keys():
-                mapping = dataset.mapping[short_file_name]
-            else:
-                mapping = None
+            mapping = dataset.get_mapping(short_file_name)
+            datetime_formats = dataset.get_datetime_formats(short_file_name)
             graph.create_events(input_path=dataset.data_path, file_name=file_name, na_values=dataset.na_values,
-                                dtype_dict=dataset.dtype_dict, mapping=mapping)
+                                dtype_dict=dataset.dtype_dict, mapping=mapping, datetime_formats=datetime_formats)
             perf.finished_step(activity=f"Imported events from event log",
                                log_message=f"Event nodes for {file_name} done")
 
@@ -107,7 +105,7 @@ def populate_graph(graph: EventKnowledgeGraph, perf: Performance):
                                               entity_label_to_node=entity_label_to_node,
                                               reference_in_event_to_to_node=reference_in_event_to_to_node)
             perf.finished_step(activity=f"create_entity_relationships {relation_type}",
-                               log_message=f"Relation (:{entity_label_from_node}) - [:{reference_in_event_to_to_node}] -> (:{entity_label_to_node})"
+                               log_message=f"Relation (:{entity_label_from_node}) - [:{relation_type}] -> (:{entity_label_to_node})"
                                            f" done")
 
             if settings.step_reify_relations:
