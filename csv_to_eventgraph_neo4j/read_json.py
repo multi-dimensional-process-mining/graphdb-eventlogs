@@ -1,5 +1,18 @@
-from datatypes import ModelledEntity, Relation, AttributeValuesPair, Class, DFC, BPIC, Settings, Semantics, DatetimeObject
 import json
+
+from csv_to_eventgraph_neo4j.datatypes import ModelledEntity, Relation, Class, DFC, Semantics, Settings, BPIC, \
+    DatetimeObject
+
+with open('BPIC14.json') as f:
+    semantic_header = json.load(f)
+
+print(semantic_header)
+
+include_entities = [x['label'] for x in semantic_header['entities']]
+model_entities = [ModelledEntity(entity_label=x['label'], property_name_id=x['event_attribute']) for x in semantic_header['entities']]
+model_relations = [Relation(relation_type=x['type'], entity_label_from_node=x['from_node_label'], entity_label_to_node=x['to_node_label'],reference_in_event_to_to_node=x['event_reference_attribute']) for x in semantic_header['relations']]
+classes = [Class(label=x['label'], required_keys=x['required_attributes'], ids=['ids']) for x in semantic_header['classes']]
+dfc_entities = [DFC(classifiers=x['required_attributes']) for x in semantic_header['classes'] if x['DF']]
 
 settings = Settings(
     step_clear_db=True,
@@ -19,37 +32,11 @@ settings = Settings(
 )
 
 semantics = Semantics(
-    include_entities=['ConfigurationItem', 'ServiceComponent', 'Incident', 'Interaction', 'Change', 'CaseR', 'KM'],
-    model_entities=[
-        # Configuration Item
-        ModelledEntity(entity_label='ConfigurationItem', property_name_id='ciNameAff'),
-        # Service Component
-        ModelledEntity(entity_label='ServiceComponent', property_name_id='serviceComponentAff'),
-        # Incident reported on a configuration item
-        ModelledEntity(entity_label='Incident', property_name_id='incidentId'),
-        # Interaction carried out in relation to a configuration item
-        ModelledEntity(entity_label='Interaction', property_name_id='interactionId'),
-        ModelledEntity(entity_label='Change', property_name_id='changeId'),
-        # resource perspective
-        ModelledEntity(entity_label='CaseR', property_name_id='resource'),
-        ModelledEntity(entity_label="KM", property_name_id="kmNumber")
-    ],
-    model_relations=[
-        Relation(relation_type='RELATED_INCIDENT', entity_label_from_node='Interaction',
-                 entity_label_to_node='Incident',
-                 reference_in_event_to_to_node='relatedIncident'),
-        Relation(relation_type='PART_OF', entity_label_from_node='ConfigurationItem',
-                 entity_label_to_node='ServiceComponent',
-                 reference_in_event_to_to_node='serviceComponentAff')
-    ],
-    classes=[
-        Class(label="Event", required_keys=["activity"], ids=["name"])
-        # Class(label="Event", required_keys=["resource"], ids=["Name"])
-    ],
-    dfc_entities=[
-        DFC(classifiers=["activity"])
-        # DFC(classifiers=["resource"], entities=['Application', 'Workflow', 'Offer', 'Case_AO', 'Case_AW', 'Case_WO'])
-    ]
+    include_entities=include_entities,
+    model_entities=model_entities,
+    model_relations=model_relations,
+    classes=classes,
+    dfc_entities=dfc_entities
 )
 
 mapping_columns_to_property_names = {
@@ -121,4 +108,3 @@ BPIC14_sample = BPIC(
     mapping=mapping_columns_to_property_names,
     datetime_formats=datetime_formats
 )
-# endregion

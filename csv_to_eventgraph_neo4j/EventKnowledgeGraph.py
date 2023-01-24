@@ -1,8 +1,15 @@
 import csv
+import itertools
 import math
 import os
+import warnings
+
 from tqdm import tqdm
 from typing import Optional, List, Sequence, Dict, Set, Any, Tuple
+
+from csv_to_eventgraph_neo4j.semantic_header import SemanticHeader
+from datatypes import DatetimeObject
+import random
 
 import neo4j
 import pandas as pd
@@ -14,7 +21,8 @@ from neo4j import GraphDatabase
 class EventKnowledgeGraph:
     def __init__(self, uri: str, db_name: str, user: str, password: str, batch_size: int,
                  option_df_entity_type_in_label: bool,
-                 verbose: bool):
+                 verbose: bool,
+                 semantic_header: SemanticHeader = None):
 
         self.batch_size = batch_size
         self.db_name = db_name
@@ -26,6 +34,8 @@ class EventKnowledgeGraph:
         self.option_event_type_in_label = False
 
         self.verbose = verbose
+
+        self.semantic_header = semantic_header
 
         # set_common_strings()
 
@@ -242,9 +252,52 @@ class EventKnowledgeGraph:
 
         return header_csv
 
-    def create_events(self, input_path: str, file_name: str, na_values: str = None, dtype_dict: Dict[str, str] = None,
+    def get_datetime_formats(self, event_table):
+        datetime_formats = {}
+        for attribute in event_table["attributes"]:
+            if attribute["is_datetime"]:
+                datetime_formats[attribute["name"]] = DatetimeObject(_format=attribute["format"],
+                                                                     offset=attribute["timezone_offset"],
+                                                                     convert_to=attribute["convert_to"])
+        return datetime_formats
+
+    def create_events_sh(self, input_path: str) -> None:
+        # Cypher does not recognize pd date times, therefore we convert the date times to the correct string format
+        for event_table in self.semantic_header.event_tables:
+            labels = event_table.labels
+
+            for file_name in event_table.file_names:
+                df_log = event_table.prepare_data_set(input_path, file_name)
+                df_log["justImported"] = True
+
+                # start with batch 0 and increment until everything is imported
+                batch = 0
+                print("\n")
+                pbar = tqdm(total=math.ceil(len(df_log) / self.batch_size), position=0)
+                while batch * self.batch_size < len(df_log):
+                    pbar.set_description(f"Loading events from {file_name} from batch {batch}")
+
+                    # import the events in batches, use the records of the log
+                    batch_without_nans = [{k: v for k, v in m.items() if not pd.isna(v) and v is not None} for m in
+                                          df_log[batch * self.batch_size:(batch + 1) * self.batch_size].to_dict(
+                                              orient='records')]
+                    self.create_events_batch(
+                        batch=batch_without_nans,
+                        labels=labels)
+                    pbar.update(1)
+                    batch += 1
+                pbar.close()
+
+                # once all events are imported, we convert the string timestamp to the timestamp as used in Cypher
+                datetime_formats = event_table.get_datetime_formats()
+                for attribute, datetime_format in datetime_formats.items():
+                    self.make_timestamp_date(attribute, datetime_format)
+
+                self.finalize_import_events()
+
+    def create_events(self, input_path: str, file_name: str, dtype_dict: Dict[str, str] = None,
                       labels: Optional[List[str]] = None, mapping: Dict[str, str] = None,
-                      datetime_formats: Dict[str, str] = None) -> None:
+                      datetime_formats: Dict[Any, DatetimeObject] = None) -> None:
         # Cypher does not recognize pd date times, therefore we convert the date times to the correct string format
         if dtype_dict is None:
             df_log: DataFrame = pd.read_csv(os.path.realpath(input_path + file_name), keep_default_na=True)
@@ -254,15 +307,6 @@ class EventKnowledgeGraph:
 
         if mapping is not None:
             df_log = df_log.rename(columns=mapping)
-
-        # rename coplumns that need to be converted to avoid duplicate conversion (will return in an error)
-        if datetime_formats is not None:
-            mapping_timestamps = {key: key + "NotConverted" for key in datetime_formats.keys()}
-            df_log = df_log.rename(columns=mapping_timestamps)
-        # df_log: DataFrame = EventKnowledgeGraph.change_timestamp_to_string(df_log)
-        # Replace all missing values with "None"  as string
-        # na_values = "None" if na_values is None else na_values
-        df_log = df_log.fillna(value="None")
 
         # create a list of labels, "Event" is always a label of event nodes
         labels = ["Event"] + labels if labels is not None else ["Event"]
@@ -281,7 +325,6 @@ class EventKnowledgeGraph:
                                       orient='records')]
             self.create_events_batch(
                 batch=batch_without_nans,
-                na_values=na_values,
                 labels=labels)
             pbar.update(1)
             batch += 1
@@ -291,7 +334,9 @@ class EventKnowledgeGraph:
             for attribute, datetime_format in datetime_formats.items():
                 self.make_timestamp_date(attribute, datetime_format)
 
-    def create_events_batch(self, batch: List[Dict[str, str]], na_values: str, labels: List[str]):
+        self.finalize_import_events()
+
+    def create_events_batch(self, batch: List[Dict[str, str]], labels: List[str]):
         """
         Create event nodes for each row in the batch with labels
         The properties of each row are also the property of the node
@@ -316,7 +361,7 @@ class EventKnowledgeGraph:
 
         self.exec_query(q_create_events_batch, batch=batch)
 
-    def make_timestamp_date(self, attribute, datetimeObject):
+    def make_timestamp_date(self, attribute, datetime_object):
         """
         Convert the strings of the timestamp to the datetime as used in cypher
         Remove the str_timestamp property
@@ -324,15 +369,26 @@ class EventKnowledgeGraph:
         """
         q_make_timestamp = f'''
             CALL apoc.periodic.iterate(
-            "MATCH (e:Event) WHERE e.{attribute}NotConverted IS NOT NULL 
-            WITH e, e.{attribute}NotConverted+'{datetimeObject.offset}' as timezoned_dt
-            WITH e, datetime(apoc.date.convertFormat(timezoned_dt, '{datetimeObject.format}', '{datetimeObject.convert_to}')) as converted
+            "MATCH (e:Event) WHERE e.{attribute} IS NOT NULL AND e.justImported = True 
+            WITH e, e.{attribute}NotConverted+'{datetime_object.timezone_offset}' as timezoned_dt
+            WITH e, datetime(apoc.date.convertFormat(timezoned_dt, '{datetime_object.format}', '{datetime_object.convert_to}')) as converted
             RETURN e, converted",
             "SET e.{attribute} = converted
             REMOVE e.{attribute}NotConverted",
             {{batchSize:10000, parallel:false}})
         '''
         self.exec_query(q_make_timestamp)
+
+    def finalize_import_events(self):
+        q_set_just_imported_to_false = f'''
+        CALL apoc.periodic.iterate(
+            "MATCH (e:Event) WHERE e.justImported = True 
+            RETURN e",
+            "REMOVE e.justImported",
+            {{batchSize:10000, parallel:false}})
+        '''
+
+        self.exec_query(q_set_just_imported_to_false)
 
     def filter_events_by_property(self, prop: str, values: Optional[List[str]] = None) -> None:
         if values is None:  # match all events that have a specific property
@@ -374,6 +430,49 @@ class EventKnowledgeGraph:
 
     # region CREATE ENTITIES
 
+    def create_entities(self) -> None:
+        entities = self.semantic_header.entities
+        for entity in entities:
+            # find events that contain the entity as property and not nan
+            # save the value of the entity property as id and also whether it is a virtual entity
+            # create a new entity node if it not exists yet with properties
+            entity_label = entity.get_label()
+            properties = entity.get_properties()
+            property_name_id = entity.get_id_attribute_name()
+
+            q_create_entity = f'''
+                        MATCH (e:Event) WHERE {EventKnowledgeGraph.create_condition("e", properties)}
+                        WITH e.{property_name_id} AS id
+                        MERGE (en:Entity:{entity_label} 
+                                {{ID:id, uID:("{entity_label}_"+toString(id)), 
+                                EntityType:"{entity_label}"}})
+                    '''
+
+            self.exec_query(q_create_entity)
+
+    def correlate_events_to_entities(self) -> None:
+        # correlate events that contain a reference from an entity to that entity node
+        entities = self.semantic_header.entities
+        for entity in entities:
+            if entity.corr:
+                # find events that contain the entity as property and not nan
+                # save the value of the entity property as id and also whether it is a virtual entity
+                # create a new entity node if it not exists yet with properties
+                entity_label = entity.get_label()
+                properties = entity.get_properties()
+                property_name_id = entity.get_id_attribute_name()
+
+                q_correlate = f'''
+        
+                    CALL apoc.periodic.iterate(
+                        'MATCH (e:Event) WHERE {EventKnowledgeGraph.create_condition("e", properties)}
+                        MATCH (n:{entity_label}) WHERE e.{property_name_id} = n.ID
+                        RETURN e, n',
+                        'MERGE (e)-[:CORR]->(n)',
+                        {{batchSize: {self.batch_size}}})
+                        '''
+                self.exec_query(q_correlate)
+
     def create_entity(self, property_name_id: str, entity_label: str, additional_label: Optional[str] = None,
                       properties: Optional[Dict[str, Any]] = None) -> None:
         # find events that contain the entity as property and not nan
@@ -413,6 +512,58 @@ class EventKnowledgeGraph:
             MERGE (e)-[:CORR]->(r)'''
         self.exec_query(q_correlate)
 
+    def create_entity_relations(self) -> None:
+        # find events that are related to different entities of which one event also has a reference to the other entity
+        # create a relation between these two entities
+        for relation in self.semantic_header.relations:
+            entity_label_to_node = relation.to_node_label
+            entity_label_from_node = relation.from_node_label
+            reference_in_event_to_to_node = relation.event_reference_attribute
+            relation_type = relation.type
+
+            q_create_relation = f'''
+                MATCH ( e1 : Event ) -[:CORR]-> ( n1:{entity_label_to_node} )
+                MATCH ( e2 : Event ) -[:CORR]-> ( n2:{entity_label_from_node} )
+                    WHERE n1 <> n2 AND e2.{reference_in_event_to_to_node} = n1.ID
+                WITH DISTINCT n1,n2
+                MERGE ( n1 ) <-[:{relation_type.upper()} {{Type:"Rel"}}]- ( n2 )'''
+            self.exec_query(q_create_relation)
+
+    def reify_entity_relations_sh(self) -> None:
+
+        for relation in self.semantic_header.relations:
+            if relation.reify:
+                entity_label_to_node = relation.to_node_label
+                entity_label_from_node = relation.from_node_label
+                relation_type = relation.type
+                reified_entity_label = relation.reified_entity.label
+
+                # create from a relation edge a new :relation node
+                # add a :REIFIED edge between the entities constituting this relationship and the new node
+                q_reify_relation = f'''
+                            MATCH ( n1 :{entity_label_to_node} ) <- [rel:{relation_type.upper()}]- ( n2:{entity_label_from_node} )
+                            MERGE (n1) <-[:REIFIED ]- (new:Entity:{reified_entity_label} {{ 
+                                {entity_label_to_node}: n1.ID,
+                                {entity_label_from_node}: n2.ID,
+                                ID:toString(n1.ID)+"_"+toString(n2.ID),
+                                EntityType: "{reified_entity_label}",
+                                uID:"{reified_entity_label}_"+toString(n1.ID)+"_"+toString(n2.ID)}})
+                                -[:REIFIED ]-> (n2)'''
+                self.exec_query(q_reify_relation)
+
+    def correlate_events_to_reification(self) -> None:
+        for relation in self.semantic_header.relations:
+            if relation.reify:
+                reified_entity = relation.reified_entity
+                if reified_entity.corr:
+                    reified_entity_label = relation.reified_entity.label
+                    # correlate events that are related to an entity which is reified into a new entity to the new reified entity
+                    q_correlate = f'''
+                        MATCH (e:Event) -[:CORR]-> (n:Entity) <-[:REIFIED ]- (r:Entity:{reified_entity_label} )
+                        MATCH (e:Event) -[:CORR]-> (n:Entity) <-[:REIFIED ]- (r:Entity:{reified_entity_label} )
+                        MERGE (e)-[:CORR]->(r)'''
+                    self.exec_query(q_correlate)
+
     def create_entity_relationships(self, relation_type: str, entity_label_from_node: str, entity_label_to_node: str,
                                     reference_in_event_to_to_node: str) -> None:
         # find events that are related to different entities of which one event also has a reference to the other entity
@@ -444,6 +595,16 @@ class EventKnowledgeGraph:
 
     # region CREATE DIRECTLY FOLLOWS RELATIONS
 
+    def create_df_edges(self) -> None:
+        for entity in self.semantic_header.entities:
+            if entity.df:
+                self.create_directly_follows(entity.label)
+
+        for relation in self.semantic_header.relations:
+            if relation.reify:
+                reified_entity_label = relation.reified_entity.label
+                self.create_directly_follows(reified_entity_label)
+
     def create_directly_follows(self, entity_name: str) -> None:
         # find the specific entities and events with a certain label correlated to that entity
         # order all events by time, order_nr and id grouped by a node n
@@ -466,7 +627,13 @@ class EventKnowledgeGraph:
 
         self.exec_query(q_create_df)
 
-    def merge_duplicate_df(self, entity_name: str) -> None:
+    def merge_duplicate_df(self):
+        for entity in self.semantic_header.entities:
+            if entity.merge_duplicate_df:
+                label = entity.label
+                self.merge_duplicate_df_entity(label)
+
+    def merge_duplicate_df_entity(self, entity_name: str) -> None:
 
         df_entity_string = self.get_df_label(entity_name)
 
@@ -480,6 +647,17 @@ class EventKnowledgeGraph:
                 '''
         self.exec_query(q_merge_duplicate_rel)
 
+    def delete_parallel_directly_follows_derived_sh(self):
+        for relation in self.semantic_header.relations:
+            if relation.reify:
+                reified_entity = relation.reified_entity
+                if reified_entity.delete_parallel_df:
+                    parent_entity = relation.from_node_label
+                    child_entity = relation.to_node_label
+                    reified_entity = reified_entity.label
+                    self.delete_parallel_directly_follows_derived(reified_entity, parent_entity)
+                    self.delete_parallel_directly_follows_derived(reified_entity, child_entity)
+
     def delete_parallel_directly_follows_derived(self, derived_entity_type, original_entity_type):
         df_derived_entity = self.get_df_label(derived_entity_type)
         df_original_entity = self.get_df_label(original_entity_type)
@@ -491,10 +669,22 @@ class EventKnowledgeGraph:
 
         self.exec_query(q_delete_df)
 
+    def df_class_relations(self):
+        classes = self.semantic_header.classes
+        for _class in classes:
+            if _class.df:
+                classifiers = _class.required_attributes
+                entity_type = _class.entity_type
+                df_threshold = _class.threshold
+                df_relative_threshold = _class.relative_threshold
+
+                self.aggregate_df_relations(entity_type=entity_type, classifiers=classifiers,
+                                            df_threshold=df_threshold, relative_df_threshold=df_relative_threshold)
+
     def aggregate_df_relations(self, entity_type: Optional[str] = None, classifiers: Optional[List[str]] = None,
                                df_threshold: int = 0, relative_df_threshold: float = 0) -> None:
         # add relations between classes when desired
-        if entity_type is None and classifiers is None:
+        if entity_type is None or classifiers is None:
             q_create_dfc = f'''
                    MATCH ( c1 : Class ) <-[:OBSERVED]- ( e1 : Event ) -[df]-> ( e2 : Event ) -[:OBSERVED]-> ( c2 : Class )
                    MATCH (e1) -[:CORR] -> (n) <-[:CORR]- (e2)
@@ -555,11 +745,17 @@ class EventKnowledgeGraph:
     # endregion
 
     # region CREATE CLASSES
-    def create_class(self, label: str = "Event", required_keys: Optional[Sequence[str]] = None,
-                     ids: Optional[Sequence[str]] = None) -> None:
-        # add values if those are None
-        required_keys = required_keys if required_keys else ["activity", "lifecycle"]
-        ids = ids if ids else ["c_id", "name", "lifecycle"]
+    def create_classes(self):
+        classes = self.semantic_header.classes
+        for _class in classes:
+            label = _class.label
+            required_attributes = _class.required_attributes
+            ids = _class.ids
+
+            self.create_class(label, required_attributes, ids)
+
+    def create_class(self, label: str, required_keys: Optional[Sequence[str]],
+                     ids: Optional[Sequence[str]]) -> None:
 
         # make sure first element of id list is cID
         if "cID" not in ids:

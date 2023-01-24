@@ -1,4 +1,5 @@
 # municipalities, building permit applications
+import numpy as np
 import pandas as pd
 import time, os, csv
 
@@ -29,44 +30,38 @@ def CreateBPI15(path, sample=False):
             [10873742, 4171558, 4495115, 10837828, 3634775, 8126523, 3589696, 10286510, 7888926, 4532439, 6365048,
              8460573, 8315159, 6793246, 6791482, 8612436, 4927985, 4637475, 4592223, 8114679])
 
-    def convert_dtype(x):
-        if not x:
-            return ''
-        try:
-            return str(x)
-        except:
-            return ''
 
     for i in range(1, 6):
         fileName = f'BPIC15_{i}.csv'
-        log = pd.read_csv(inputpath + fileName, keep_default_na=True, converters={'dateStop': convert_dtype})
+        log = pd.read_csv(inputpath + fileName, keep_default_na=True)
         log.columns = convert_columns_into_camel_case(log.columns.values)
         log['log'] = 'BPIC15'
 
-        if i == 2:
-            log = log.drop(columns=['actionCode', 'activityNameNl', 'caseType'])
-        else:
-            log = log.drop(columns=['actionCode', 'endDatePlanned', 'activityNameNl', 'caseType'])
+
+        # if i == 2:
+        #     log = log.drop(columns=['actionCode', 'activityNameNl', 'caseType'])
+        # else:
+        #     log = log.drop(columns=['actionCode', 'endDatePlanned', 'activityNameNl', 'caseType'])
+        #
+        # if (sample):
+        #     log = log[log['case'].isin(sampleIDs[i - 1])]
+
+        # log['idofConceptCase'] = log['idofConceptCase'].astype('Int64', errors='ignore')
+        # log['idofConceptCase'] = log['idofConceptCase'].fillna(-1)
+        # log['responsibleActor'] = log['responsibleActor'].astype('Int64', errors='ignore')
+        # log['responsibleActor'] = log['responsibleActor'].fillna(-1)
+        # log['landRegisterId'] = log['landRegisterId'].astype('Int64', errors='ignore')
+        # log['landRegisterId'] = log['landRegisterId'].fillna(-1)
+
+        # log['startTime'] = pd.to_datetime(log['startTime'], format='%Y/%m/%d %H:%M:%S.%f')
+        # log['startTime'] = log['startTime'].map(lambda x: x.strftime('%Y-%m-%dT%H:%M:%S%z'))
+        # log['completeTime'] = pd.to_datetime(log['completeTime'], format='%Y/%m/%d %H:%M:%S.%f')
+        # log['completeTime'] = log['completeTime'].map(lambda x: x.strftime('%Y-%m-%dT%H:%M:%S%z'))
 
         if (sample):
-            log = log[log['case'].isin(sampleIDs[i - 1])]
-
-        log['idofConceptCase'] = log['idofConceptCase'].astype('Int64', errors='ignore')
-        log['idofConceptCase'] = log['idofConceptCase'].fillna(-1)
-        log['responsibleActor'] = log['responsibleActor'].astype('Int64', errors='ignore')
-        log['responsibleActor'] = log['responsibleActor'].fillna(-1)
-        log['landRegisterId'] = log['landRegisterId'].astype('Int64', errors='ignore')
-        log['landRegisterId'] = log['landRegisterId'].fillna(-1)
-
-        log['startTime'] = pd.to_datetime(log['startTime'], format='%Y/%m/%d %H:%M:%S.%f')
-        log['startTime'] = log['startTime'].map(lambda x: x.strftime('%Y-%m-%dT%H:%M:%S%z'))
-        log['completeTime'] = pd.to_datetime(log['completeTime'], format='%Y/%m/%d %H:%M:%S.%f')
-        log['completeTime'] = log['completeTime'].map(lambda x: x.strftime('%Y-%m-%dT%H:%M:%S%z'))
-
-        if (sample):
-            log.to_csv(path + fileName[0:-4] + '_sample.csv', index=True, index_label="idx", na_rep="Unknown")
+            log.to_csv(path + fileName[0:-4] + '_sample.csv', index=True, index_label="idx")
         else:
-            log.to_csv(path + fileName, index=True, index_label="idx", na_rep="Unknown")
+            log.to_csv(path + fileName, index=True, index_label="idx")
 
 
 start = time.time()

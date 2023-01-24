@@ -128,7 +128,7 @@ class Settings:
 class DatetimeObject:
     def __init__(self, _format: str, offset: str, convert_to: str):
         self.format = _format
-        self.offset = offset
+        self.timezone_offset = offset
         self.convert_to = convert_to
 
 class BPIC:

@@ -1,415 +1,1178 @@
 {
   "name": "BPIC14",
   "version": "1.0.0",
-  "events": [
+  "sample_seed": 1,
+  "event_tables": [
     {
-      "event_table": "BPIC14Change",
-      "label": "Event",
+      "name": "BPIC14Change",
+      "file_names": [
+        "BPIC14Change.csv"
+      ],
+      "labels": [
+        "Event"
+      ],
+      "true_values": [
+        "Y"
+      ],
+      "false_values": [
+        "N"
+      ],
+      "samples": [
+        {
+          "file_name": "BPIC14Change.csv",
+          "sample_method": "random",
+          "population_column": "serviceComponentWbsAff",
+          "size": 20
+        }
+      ],
       "attributes": [
         {
+          "name": "idx",
+          "columns": [
+            {
+              "name": "idx",
+              "dtype": "int"
+            }
+          ],
+          "is_datetime": false,
+          "is_compound": false,
+          "mandatory": true
+        },
+        {
           "name": "ciNameAff",
-          "columns": ["ciNameAff"],
-          "datatype": "string",
-          "mandatory": false
+          "columns": [
+            {
+              "name": "ciNameAff"
+            }
+          ],
+          "is_datetime": false,
+          "is_compound": false,
+          "mandatory": true
         },
         {
           "name": "ciTypeAff",
-          "columns": ["ciTypeAff"],
-          "datatype": "string",
-          "mandatory": false
+          "columns": [
+            {
+              "name": "ciTypeAff"
+            }
+          ],
+          "is_datetime": false,
+          "is_compound": false,
+          "mandatory": true
         },
         {
           "name": "ciSubtypeAff",
-          "columns": ["ciSubtypeAff"],
-          "datatype": "string",
-          "mandatory": false
+          "columns": [
+            {
+              "name": "ciSubtypeAff"
+            }
+          ],
+          "is_datetime": false,
+          "is_compound": false,
+          "mandatory": true
         },
         {
           "name": "serviceComponentAff",
-          "columns": ["serviceComponentWbsAff"],
-          "datatype": "string",
+          "columns": [
+            {
+              "name": "serviceComponentWbsAff"
+            }
+          ],
+          "is_datetime": false,
+          "is_compound": false,
           "mandatory": true
         },
         {
           "name": "changeId",
-          "columns": ["changeId"],
-          "datatype": "string",
+          "columns": [
+            {
+              "name": "changeId"
+            }
+          ],
+          "is_datetime": false,
+          "is_compound": false,
           "mandatory": true
         },
         {
           "name": "activity",
-          "columns": ["changeType"],
-          "datatype": "string",
+          "columns": [
+            {
+              "name": "changeType"
+            }
+          ],
+          "is_datetime": false,
+          "is_compound": false,
           "mandatory": true
         },
         {
           "name": "riskAssessment",
-          "columns": ["riskAssessment"],
-          "datatype": "string",
+          "columns": [
+            {
+              "name": "riskAssessment"
+            }
+          ],
+          "is_datetime": false,
+          "is_compound": false,
           "mandatory": true
         },
         {
           "name": "emergencyChange",
-          "columns": ["emergencyChange"],
-          "datatype": "string",
+          "columns": [
+            {
+              "name": "emergencyChange",
+              "dtype": "boolean"
+            }
+          ],
+          "is_datetime": false,
+          "is_compound": false,
           "mandatory": true
         },
         {
           "name": "cabApprovalNeeded",
-          "columns": ["cabApprovalNeeded"],
-          "datatype": "string",
+          "columns": [
+            {
+              "name": "cabApprovalNeeded",
+              "dtype": "boolean"
+            }
+          ],
+          "is_datetime": false,
+          "is_compound": false,
           "mandatory": true
         },
         {
           "name": "plannedStart",
-          "columns": ["plannedStart"],
-          "datatype": "datetime",
-          "format": "d-M-y H:mX",
-          "timezone_offset": "+01",
-          "convert_to": "ISO_DATE_TIME",
+          "columns": [
+            {
+              "name": "plannedStart"
+            }
+          ],
+          "is_datetime": true,
+          "is_compound": false,
+          "datetime_object": {
+            "format": "d-M-y H:mX",
+            "timezone_offset": "+01",
+            "convert_to": "ISO_DATE_TIME"
+          },
           "mandatory": true
         },
         {
           "name": "plannedEnd",
-          "columns": ["plannedEnd"],
-          "datatype": "datetime",
-          "format": "d-M-y H:mX",
-          "timezone_offset": "+01",
-          "convert_to": "ISO_DATE_TIME",
+          "columns": [
+            {
+              "name": "plannedEnd"
+            }
+          ],
+          "is_datetime": true,
+          "datetime_object": {
+            "format": "d-M-y H:mX",
+            "timezone_offset": "+01",
+            "convert_to": "ISO_DATE_TIME"
+          },
+          "is_compound": false,
           "mandatory": true
         },
         {
           "name": "scheduledDowntimeStart",
-          "columns": ["scheduledDowntimeStart"],
-          "datatype": "datetime",
-          "format": "d-M-y H:mX",
-          "timezone_offset": "+01",
-          "convert_to": "ISO_DATE_TIME",
-          "mandatory": true,
+          "columns": [
+            {
+              "name": "scheduledDowntimeStart"
+            }
+          ],
+          "is_datetime": true,
+          "datetime_object": {
+            "format": "d-M-y H:mX",
+            "timezone_offset": "+01",
+            "convert_to": "ISO_DATE_TIME"
+          },
+          "is_compound": false,
+          "mandatory": false
         },
         {
           "name": "scheduledDowntimeEnd",
-          "columns": ["scheduledDowntimeEnd"],
-          "datatype": "datetime",
-          "format": "d-M-y H:mX",
-          "timezone_offset": "+01",
-          "convert_to": "ISO_DATE_TIME",
-          "mandatory": true,
+          "columns": [
+            {
+              "name": "scheduledDowntimeEnd"
+            }
+          ],
+          "is_datetime": true,
+          "datetime_object": {
+            "format": "d-M-y H:mX",
+            "timezone_offset": "+01",
+            "convert_to": "ISO_DATE_TIME"
+          },
+          "is_compound": false,
+          "mandatory": false
         },
         {
           "name": "start",
-          "columns": ["actualStart"],
-          "na_rep_column": ["changeRecordOpenTime"],
-          "datatype": "datetime",
-          "format": "d-M-y H:mX",
-          "timezone_offset": "+01",
-          "convert_to": "ISO_DATE_TIME",
+          "columns": [
+            {
+              "name": "actualStart"
+            }
+          ],
+          "na_rep_columns": [
+            {
+              "name": "changeRecordOpenTime"
+            }
+          ],
+          "is_datetime": true,
+          "datetime_object": {
+            "format": "d-M-y H:mX",
+            "timezone_offset": "+01",
+            "convert_to": "ISO_DATE_TIME"
+          },
+          "is_compound": false,
           "mandatory": true
         },
         {
           "name": "timestamp",
-          "columns": ["actualEnd"],
-          "na_rep_column": ["changeRecordCloseTime"],
-          "datatype": "datetime",
-          "format": "d-M-y H:mX",
-          "timezone_offset": "+01",
-          "convert_to": "ISO_DATE_TIME",
+          "columns": [
+            {
+              "name": "actualEnd"
+            }
+          ],
+          "na_rep_columns": [
+            {
+              "name": "changeRecordCloseTime"
+            }
+          ],
+          "is_datetime": true,
+          "datetime_object": {
+            "format": "d-M-y H:mX",
+            "timezone_offset": "+01",
+            "convert_to": "ISO_DATE_TIME"
+          },
+          "is_compound": false,
           "mandatory": true
         },
         {
           "name": "requestedEndDate",
-          "columns": ["requestedEndDate"],
-          "datatype": "datetime",
-          "format": "d-M-y H:mX",
-          "timezone_offset": "+01",
-          "convert_to": "ISO_DATE_TIME",
+          "columns": [
+            {
+              "name": "requestedEndDate"
+            }
+          ],
+          "is_datetime": true,
+          "datetime_object": {
+            "format": "d-M-y H:mX",
+            "timezone_offset": "+01",
+            "convert_to": "ISO_DATE_TIME"
+          },
+          "is_compound": false,
           "mandatory": true
         },
         {
           "name": "changeRecordOpenTime",
-          "columns": ["changeRecordOpenTime"],
-          "datatype": "datetime",
-          "format": "d-M-y H:mX",
-          "timezone_offset": "+01",
-          "convert_to": "ISO_DATE_TIME",
+          "columns": [
+            {
+              "name": "changeRecordOpenTime"
+            }
+          ],
+          "is_datetime": true,
+          "datetime_object": {
+            "format": "d-M-y H:mX",
+            "timezone_offset": "+01",
+            "convert_to": "ISO_DATE_TIME"
+          },
+          "is_compound": false,
           "mandatory": true
         },
         {
           "name": "changeRecordCloseTime",
-          "columns": ["changeRecordCloseTime"],
-          "datatype": "datetime",
-          "format": "d-M-y H:mX",
-          "timezone_offset": "+01",
-          "convert_to": "ISO_DATE_TIME",
+          "columns": [
+            {
+              "name": "changeRecordCloseTime"
+            }
+          ],
+          "is_datetime": true,
+          "datetime_object": {
+            "format": "d-M-y H:mX",
+            "timezone_offset": "+01",
+            "convert_to": "ISO_DATE_TIME"
+          },
+          "is_compound": false,
           "mandatory": true
         },
         {
           "name": "originatedFrom",
-          "columns": ["originatedFrom"],
-          "datatype": "string",
+          "columns": [
+            {
+              "name": "originatedFrom"
+            }
+          ],
+          "is_datetime": false,
+          "is_compound": false,
           "mandatory": true
         },
         {
           "name": "numRelatedInteractions",
-          "columns": ["numRelatedInteractions"],
-          "datatype": "int",
-          "mandatory": true
+          "columns": [
+            {
+              "name": "numRelatedInteractions",
+              "dtype": "Int64"
+            }
+          ],
+          "is_datetime": false,
+          "is_compound": false,
+          "mandatory": false
         },
         {
           "name": "numRelatedIncidents",
-          "columns": ["numRelatedIncidents"],
-          "datatype": "int",
-          "mandatory": true
+          "columns": [
+            {
+              "name": "numRelatedIncidents",
+              "dtype": "Int64"
+            }
+          ],
+          "is_datetime": false,
+          "is_compound": false,
+          "mandatory": false
         },
         {
           "name": "log",
-          "columns": ["log"],
-          "datatype": "string",
+          "columns": [
+            {
+              "name": "log"
+            }
+          ],
+          "is_datetime": false,
+          "is_compound": false,
           "mandatory": true
         }
       ]
     },
     {
-      "event_table": "BPIC14Incident",
-      "label": "Event",
+      "name": "BPIC14Incident",
+      "file_names": [
+        "BPIC14Incident.csv"
+      ],
+      "labels": [
+        "Event"
+      ],
+      "samples": [{
+        "file_name": "BPIC14Incident.csv",
+        "sample_method": "random",
+        "population_column": "serviceComponentWbsAff",
+        "size": 20
+      }],
       "attributes": [
         {
+          "name": "idx",
+          "columns": [
+            {
+              "name": "idx",
+              "dtype": "int"
+            }
+          ],
+          "is_datetime": false,
+          "is_compound": false,
+          "mandatory": true
+        },
+        {
           "name": "ciNameAff",
-          "columns": ["ciNameAff"],
-          "datatype": "string",
+          "columns": [
+            {
+              "name": "ciNameAff"
+            }
+          ],
+          "is_datetime": false,
+          "is_compound": false,
           "mandatory": false
         },
         {
           "name": "ciTypeAff",
-          "columns": ["ciTypeAff"],
-          "datatype": "string",
+          "columns": [
+            {
+              "name": "ciTypeAff"
+            }
+          ],
+          "is_datetime": false,
+          "is_compound": false,
           "mandatory": false
         },
         {
           "name": "ciSubtypeAff",
-          "columns": ["ciSubtypeAff"],
-          "datatype": "string",
+          "columns": [
+            {
+              "name": "ciSubtypeAff"
+            }
+          ],
+          "is_datetime": false,
+          "is_compound": false,
           "mandatory": false
         },
         {
           "name": "serviceComponentAff",
-          "columns": ["serviceComponentWbsAff"],
-          "datatype": "string",
+          "columns": [
+            {
+              "name": "serviceComponentWbsAff"
+            }
+          ],
+          "is_datetime": false,
+          "is_compound": false,
           "mandatory": true
         },
         {
           "name": "incidentId",
-          "columns": ["incidentId"],
-          "datatype": "string",
+          "columns": [
+            {
+              "name": "incidentId"
+            }
+          ],
+          "is_datetime": false,
+          "is_compound": false,
           "mandatory": true
         },
         {
           "name": "status",
-          "columns": ["status"],
-          "datatype": "string",
+          "columns": [
+            {
+              "name": "status"
+            }
+          ],
+          "is_datetime": false,
+          "is_compound": false,
           "mandatory": true
         },
         {
           "name": "impact",
-          "columns": ["impact"],
-          "datatype": "int",
+          "columns": [
+            {
+              "name": "impact",
+              "dtype": "Int64"
+            }
+          ],
+          "is_datetime": false,
+          "is_compound": false,
           "mandatory": true
         },
         {
           "name": "urgency",
-          "columns": ["urgency"],
-          "datatype": "int",
+          "columns": [
+            {
+              "name": "urgency",
+              "dtype": "Int64"
+            }
+          ],
+          "is_datetime": false,
+          "is_compound": false,
           "mandatory": true
         },
         {
           "name": "priority",
-          "columns": ["priority"],
-          "datatype": "int",
+          "columns": [
+            {
+              "name": "priority",
+              "dtype": "Int64"
+            }
+          ],
+          "is_datetime": false,
+          "is_compound": false,
           "mandatory": true
         },
         {
           "name": "category",
-          "columns": ["category"],
-          "datatype": "string",
+          "columns": [
+            {
+              "name": "category"
+            }
+          ],
+          "is_datetime": false,
+          "is_compound": false,
           "mandatory": true
         },
         {
           "name": "kmNumber",
-          "columns": ["kmNumber"],
-          "datatype": "string",
+          "columns": [
+            {
+              "name": "kmNumber"
+            }
+          ],
+          "is_datetime": false,
+          "is_compound": false,
           "mandatory": true
         },
         {
           "name": "alertStatus",
-          "columns": ["alertStatus"],
-          "datatype": "string",
+          "columns": [
+            {
+              "name": "alertStatus"
+            }
+          ],
+          "is_datetime": false,
+          "is_compound": false,
           "mandatory": true
         },
         {
           "name": "numReassignments",
-          "columns": ["numReassignments"],
-          "datatype": "int",
+          "columns": [
+            {
+              "name": "numReassignments",
+              "dtype": "Int64"
+            }
+          ],
+          "is_datetime": false,
+          "is_compound": false,
           "mandatory": true
         },
         {
           "name": "start",
-          "columns": ["openTime"],
-          "datatype": "datetime",
-          "format": "d/M/y H:m:sX",
-          "timezone_offset": "+01",
-          "convert_to": "ISO_DATE_TIME",
+          "columns": [
+            {
+              "name": "openTime"
+            }
+          ],
+          "is_datetime": true,
+          "datetime_object": {
+            "format": "d/M/y H:m:sX",
+            "timezone_offset": "+01",
+            "convert_to": "ISO_DATE_TIME"
+          },
+          "is_compound": false,
           "mandatory": true
         },
         {
           "name": "reopenTime",
-          "columns": ["reopenTime"],
-          "datatype": "datetime",
-          "format": "d/M/y H:m:sX",
-          "timezone_offset": "+01",
-          "convert_to": "ISO_DATE_TIME",
+          "columns": [
+            {
+              "name": "reopenTime"
+            }
+          ],
+          "is_datetime": true,
+          "datetime_object": {
+            "format": "d/M/y H:m:sX",
+            "timezone_offset": "+01",
+            "convert_to": "ISO_DATE_TIME"
+          },
+          "is_compound": false,
           "mandatory": true
         },
         {
           "name": "resolvedTime",
-          "columns": ["resolvedTime"],
-          "datatype": "datetime",
-          "format": "d/M/y H:m:sX",
-          "timezone_offset": "+01",
-          "convert_to": "ISO_DATE_TIME",
+          "columns": [
+            {
+              "name": "resolvedTime"
+            }
+          ],
+          "is_datetime": true,
+          "datetime_object": {
+            "format": "d/M/y H:m:sX",
+            "timezone_offset": "+01",
+            "convert_to": "ISO_DATE_TIME"
+          },
+          "is_compound": false,
           "mandatory": true
         },
         {
           "name": "timestamp",
-          "columns": ["closeTime"],
-          "datatype": "datetime",
-          "format": "d/M/y H:m:sX",
-          "timezone_offset": "+01",
-          "convert_to": "ISO_DATE_TIME",
+          "columns": [
+            {
+              "name": "closeTime"
+            }
+          ],
+          "is_datetime": true,
+          "datetime_object": {
+            "format": "d/M/y H:m:sX",
+            "timezone_offset": "+01",
+            "convert_to": "ISO_DATE_TIME"
+          },
+          "is_compound": false,
           "mandatory": true
         },
         {
           "name": "handleTimeHours",
-          "columns": ["handleTimeHours"],
-          "datatype": "float",
+          "columns": [
+            {
+              "name": "handleTimeHours",
+              "dtype": "float"
+            }
+          ],
+          "is_datetime": false,
+          "is_compound": false,
           "mandatory": true
         },
         {
           "name": "numRelatedInteractions",
-          "columns": ["numRelatedInteractions"],
-          "datatype": "int",
+          "columns": [
+            {
+              "name": "numRelatedInteractions",
+              "dtype": "Int64"
+            }
+          ],
+          "is_datetime": false,
+          "is_compound": false,
           "mandatory": true
         },
         {
           "name": "relatedInteraction",
-          "columns": ["relatedInteractions"],
-          "datatype": "string",
+          "columns": [
+            {
+              "name": "relatedInteraction"
+            }
+          ],
+          "is_datetime": false,
+          "is_compound": false,
           "mandatory": true
         },
-
         {
           "name": "numRelatedIncidents",
-          "columns": ["numRelatedIncidents"],
-          "datatype": "int",
+          "columns": [
+            {
+              "name": "numRelatedIncidents",
+              "dtype": "Int64"
+            }
+          ],
+          "is_datetime": false,
+          "is_compound": false,
           "mandatory": true
         },
         {
           "name": "numRelatedChanges",
-          "columns": ["numRelatedChanges"],
-          "datatype": "int",
+          "columns": [
+            {
+              "name": "numRelatedChanges",
+              "dtype": "Int64"
+            }
+          ],
+          "is_datetime": false,
+          "is_compound": false,
           "mandatory": true
         },
         {
           "name": "relatedChange",
-          "columns": ["relatedChange"],
-          "datatype": "string",
+          "columns": [
+            {
+              "name": "relatedChange"
+            }
+          ],
+          "is_datetime": false,
+          "is_compound": false,
           "mandatory": true
         },
-
         {
           "name": "ciNameCby",
-          "columns": ["ciNameCby"],
-          "datatype": "string",
+          "columns": [
+            {
+              "name": "ciNameCby"
+            }
+          ],
+          "is_datetime": false,
+          "is_compound": false,
           "mandatory": true
         },
         {
           "name": "ciTypeCby",
-          "columns": ["ciTypeCby"],
-          "datatype": "string",
+          "columns": [
+            {
+              "name": "ciTypeCby"
+            }
+          ],
+          "is_datetime": false,
+          "is_compound": false,
           "mandatory": true
         },
         {
           "name": "ciSubtypeCby",
-          "columns": ["ciTypeCby"],
-          "datatype": "string",
+          "columns": [
+            {
+              "name": "ciSubtypeCby"
+            }
+          ],
+          "is_datetime": false,
+          "is_compound": false,
           "mandatory": true
         },
-
         {
           "name": "serviceComponentCBy",
-          "columns": ["serviceCompWBSCby"],
-          "datatype": "string",
+          "columns": [
+            {
+              "name": "serviceCompWbsCby"
+            }
+          ],
+          "is_datetime": false,
+          "is_compound": false,
           "mandatory": true
         },
-
         {
           "name": "log",
-          "columns": ["log"],
-          "datatype": "string",
+          "columns": [
+            {
+              "name": "log"
+            }
+          ],
+          "is_datetime": false,
+          "is_compound": false,
           "mandatory": true
         },
-
         {
           "name": "activity",
-          "columns": ["activity"],
-          "datatype": "string",
+          "columns": [
+            {
+              "name": "category"
+            },
+            {
+              "name": "closureCode"
+            }
+          ],
+          "separator": ": ",
+          "is_datetime": false,
+          "is_compound": true,
           "mandatory": true
         }
-
+      ]
+    },
+    {
+      "name": "BPIC14IncidentDetail",
+      "file_names": [
+        "BPIC14IncidentDetail.csv"
+      ],
+      "samples": [{
+        "file_name": "BPIC14IncidentDetail.csv",
+        "sample_method": "random",
+        "population_column": "incidentId",
+        "size": 20
+      }],
+      "labels": [
+        "Event"
+      ],
+      "attributes": [
+        {
+          "name": "idx",
+          "columns": [
+            {
+              "name": "idx",
+              "dtype": "int"
+            }
+          ],
+          "is_datetime": false,
+          "is_compound": false,
+          "mandatory": true
+        },
+        {
+          "name": "incidentId",
+          "columns": [
+            {
+              "name": "incidentId"
+            }
+          ],
+          "is_datetime": false,
+          "is_compound": false,
+          "mandatory": false
+        },
+        {
+          "name": "timestamp",
+          "columns": [
+            {
+              "name": "dateStamp"
+            }
+          ],
+          "is_datetime": true,
+          "datetime_object": {
+            "format": "d-M-y H:m:sX",
+            "timezone_offset": "+01",
+            "convert_to": "ISO_DATE_TIME"
+          },
+          "is_compound": false,
+          "mandatory": false
+        },
+        {
+          "name": "incidentActivityNumber",
+          "columns": [
+            {
+              "name": "incidentActivityNumber"
+            }
+          ],
+          "is_datetime": false,
+          "is_compound": false,
+          "mandatory": false
+        },
+        {
+          "name": "activity",
+          "columns": [
+            {
+              "name": "incidentActivityType"
+            }
+          ],
+          "is_datetime": false,
+          "is_compound": false,
+          "mandatory": true
+        },
+        {
+          "name": "resource",
+          "columns": [
+            {
+              "name": "assignmentGroup"
+            }
+          ],
+          "is_datetime": false,
+          "is_compound": false,
+          "mandatory": true
+        },
+        {
+          "name": "kmNumber",
+          "columns": [
+            {
+              "name": "kmNumber"
+            }
+          ],
+          "is_datetime": false,
+          "is_compound": false,
+          "mandatory": true
+        },
+        {
+          "name": "interactionId",
+          "columns": [
+            {
+              "name": "interactionId"
+            }
+          ],
+          "is_datetime": false,
+          "is_compound": false,
+          "mandatory": true
+        },
+        {
+          "name": "log",
+          "columns": [
+            {
+              "name": "log"
+            }
+          ],
+          "is_datetime": false,
+          "is_compound": false,
+          "mandatory": true
+        }
+      ]
+    },
+    {
+      "name": "BPIC14Interaction",
+      "file_names": [
+        "BPIC14Interaction.csv"
+      ],
+      "labels": [
+        "Event"
+      ],
+      "samples": [{
+        "file_name": "BPIC14Interaction.csv",
+        "sample_method": "random",
+        "population_column": "serviceCompWbsAff",
+        "size": 10
+      }],
+      "attributes": [
+        {
+          "name": "idx",
+          "columns": [
+            {
+              "name": "idx",
+              "dtype": "int"
+            }
+          ],
+          "is_datetime": false,
+          "is_compound": false,
+          "mandatory": true
+        },
+        {
+          "name": "ciNameAff",
+          "columns": [
+            {
+              "name": "ciNameAff"
+            }
+          ],
+          "is_datetime": false,
+          "is_compound": false,
+          "mandatory": false
+        },
+        {
+          "name": "ciSubtypeAff",
+          "columns": [
+            {
+              "name": "ciSubtypeAff"
+            }
+          ],
+          "is_datetime": false,
+          "is_compound": false,
+          "mandatory": false
+        },
+        {
+          "name": "serviceComponentAff",
+          "columns": [
+            {
+              "name": "serviceCompWbsAff"
+            }
+          ],
+          "is_datetime": false,
+          "is_compound": false,
+          "mandatory": false
+        },
+        {
+          "name": "interactionId",
+          "columns": [
+            {
+              "name": "interactionId"
+            }
+          ],
+          "is_datetime": false,
+          "is_compound": false,
+          "mandatory": false
+        },
+        {
+          "name": "status",
+          "columns": [
+            {
+              "name": "status"
+            }
+          ],
+          "is_datetime": false,
+          "is_compound": false,
+          "mandatory": false
+        },
+        {
+          "name": "impact",
+          "columns": [
+            {
+              "name": "impact",
+              "dtype": "Int64"
+            }
+          ],
+          "is_datetime": false,
+          "is_compound": false,
+          "mandatory": false
+        },
+        {
+          "name": "urgency",
+          "columns": [
+            {
+              "name": "urgency",
+              "dtype": "Int64"
+            }
+          ],
+          "is_datetime": false,
+          "is_compound": false,
+          "mandatory": false
+        },
+        {
+          "name": "priority",
+          "columns": [
+            {
+              "name": "priority",
+              "dtype": "Int64"
+            }
+          ],
+          "is_datetime": false,
+          "is_compound": false,
+          "mandatory": false
+        },
+        {
+          "name": "category",
+          "columns": [
+            {
+              "name": "category"
+            }
+          ],
+          "is_datetime": false,
+          "is_compound": false,
+          "mandatory": false
+        },
+        {
+          "name": "kmNumber",
+          "columns": [
+            {
+              "name": "kmNumber"
+            }
+          ],
+          "is_datetime": false,
+          "is_compound": false,
+          "mandatory": false
+        },
+        {
+          "name": "start",
+          "columns": [
+            {
+              "name": "openTimeFirstTouch"
+            }
+          ],
+          "is_datetime": true,
+          "datetime_object": {
+            "format": "d-M-y H:mX",
+            "timezone_offset": "+01",
+            "convert_to": "ISO_DATE_TIME"
+          },
+          "is_compound": false,
+          "mandatory": false
+        },
+        {
+          "name": "timestamp",
+          "columns": [
+            {
+              "name": "closeTime"
+            }
+          ],
+          "is_datetime": true,
+          "datetime_object": {
+            "format": "d-M-y H:mX",
+            "timezone_offset": "+01",
+            "convert_to": "ISO_DATE_TIME"
+          },
+          "is_compound": false,
+          "mandatory": false
+        },
+        {
+          "name": "closureCode",
+          "columns": [
+            {
+              "name": "closureCode"
+            }
+          ],
+          "is_datetime": false,
+          "is_compound": false,
+          "mandatory": false
+        },
+        {
+          "name": "firstCallResolution",
+          "columns": [
+            {
+              "name": "firstCallResolution"
+            }
+          ],
+          "is_datetime": false,
+          "is_compound": false,
+          "mandatory": false
+        },
+        {
+          "name": "handleTimeSecs",
+          "columns": [
+            {
+              "name": "handleTimeSecs",
+              "dtype": "Int64"
+            }
+          ],
+          "is_datetime": false,
+          "is_compound": false,
+          "mandatory": false
+        },
+        {
+          "name": "relatedIncident",
+          "columns": [
+            {
+              "name": "relatedIncident"
+            }
+          ],
+          "is_datetime": false,
+          "is_compound": false,
+          "mandatory": false
+        },
+        {
+          "name": "log",
+          "columns": [
+            {
+              "name": "log"
+            }
+          ],
+          "is_datetime": false,
+          "is_compound": false,
+          "mandatory": true
+        },
+        {
+          "name": "activity",
+          "columns": [
+            {
+              "name": "category"
+            },
+            {
+              "name": "closureCode"
+            }
+          ],
+          "separator": ": ",
+          "is_datetime": false,
+          "is_compound": true,
+          "mandatory": true
+        }
       ]
     }
   ],
   "entities": [
     {
-      "label": "Entity:ConfigurationItem",
-      "event_attribute": "ciNameAff",
+      "label": "ConfigurationItem",
+      "event_attributes": [
+        {
+          "name": "ciNameAff",
+          "is_id": true
+        }
+      ],
       "DF": true,
-      "CORR": true
+      "CORR": true,
+      "merge_duplicate_df": true
     },
     {
-      "label": "Entity:ServiceComponent",
-      "event_attribute": "serviceComponentAff",
+      "label": "ServiceComponent",
+      "event_attributes": [
+        {
+          "name": "serviceComponentAff",
+          "is_id": true
+        }
+      ],
       "DF": true,
-      "CORR": true
+      "CORR": true,
+      "merge_duplicate_df": true
     },
     {
-      "label": "Entity:Incident",
-      "event_attribute": "incidentId",
+      "label": "Incident",
+      "event_attributes": [
+        {
+          "name": "incidentId",
+          "is_id": true
+        }
+      ],
       "DF": true,
-      "CORR": true
+      "CORR": true,
+      "merge_duplicate_df": true
     },
     {
-      "label": "Entity:Interaction",
-      "event_attribute": "interactionId",
+      "label": "Interaction",
+      "event_attributes": [
+        {
+          "name": "interactionId",
+          "is_id": true
+        }
+      ],
       "DF": true,
-      "CORR": true
+      "CORR": true,
+      "merge_duplicate_df": true
     },
     {
-      "label": "Entity:Change",
-      "event_attribute": "changeId",
+      "label": "Change",
+      "event_attributes": [
+        {
+          "name": "changeId",
+          "is_id": true
+        }
+      ],
       "DF": true,
-      "CORR": true
+      "CORR": true,
+      "merge_duplicate_df": true
     },
     {
-      "label": "Entity:CaseR",
-      "event_attribute": "resource",
+      "label": "CaseR",
+      "event_attributes": [
+        {
+          "name": "resource",
+          "is_id": true
+        }
+      ],
       "DF": true,
-      "CORR": true
+      "CORR": true,
+      "merge_duplicate_df": true
     },
     {
-      "label": "Entity:KM",
-      "event_attribute": "kmNumber",
+      "label": "KM",
+      "event_attributes": [
+        {
+          "name": "kmNumber",
+          "is_id": true
+        }
+      ],
       "DF": true,
-      "CORR": true
+      "CORR": true,
+      "merge_duplicate_df": true
     }
   ],
   "relations": [
@@ -417,21 +1180,27 @@
       "type": "RELATED_INCIDENT",
       "from_node_label": "Interaction",
       "to_node_label": "Incident",
-      "event_reference_attribute": "relatedIncident"
+      "event_reference_attribute": "relatedIncident",
+      "reify": false
     },
     {
       "type": "PART_OF",
       "from_node_label": "ConfigurationItem",
       "to_node_label": "ServiceComponent",
-      "event_reference_attribute": "serviceComponentAff"
+      "event_reference_attribute": "serviceComponentAff",
+      "reify": false
     }
   ],
   "classes": [
     {
       "label": "Event",
-      "required_attributes": ["activity"],
-      "ids": ["name"],
-      "df": true
+      "required_attributes": [
+        "activity"
+      ],
+      "ids": [
+        "name"
+      ],
+      "DF": false
     }
   ]
 }
