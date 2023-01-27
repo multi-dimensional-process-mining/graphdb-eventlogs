@@ -526,11 +526,10 @@ class EventKnowledgeGraph:
                 self._write_message_to_performance(f"Created [:DF] edge for {entity.label}")
 
         for relation in self.semantic_header.relations:
-            if relation.reify:
-                if relation.reified_entity.df:
-                    self._create_directly_follows(entity_name=relation.reified_entity.label,
-                                                  include_label_in_df=relation.reified_entity.include_label_in_df)
-                    self._write_message_to_performance(f"Created [:DF] edge for {relation.reified_entity.label}")
+            if relation.reify and relation.reified_entity.df:
+                self._create_directly_follows(entity_name=relation.reified_entity.label,
+                                              include_label_in_df=relation.reified_entity.include_label_in_df)
+                self._write_message_to_performance(f"Created [:DF] edge for {relation.reified_entity.label}")
 
     def _create_directly_follows(self, entity_name: str, include_label_in_df: bool) -> None:
         # find the specific entities and events with a certain label correlated to that entity
@@ -752,7 +751,6 @@ class EventKnowledgeGraph:
     # region CREATE STATIC NODES AND RELATIONS
     def create_static_nodes_and_relations(self):
         # TODO no implementation yet (see if needed)
-        pass
         self._write_message_to_performance("Static Nodes and Relations are created")
 
     # endregion

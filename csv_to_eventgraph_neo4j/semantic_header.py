@@ -177,6 +177,7 @@ class Log:
     include: bool
     has: bool
 
+    @staticmethod
     def from_dict(obj: Any) -> 'Log':
         if obj is None:
             return Log(True, True)
@@ -241,7 +242,6 @@ class EventTable:
         self.false_values = false_values
         self.samples = samples
         self.attributes = attributes
-        # self.attributes = {attribute.name: attribute for attribute in self.attributes}
 
     @staticmethod
     def from_dict(obj: Any) -> Optional['EventTable']:
@@ -267,11 +267,10 @@ class EventTable:
                 if column.dtype is not None:
                     if column.name not in dtypes:
                         dtypes[column.name] = column.dtype
-                    else:
-                        if column.dtype != dtypes[column.name]:
-                            warnings.warn(
-                                f"Multiple dtypes ({column.dtype} != {dtypes[column.name]}) "
-                                f"defined for {column.name}")
+                    elif column.dtype != dtypes[column.name]:
+                        warnings.warn(
+                            f"Multiple dtypes ({column.dtype} != {dtypes[column.name]}) "
+                            f"defined for {column.name}")
         return dtypes
 
     def get_required_columns(self):
@@ -395,13 +394,8 @@ class SemanticHeader:
         random.seed(self.sample_seed)
 
         self.event_tables = event_tables
-        # self.event_tables = {event_table.name: event_table for event_table in self.event_tables}
-
         self.entities = entities
-        # self.entities = {entity.label: entity for entity in self.entities}
-
         self.relations = relations
-
         self.classes = classes
         self.log = log
 

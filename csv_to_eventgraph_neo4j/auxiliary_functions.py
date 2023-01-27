@@ -3,9 +3,9 @@ from re import sub
 
 def camel_case(s):
     # remove all _ or - and replace by a space
-    s = sub(r"(_|-)+", " ", s)
+    s = sub(r"[_-]+", " ", s)
     # remove all (, ), :, . with empty space
-    s = sub(r"(\(|\)|:|\.)+", " ", s)
+    s = sub(r"[():.]+", " ", s)
     # Add Space Before Capital Letter If and Only If Previous Letter is Not Also Capital
     # So 'HelloCHARLIE this isBob.' should become 'Hello CHARLIE this is Bob.'
     s = sub(r"(?<![A-Z])(?<!^)([A-Z])", r" \1", s)

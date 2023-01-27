@@ -11,13 +11,14 @@ import authentication
 
 connection = authentication.connections_map[authentication.Connections.LOCAL]
 
+dataset_name = 'BPIC17'
 
-with open('../json_files/BPIC17.json') as f:
+with open(f'../json_files/{dataset_name}.json') as f:
     json_dict = json.load(f)
 
 use_sample = True
 semantic_header = SemanticHeader.from_dict(json_dict)
-perf_path = '..\\perf\\' + semantic_header.name + "Performance.csv"
+perf_path = f"..\\perf\\{dataset_name}\\{semantic_header.name}Performance.csv"
 number_of_steps = 100
 
 step_clear_db = True
@@ -96,18 +97,12 @@ def populate_graph(graph: EventKnowledgeGraph, perf: Performance):
     graph.create_df_edges()
     perf.finished_step(log_message=f"[:DF] edges done")
 
-    # TODO: add perf message inside function
-    # "Deleted parallel DF between {derived_entity} and {parent_entity}"
     graph.delete_parallel_dfs_derived()
     perf.finished_step(log_message=f"Deleted all duplicate parallel [:DF] edges done")
 
-    # TODO: add perf message inside function
-    # "Duplicate DF for Entity '{entity}' are merged"
     graph.merge_duplicate_df()
     perf.finished_step(log_message=f"Merged duplicate [:DF] edges done")
 
-    # TODO: add perf message inside function
-    # Created classes for {label}
     graph.create_classes()
     perf.finished_step(log_message=f"(:Class) nodes done")
     graph.df_class_relations()
