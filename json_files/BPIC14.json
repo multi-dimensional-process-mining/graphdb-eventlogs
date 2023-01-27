@@ -1,10 +1,10 @@
 {
   "name": "BPIC14",
   "version": "1.0.0",
-  "sample_seed": 1,
   "event_tables": [
     {
       "name": "BPIC14Change",
+      "file_directory": "..\\data\\BPIC14\\prepared\\",
       "file_names": [
         "BPIC14Change.csv"
       ],
@@ -20,7 +20,7 @@
       "samples": [
         {
           "file_name": "BPIC14Change.csv",
-          "sample_method": "random",
+          "use_random_sample": true,
           "population_column": "serviceComponentWbsAff",
           "size": 20
         }
@@ -34,8 +34,6 @@
               "dtype": "int"
             }
           ],
-          "is_datetime": false,
-          "is_compound": false,
           "mandatory": true
         },
         {
@@ -45,8 +43,6 @@
               "name": "ciNameAff"
             }
           ],
-          "is_datetime": false,
-          "is_compound": false,
           "mandatory": true
         },
         {
@@ -56,8 +52,6 @@
               "name": "ciTypeAff"
             }
           ],
-          "is_datetime": false,
-          "is_compound": false,
           "mandatory": true
         },
         {
@@ -67,8 +61,6 @@
               "name": "ciSubtypeAff"
             }
           ],
-          "is_datetime": false,
-          "is_compound": false,
           "mandatory": true
         },
         {
@@ -78,8 +70,6 @@
               "name": "serviceComponentWbsAff"
             }
           ],
-          "is_datetime": false,
-          "is_compound": false,
           "mandatory": true
         },
         {
@@ -89,8 +79,6 @@
               "name": "changeId"
             }
           ],
-          "is_datetime": false,
-          "is_compound": false,
           "mandatory": true
         },
         {
@@ -100,8 +88,6 @@
               "name": "changeType"
             }
           ],
-          "is_datetime": false,
-          "is_compound": false,
           "mandatory": true
         },
         {
@@ -111,8 +97,6 @@
               "name": "riskAssessment"
             }
           ],
-          "is_datetime": false,
-          "is_compound": false,
           "mandatory": true
         },
         {
@@ -123,8 +107,6 @@
               "dtype": "boolean"
             }
           ],
-          "is_datetime": false,
-          "is_compound": false,
           "mandatory": true
         },
         {
@@ -135,8 +117,6 @@
               "dtype": "boolean"
             }
           ],
-          "is_datetime": false,
-          "is_compound": false,
           "mandatory": true
         },
         {
@@ -146,8 +126,6 @@
               "name": "plannedStart"
             }
           ],
-          "is_datetime": true,
-          "is_compound": false,
           "datetime_object": {
             "format": "d-M-y H:mX",
             "timezone_offset": "+01",
@@ -162,13 +140,11 @@
               "name": "plannedEnd"
             }
           ],
-          "is_datetime": true,
           "datetime_object": {
             "format": "d-M-y H:mX",
             "timezone_offset": "+01",
             "convert_to": "ISO_DATE_TIME"
           },
-          "is_compound": false,
           "mandatory": true
         },
         {
@@ -178,13 +154,11 @@
               "name": "scheduledDowntimeStart"
             }
           ],
-          "is_datetime": true,
           "datetime_object": {
             "format": "d-M-y H:mX",
             "timezone_offset": "+01",
             "convert_to": "ISO_DATE_TIME"
           },
-          "is_compound": false,
           "mandatory": false
         },
         {
@@ -194,13 +168,11 @@
               "name": "scheduledDowntimeEnd"
             }
           ],
-          "is_datetime": true,
           "datetime_object": {
             "format": "d-M-y H:mX",
             "timezone_offset": "+01",
             "convert_to": "ISO_DATE_TIME"
           },
-          "is_compound": false,
           "mandatory": false
         },
         {
@@ -215,13 +187,11 @@
               "name": "changeRecordOpenTime"
             }
           ],
-          "is_datetime": true,
           "datetime_object": {
             "format": "d-M-y H:mX",
             "timezone_offset": "+01",
             "convert_to": "ISO_DATE_TIME"
           },
-          "is_compound": false,
           "mandatory": true
         },
         {
@@ -236,13 +206,11 @@
               "name": "changeRecordCloseTime"
             }
           ],
-          "is_datetime": true,
           "datetime_object": {
             "format": "d-M-y H:mX",
             "timezone_offset": "+01",
             "convert_to": "ISO_DATE_TIME"
           },
-          "is_compound": false,
           "mandatory": true
         },
         {
@@ -252,13 +220,11 @@
               "name": "requestedEndDate"
             }
           ],
-          "is_datetime": true,
           "datetime_object": {
             "format": "d-M-y H:mX",
             "timezone_offset": "+01",
             "convert_to": "ISO_DATE_TIME"
           },
-          "is_compound": false,
           "mandatory": true
         },
         {
@@ -268,13 +234,11 @@
               "name": "changeRecordOpenTime"
             }
           ],
-          "is_datetime": true,
           "datetime_object": {
             "format": "d-M-y H:mX",
             "timezone_offset": "+01",
             "convert_to": "ISO_DATE_TIME"
           },
-          "is_compound": false,
           "mandatory": true
         },
         {
@@ -284,13 +248,11 @@
               "name": "changeRecordCloseTime"
             }
           ],
-          "is_datetime": true,
           "datetime_object": {
             "format": "d-M-y H:mX",
             "timezone_offset": "+01",
             "convert_to": "ISO_DATE_TIME"
           },
-          "is_compound": false,
           "mandatory": true
         },
         {
@@ -300,8 +262,6 @@
               "name": "originatedFrom"
             }
           ],
-          "is_datetime": false,
-          "is_compound": false,
           "mandatory": true
         },
         {
@@ -312,8 +272,6 @@
               "dtype": "Int64"
             }
           ],
-          "is_datetime": false,
-          "is_compound": false,
           "mandatory": false
         },
         {
@@ -324,8 +282,6 @@
               "dtype": "Int64"
             }
           ],
-          "is_datetime": false,
-          "is_compound": false,
           "mandatory": false
         },
         {
@@ -335,26 +291,27 @@
               "name": "log"
             }
           ],
-          "is_datetime": false,
-          "is_compound": false,
           "mandatory": true
         }
       ]
     },
     {
       "name": "BPIC14Incident",
+      "file_directory": "..\\data\\BPIC14\\prepared\\",
       "file_names": [
         "BPIC14Incident.csv"
       ],
       "labels": [
         "Event"
       ],
-      "samples": [{
-        "file_name": "BPIC14Incident.csv",
-        "sample_method": "random",
-        "population_column": "serviceComponentWbsAff",
-        "size": 20
-      }],
+      "samples": [
+        {
+          "file_name": "BPIC14Incident.csv",
+          "use_random_sample": true,
+          "population_column": "serviceComponentWbsAff",
+          "size": 20
+        }
+      ],
       "attributes": [
         {
           "name": "idx",
@@ -364,8 +321,6 @@
               "dtype": "int"
             }
           ],
-          "is_datetime": false,
-          "is_compound": false,
           "mandatory": true
         },
         {
@@ -375,8 +330,6 @@
               "name": "ciNameAff"
             }
           ],
-          "is_datetime": false,
-          "is_compound": false,
           "mandatory": false
         },
         {
@@ -386,8 +339,6 @@
               "name": "ciTypeAff"
             }
           ],
-          "is_datetime": false,
-          "is_compound": false,
           "mandatory": false
         },
         {
@@ -397,8 +348,6 @@
               "name": "ciSubtypeAff"
             }
           ],
-          "is_datetime": false,
-          "is_compound": false,
           "mandatory": false
         },
         {
@@ -408,8 +357,6 @@
               "name": "serviceComponentWbsAff"
             }
           ],
-          "is_datetime": false,
-          "is_compound": false,
           "mandatory": true
         },
         {
@@ -419,8 +366,6 @@
               "name": "incidentId"
             }
           ],
-          "is_datetime": false,
-          "is_compound": false,
           "mandatory": true
         },
         {
@@ -430,8 +375,6 @@
               "name": "status"
             }
           ],
-          "is_datetime": false,
-          "is_compound": false,
           "mandatory": true
         },
         {
@@ -442,8 +385,6 @@
               "dtype": "Int64"
             }
           ],
-          "is_datetime": false,
-          "is_compound": false,
           "mandatory": true
         },
         {
@@ -454,8 +395,6 @@
               "dtype": "Int64"
             }
           ],
-          "is_datetime": false,
-          "is_compound": false,
           "mandatory": true
         },
         {
@@ -466,8 +405,6 @@
               "dtype": "Int64"
             }
           ],
-          "is_datetime": false,
-          "is_compound": false,
           "mandatory": true
         },
         {
@@ -477,8 +414,6 @@
               "name": "category"
             }
           ],
-          "is_datetime": false,
-          "is_compound": false,
           "mandatory": true
         },
         {
@@ -488,8 +423,6 @@
               "name": "kmNumber"
             }
           ],
-          "is_datetime": false,
-          "is_compound": false,
           "mandatory": true
         },
         {
@@ -499,8 +432,6 @@
               "name": "alertStatus"
             }
           ],
-          "is_datetime": false,
-          "is_compound": false,
           "mandatory": true
         },
         {
@@ -511,8 +442,6 @@
               "dtype": "Int64"
             }
           ],
-          "is_datetime": false,
-          "is_compound": false,
           "mandatory": true
         },
         {
@@ -522,13 +451,11 @@
               "name": "openTime"
             }
           ],
-          "is_datetime": true,
           "datetime_object": {
             "format": "d/M/y H:m:sX",
             "timezone_offset": "+01",
             "convert_to": "ISO_DATE_TIME"
           },
-          "is_compound": false,
           "mandatory": true
         },
         {
@@ -538,13 +465,11 @@
               "name": "reopenTime"
             }
           ],
-          "is_datetime": true,
           "datetime_object": {
             "format": "d/M/y H:m:sX",
             "timezone_offset": "+01",
             "convert_to": "ISO_DATE_TIME"
           },
-          "is_compound": false,
           "mandatory": true
         },
         {
@@ -554,13 +479,11 @@
               "name": "resolvedTime"
             }
           ],
-          "is_datetime": true,
           "datetime_object": {
             "format": "d/M/y H:m:sX",
             "timezone_offset": "+01",
             "convert_to": "ISO_DATE_TIME"
           },
-          "is_compound": false,
           "mandatory": true
         },
         {
@@ -570,13 +493,11 @@
               "name": "closeTime"
             }
           ],
-          "is_datetime": true,
           "datetime_object": {
             "format": "d/M/y H:m:sX",
             "timezone_offset": "+01",
             "convert_to": "ISO_DATE_TIME"
           },
-          "is_compound": false,
           "mandatory": true
         },
         {
@@ -587,8 +508,6 @@
               "dtype": "float"
             }
           ],
-          "is_datetime": false,
-          "is_compound": false,
           "mandatory": true
         },
         {
@@ -599,8 +518,6 @@
               "dtype": "Int64"
             }
           ],
-          "is_datetime": false,
-          "is_compound": false,
           "mandatory": true
         },
         {
@@ -610,8 +527,6 @@
               "name": "relatedInteraction"
             }
           ],
-          "is_datetime": false,
-          "is_compound": false,
           "mandatory": true
         },
         {
@@ -622,8 +537,6 @@
               "dtype": "Int64"
             }
           ],
-          "is_datetime": false,
-          "is_compound": false,
           "mandatory": true
         },
         {
@@ -634,8 +547,6 @@
               "dtype": "Int64"
             }
           ],
-          "is_datetime": false,
-          "is_compound": false,
           "mandatory": true
         },
         {
@@ -645,8 +556,6 @@
               "name": "relatedChange"
             }
           ],
-          "is_datetime": false,
-          "is_compound": false,
           "mandatory": true
         },
         {
@@ -656,8 +565,6 @@
               "name": "ciNameCby"
             }
           ],
-          "is_datetime": false,
-          "is_compound": false,
           "mandatory": true
         },
         {
@@ -667,8 +574,6 @@
               "name": "ciTypeCby"
             }
           ],
-          "is_datetime": false,
-          "is_compound": false,
           "mandatory": true
         },
         {
@@ -678,8 +583,6 @@
               "name": "ciSubtypeCby"
             }
           ],
-          "is_datetime": false,
-          "is_compound": false,
           "mandatory": true
         },
         {
@@ -689,8 +592,6 @@
               "name": "serviceCompWbsCby"
             }
           ],
-          "is_datetime": false,
-          "is_compound": false,
           "mandatory": true
         },
         {
@@ -700,8 +601,6 @@
               "name": "log"
             }
           ],
-          "is_datetime": false,
-          "is_compound": false,
           "mandatory": true
         },
         {
@@ -715,23 +614,24 @@
             }
           ],
           "separator": ": ",
-          "is_datetime": false,
-          "is_compound": true,
           "mandatory": true
         }
       ]
     },
     {
       "name": "BPIC14IncidentDetail",
+      "file_directory": "..\\data\\BPIC14\\prepared\\",
       "file_names": [
         "BPIC14IncidentDetail.csv"
       ],
-      "samples": [{
-        "file_name": "BPIC14IncidentDetail.csv",
-        "sample_method": "random",
-        "population_column": "incidentId",
-        "size": 20
-      }],
+      "samples": [
+        {
+          "file_name": "BPIC14IncidentDetail.csv",
+          "use_random_sample": true,
+          "population_column": "incidentId",
+          "size": 20
+        }
+      ],
       "labels": [
         "Event"
       ],
@@ -744,8 +644,6 @@
               "dtype": "int"
             }
           ],
-          "is_datetime": false,
-          "is_compound": false,
           "mandatory": true
         },
         {
@@ -755,8 +653,6 @@
               "name": "incidentId"
             }
           ],
-          "is_datetime": false,
-          "is_compound": false,
           "mandatory": false
         },
         {
@@ -766,13 +662,11 @@
               "name": "dateStamp"
             }
           ],
-          "is_datetime": true,
           "datetime_object": {
             "format": "d-M-y H:m:sX",
             "timezone_offset": "+01",
             "convert_to": "ISO_DATE_TIME"
           },
-          "is_compound": false,
           "mandatory": false
         },
         {
@@ -782,8 +676,6 @@
               "name": "incidentActivityNumber"
             }
           ],
-          "is_datetime": false,
-          "is_compound": false,
           "mandatory": false
         },
         {
@@ -793,8 +685,6 @@
               "name": "incidentActivityType"
             }
           ],
-          "is_datetime": false,
-          "is_compound": false,
           "mandatory": true
         },
         {
@@ -804,8 +694,6 @@
               "name": "assignmentGroup"
             }
           ],
-          "is_datetime": false,
-          "is_compound": false,
           "mandatory": true
         },
         {
@@ -815,8 +703,6 @@
               "name": "kmNumber"
             }
           ],
-          "is_datetime": false,
-          "is_compound": false,
           "mandatory": true
         },
         {
@@ -826,8 +712,6 @@
               "name": "interactionId"
             }
           ],
-          "is_datetime": false,
-          "is_compound": false,
           "mandatory": true
         },
         {
@@ -837,26 +721,27 @@
               "name": "log"
             }
           ],
-          "is_datetime": false,
-          "is_compound": false,
           "mandatory": true
         }
       ]
     },
     {
       "name": "BPIC14Interaction",
+      "file_directory": "..\\data\\BPIC14\\prepared\\",
       "file_names": [
         "BPIC14Interaction.csv"
       ],
       "labels": [
         "Event"
       ],
-      "samples": [{
-        "file_name": "BPIC14Interaction.csv",
-        "sample_method": "random",
-        "population_column": "serviceCompWbsAff",
-        "size": 10
-      }],
+      "samples": [
+        {
+          "file_name": "BPIC14Interaction.csv",
+          "use_random_sample": true,
+          "population_column": "serviceCompWbsAff",
+          "size": 10
+        }
+      ],
       "attributes": [
         {
           "name": "idx",
@@ -866,8 +751,6 @@
               "dtype": "int"
             }
           ],
-          "is_datetime": false,
-          "is_compound": false,
           "mandatory": true
         },
         {
@@ -877,8 +760,6 @@
               "name": "ciNameAff"
             }
           ],
-          "is_datetime": false,
-          "is_compound": false,
           "mandatory": false
         },
         {
@@ -888,8 +769,6 @@
               "name": "ciSubtypeAff"
             }
           ],
-          "is_datetime": false,
-          "is_compound": false,
           "mandatory": false
         },
         {
@@ -899,8 +778,6 @@
               "name": "serviceCompWbsAff"
             }
           ],
-          "is_datetime": false,
-          "is_compound": false,
           "mandatory": false
         },
         {
@@ -910,8 +787,6 @@
               "name": "interactionId"
             }
           ],
-          "is_datetime": false,
-          "is_compound": false,
           "mandatory": false
         },
         {
@@ -921,8 +796,6 @@
               "name": "status"
             }
           ],
-          "is_datetime": false,
-          "is_compound": false,
           "mandatory": false
         },
         {
@@ -933,8 +806,6 @@
               "dtype": "Int64"
             }
           ],
-          "is_datetime": false,
-          "is_compound": false,
           "mandatory": false
         },
         {
@@ -945,8 +816,6 @@
               "dtype": "Int64"
             }
           ],
-          "is_datetime": false,
-          "is_compound": false,
           "mandatory": false
         },
         {
@@ -957,8 +826,6 @@
               "dtype": "Int64"
             }
           ],
-          "is_datetime": false,
-          "is_compound": false,
           "mandatory": false
         },
         {
@@ -968,8 +835,6 @@
               "name": "category"
             }
           ],
-          "is_datetime": false,
-          "is_compound": false,
           "mandatory": false
         },
         {
@@ -979,8 +844,6 @@
               "name": "kmNumber"
             }
           ],
-          "is_datetime": false,
-          "is_compound": false,
           "mandatory": false
         },
         {
@@ -990,13 +853,11 @@
               "name": "openTimeFirstTouch"
             }
           ],
-          "is_datetime": true,
           "datetime_object": {
             "format": "d-M-y H:mX",
             "timezone_offset": "+01",
             "convert_to": "ISO_DATE_TIME"
           },
-          "is_compound": false,
           "mandatory": false
         },
         {
@@ -1006,13 +867,11 @@
               "name": "closeTime"
             }
           ],
-          "is_datetime": true,
           "datetime_object": {
             "format": "d-M-y H:mX",
             "timezone_offset": "+01",
             "convert_to": "ISO_DATE_TIME"
           },
-          "is_compound": false,
           "mandatory": false
         },
         {
@@ -1022,8 +881,6 @@
               "name": "closureCode"
             }
           ],
-          "is_datetime": false,
-          "is_compound": false,
           "mandatory": false
         },
         {
@@ -1033,8 +890,6 @@
               "name": "firstCallResolution"
             }
           ],
-          "is_datetime": false,
-          "is_compound": false,
           "mandatory": false
         },
         {
@@ -1045,8 +900,6 @@
               "dtype": "Int64"
             }
           ],
-          "is_datetime": false,
-          "is_compound": false,
           "mandatory": false
         },
         {
@@ -1056,8 +909,6 @@
               "name": "relatedIncident"
             }
           ],
-          "is_datetime": false,
-          "is_compound": false,
           "mandatory": false
         },
         {
@@ -1067,8 +918,6 @@
               "name": "log"
             }
           ],
-          "is_datetime": false,
-          "is_compound": false,
           "mandatory": true
         },
         {
@@ -1082,8 +931,6 @@
             }
           ],
           "separator": ": ",
-          "is_datetime": false,
-          "is_compound": true,
           "mandatory": true
         }
       ]
@@ -1098,8 +945,9 @@
           "is_id": true
         }
       ],
-      "DF": true,
-      "CORR": true,
+      "df": true,
+      "include_label_in_df": true,
+      "corr": true,
       "merge_duplicate_df": true
     },
     {
@@ -1110,8 +958,9 @@
           "is_id": true
         }
       ],
-      "DF": true,
-      "CORR": true,
+      "df": true,
+      "include_label_in_df": true,
+      "corr": true,
       "merge_duplicate_df": true
     },
     {
@@ -1122,8 +971,9 @@
           "is_id": true
         }
       ],
-      "DF": true,
-      "CORR": true,
+      "df": true,
+      "include_label_in_df": true,
+      "corr": true,
       "merge_duplicate_df": true
     },
     {
@@ -1134,8 +984,9 @@
           "is_id": true
         }
       ],
-      "DF": true,
-      "CORR": true,
+      "df": true,
+      "include_label_in_df": true,
+      "corr": true,
       "merge_duplicate_df": true
     },
     {
@@ -1146,8 +997,9 @@
           "is_id": true
         }
       ],
-      "DF": true,
-      "CORR": true,
+      "df": true,
+      "include_label_in_df": true,
+      "corr": true,
       "merge_duplicate_df": true
     },
     {
@@ -1158,8 +1010,9 @@
           "is_id": true
         }
       ],
-      "DF": true,
-      "CORR": true,
+      "df": true,
+      "include_label_in_df": true,
+      "corr": true,
       "merge_duplicate_df": true
     },
     {
@@ -1170,8 +1023,9 @@
           "is_id": true
         }
       ],
-      "DF": true,
-      "CORR": true,
+      "df": true,
+      "include_label_in_df": true,
+      "corr": true,
       "merge_duplicate_df": true
     }
   ],
@@ -1180,15 +1034,13 @@
       "type": "RELATED_INCIDENT",
       "from_node_label": "Interaction",
       "to_node_label": "Incident",
-      "event_reference_attribute": "relatedIncident",
-      "reify": false
+      "event_reference_attribute": "relatedIncident"
     },
     {
       "type": "PART_OF",
       "from_node_label": "ConfigurationItem",
       "to_node_label": "ServiceComponent",
-      "event_reference_attribute": "serviceComponentAff",
-      "reify": false
+      "event_reference_attribute": "serviceComponentAff"
     }
   ],
   "classes": [
@@ -1200,7 +1052,11 @@
       "ids": [
         "name"
       ],
-      "DF": false
+      "df": false
     }
-  ]
+  ],
+  "log": {
+    "include": true,
+    "has": true
+  }
 }

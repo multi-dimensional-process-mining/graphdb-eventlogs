@@ -2,15 +2,24 @@ import json
 import os
 import random
 import warnings
-from typing import List, Any, Dict
+from typing import List, Any, Dict, Optional
 
 import pandas as pd
 from pandas import DataFrame
 
 from dataclasses import dataclass
 
+
 def replace_undefined_value(item, value):
     return item if item is not None else value
+
+
+def create_list(class_type: Any, obj: Optional[Dict[str, Any]], *args) -> List[Any]:
+    if obj is None:
+        return []
+    else:
+        return [class_type.from_dict(y, *args) for y in obj]
+
 
 @dataclass
 class DatetimeObject:
@@ -34,7 +43,7 @@ class Column:
     dtype: str
 
     @staticmethod
-    def from_dict(obj: Any) -> 'Column':
+    def from_dict(obj: Any) -> Optional['Column']:
         if obj is None:
             return None
         _name = obj.get("name")
@@ -43,45 +52,34 @@ class Column:
 
 
 @dataclass
-class NaRepColumn:
-    name: str
-    dtype: str
-
-    @staticmethod
-    def from_dict(obj: Any) -> 'NaRepColumn':
-        if obj is None:
-            return None
-        _name = obj.get("name")
-        _dtype = obj.get("dtype")
-        return NaRepColumn(_name, _dtype)
-
-
-@dataclass
 class Attribute:
     name: str
     columns: List[Column]
+    separator: str
     is_datetime: bool
     is_compound: bool
     mandatory: bool
     datetime_object: DatetimeObject
-    na_rep_columns: List[NaRepColumn]
-    separator: str
+    na_rep_columns: List[Column]
+    filter_values: List[str]
+    use_filter: bool
 
     @staticmethod
-    def from_dict(obj: Any) -> 'Attribute':
+    def from_dict(obj: Any) -> Optional['Attribute']:
         if obj is None:
             return None
         _name = obj.get("name")
-        _columns = [Column.from_dict(y) for y in obj.get("columns")]
-        _is_datetime = bool(obj.get("is_datetime"))
-        _is_compound = bool(obj.get("is_compound"))
+        _columns = create_list(Column, obj.get("columns"))
+        _is_compound = len(_columns) > 1
         _mandatory = bool(obj.get("mandatory"))
         _datetime_object = DatetimeObject.from_dict(obj.get("datetime_object"))
-        _na_rep_columns = [NaRepColumn.from_dict(y) for y in obj.get("na_rep_columns")] if obj.get(
-            "na_rep_columns") is not None else None
+        _is_datetime = _datetime_object is not None
+        _na_rep_columns = create_list(Column, obj.get("na_rep_columns"))
         _separator = obj.get("separator")
-        return Attribute(_name, _columns, _is_datetime, _is_compound, _mandatory, _datetime_object, _na_rep_columns,
-                         _separator)
+        _filter_values = obj.get("filter_values")
+        _use_filter = replace_undefined_value(obj.get("use_filter"), _filter_values is not None)
+        return Attribute(_name, _columns, _separator, _is_datetime, _is_compound, _mandatory, _datetime_object,
+                         _na_rep_columns, _filter_values, _use_filter)
 
 
 @dataclass
@@ -90,22 +88,25 @@ class Class:
     required_attributes: List[str]
     ids: List[str]
     df: bool
-    entity_type: str
+    include_label_in_cdf: bool
+    df_entity_labels: List[str]
     threshold: int
     relative_threshold: int
 
     @staticmethod
-    def from_dict(obj: Any) -> 'Class':
+    def from_dict(obj: Any) -> Optional['Class']:
         if obj is None:
             return None
         _label = obj.get("label")
         _required_attributes = obj.get("required_attributes")
         _ids = obj.get("ids")
-        _df = replace_undefined_value(obj.get("DF"), False)
-        _entity_type = obj.get("entity_type")
+        _df = replace_undefined_value(obj.get("df"), False)
+        _include_label_in_cdf = _df or replace_undefined_value(obj.get("include_label_in_cdf"), True)
+        _df_entity_labels = obj.get("entity_labels")
         _threshold = replace_undefined_value(obj.get("threshold"), 0)
         _relative_threshold = replace_undefined_value(obj.get("relative_threshold"), 0)
-        return Class(_label, _required_attributes, _ids, _df, _entity_type, _threshold, _relative_threshold)
+        return Class(_label, _required_attributes, _ids, _df, _include_label_in_cdf, _df_entity_labels, _threshold,
+                     _relative_threshold)
 
 
 @dataclass
@@ -115,24 +116,30 @@ class EventAttribute:
     is_id: bool
 
     @staticmethod
-    def from_dict(obj: Any) -> 'EventAttribute':
+    def from_dict(obj: Any) -> Optional['EventAttribute']:
         if obj is None:
             return None
         _name = obj.get("name")
         _values = replace_undefined_value(obj.get("values"), ["IS NOT NULL", '<> "nan"', '<> "None"'])
+        if _values != ["IS NOT NULL", '<> "nan"', '<> "None"']:
+            _values = [f'''= "{value}"''' for value in _values]
         _is_id = replace_undefined_value(obj.get("is_id"), False)
         return EventAttribute(_name, _values, _is_id)
 
 
 class Entity:
 
-    def __init__(self, label: str, event_attributes: List[EventAttribute], df: bool, corr: bool,
-                 merge_duplicate_df: bool):
+    def __init__(self, include: bool, label: str, additional_labels: List[str], event_attributes: List[EventAttribute],
+                 corr: bool, df: bool, include_label_in_df: bool, merge_duplicate_df: bool, delete_parallel_df: bool):
+        self.include = include
         self.label = label
+        self.additional_labels = additional_labels
         self.event_attributes = event_attributes
-        self.df = df
         self.corr = corr
+        self.df = df
+        self.include_label_in_df = include_label_in_df
         self.merge_duplicate_df = merge_duplicate_df
+        self.delete_parallel_df = delete_parallel_df
 
     def get_id_attribute_name(self):
         for event_attribute in self.event_attributes:
@@ -147,114 +154,111 @@ class Entity:
 
         return properties
 
-    def get_label(self):
-        label = self.label if self.label is not None else ""
-        return label
-
     @staticmethod
-    def from_dict(obj: Any) -> 'Entity':
+    def from_dict(obj: Any) -> Optional['Entity']:
         if obj is None:
             return None
-        _label = obj.get("label")
-        _event_attributes = [EventAttribute.from_dict(y) for y in obj.get("event_attributes")]
-        _df = replace_undefined_value(obj.get("DF"), False)
-        _corr = replace_undefined_value(obj.get("CORR"), False)
-        _merge_duplicate_df = replace_undefined_value(obj.get("merge_duplicate_df"), False)
-        return Entity(_label, _event_attributes, _df, _corr, _merge_duplicate_df)
+        _include = replace_undefined_value(obj.get("include"), True)
+        _label = replace_undefined_value(obj.get("label"), "")
+        _additional_labels = replace_undefined_value(obj.get("additional_labels"), [])
+        _event_attributes = create_list(EventAttribute, obj.get("event_attributes"))
+        _corr = _include or replace_undefined_value(obj.get("corr"), False)
+        _df = _corr or replace_undefined_value(obj.get("df"), False)
+        _include_label_in_df = _df or replace_undefined_value(obj.get("include_label_in_df"), False)
+        _merge_duplicate_df = _include or replace_undefined_value(obj.get("merge_duplicate_df"), False)
+        _delete_parallel_df = _include or replace_undefined_value(obj.get("delete_parallel_df"), False)
+        return Entity(_include, _label, _additional_labels, _event_attributes, _df, _include_label_in_df, _corr,
+                      _merge_duplicate_df,
+                      _delete_parallel_df)
 
 
 @dataclass
-class ReifiedEntity:
-    label: str
-    df: bool
-    corr: bool
-    delete_parallel_df: bool
-    merge_duplicate_df: bool
+class Log:
+    include: bool
+    has: bool
 
-    @staticmethod
-    def from_dict(obj: Any) -> 'ReifiedEntity':
+    def from_dict(obj: Any) -> 'Log':
         if obj is None:
-            return None
-
-        _label = obj.get("label")
-        _df = replace_undefined_value(obj.get("DF"), False)
-        _corr = replace_undefined_value(obj.get("CORR"), False)
-        _delete_parallel_df = replace_undefined_value(obj.get("delete_parallel_df"), False)
-        _merge_duplicate_df = replace_undefined_value(obj.get("merge_duplicate_df"), False)
-
-        return ReifiedEntity(_label, _df, _corr, _delete_parallel_df, _merge_duplicate_df)
+            return Log(True, True)
+        _include = replace_undefined_value(obj.get("include"), True)
+        _has = replace_undefined_value(obj.get("has"), True)
+        return Log(_include, _has)
 
 
 @dataclass
 class Relation:
+    include: bool
     type: str
     from_node_label: str
     to_node_label: str
     event_reference_attribute: str
     reify: bool
-    reified_entity: ReifiedEntity
+    reified_entity: Entity
 
     @staticmethod
-    def from_dict(obj: Any) -> 'Relation':
+    def from_dict(obj: Any) -> Optional['Relation']:
         if obj is None:
             return None
+        _include = replace_undefined_value(obj.get("include"), True)
         _type = obj.get("type")
         _from_node_label = obj.get("from_node_label")
         _to_node_label = obj.get("to_node_label")
         _event_reference_attribute = obj.get("event_reference_attribute")
-        _reify = replace_undefined_value(obj.get("reify"), False)
-        _reified_entity = ReifiedEntity.from_dict(obj.get("reified_entity"))
-        return Relation(_type, _from_node_label, _to_node_label, _event_reference_attribute, _reify, _reified_entity)
+        _reified_entity = Entity.from_dict(obj.get("reified_entity"))
+        _reify = replace_undefined_value(obj.get("reify"), _reified_entity is not None)
+        return Relation(_include, _type, _from_node_label, _to_node_label, _event_reference_attribute, _reify,
+                        _reified_entity)
 
 
 @dataclass
 class Sample:
     file_name: str
-    sample_method: str
+    use_random_sample: bool
     population_column: str
     size: int
     ids: List[Any]
 
     @staticmethod
-    def from_dict(obj: Any) -> 'Sample':
+    def from_dict(obj: Any) -> Optional['Sample']:
         if obj is None:
             return None
         _file_name = obj.get("file_name")
-        _sample_method = obj.get("sample_method")
+        _use_random_sample = obj.get("use_random_sample")
         _population_column = obj.get("population_column")
         _size = obj.get("size")
         _ids = obj.get("ids")
-        return Sample(_file_name, _sample_method, _population_column, _size, _ids)
+        return Sample(_file_name, _use_random_sample, _population_column, _size, _ids)
 
 
 class EventTable:
-    def __init__(self, name: str, file_names: List[str], labels: List[str], true_values: List[str],
-                 false_values: List[str], samples: Dict[str, Sample], attributes: List[Attribute],
-                 use_sample: bool = False):
+    def __init__(self, name: str, file_directory: str, file_names: List[str], labels: List[str], true_values: List[str],
+                 false_values: List[str], samples: Dict[str, Sample], attributes: List[Attribute]):
         self.name = name
+        self.file_directory = file_directory
         self.file_names = file_names
         self.labels = labels
         self.true_values = true_values
         self.false_values = false_values
         self.samples = samples
         self.attributes = attributes
-        self.use_sample = use_sample
         # self.attributes = {attribute.name: attribute for attribute in self.attributes}
 
     @staticmethod
-    def from_dict(obj: Any, use_sample: bool = False) -> 'EventTable':
+    def from_dict(obj: Any) -> Optional['EventTable']:
         if obj is None:
             return None
 
         _name = obj.get("name")
+        _file_directory = obj.get("file_directory")
         _file_names = obj.get("file_names")
         _labels = obj.get("labels")
         _true_values = obj.get("true_values")
         _false_values = obj.get("false_values")
-        _samples = [Sample.from_dict(y) for y in obj.get("samples")]
+        _samples = create_list(Sample, obj.get("samples"))
         _samples = {sample.file_name: sample for sample in _samples}
-        _attributes = [Attribute.from_dict(y) for y in obj.get("attributes")]
-        return EventTable(_name, _file_names, _labels, _true_values, _false_values, _samples, _attributes, use_sample)
+        _attributes = create_list(Attribute, obj.get("attributes"))
+        return EventTable(_name, _file_directory, _file_names, _labels, _true_values, _false_values, _samples,
+                          _attributes)
 
     def get_dtype_dict(self):
         dtypes = {}
@@ -283,12 +287,12 @@ class EventTable:
             warnings.warn(f"No sample population has been defined for {self.name}")
 
         if file_name not in self.samples:
-            #TODO make error
+            # TODO make error
             warnings.warn(f"No sample population has been defined for {file_name}")
 
         sample = self.samples[file_name]
         sample_column = sample.population_column
-        if sample.sample_method == "random":
+        if sample.use_random_sample:
             random_selection = random.sample(df_log[sample_column].unique().tolist(), k=sample.size)
         else:
             random_selection = sample.ids
@@ -329,7 +333,7 @@ class EventTable:
     def preprocess_according_to_attributes(self, df_log):
         # loop over all attributes and check if they should be created, renamed or imputed
         for attribute in self.attributes:
-            if attribute.na_rep_columns is not None:  # impute values in case of missing values
+            if len(attribute.na_rep_columns) > 0:  # impute values in case of missing values
                 df_log = EventTable.replace_nan_values(df_log, attribute)
             if attribute.is_compound:  # create attribute by composing
                 df_log = EventTable.create_compound_attribute(df_log, attribute)
@@ -338,7 +342,7 @@ class EventTable:
 
         return df_log
 
-    def prepare_data_set(self, input_path, file_name):
+    def prepare_data_set(self, input_path, file_name, use_sample):
         dtypes = self.get_dtype_dict()
         required_columns = self.get_required_columns()
 
@@ -349,7 +353,7 @@ class EventTable:
                                         usecols=required_columns, dtype=dtypes, true_values=true_values,
                                         false_values=false_values)
 
-        if self.use_sample:
+        if use_sample:
             df_log = self.create_sample(file_name, df_log)
 
         df_log = self.preprocess_according_to_attributes(df_log)
@@ -361,7 +365,7 @@ class EventTable:
 
         return df_log
 
-    def get_datetime_formats(self):
+    def get_datetime_formats(self) -> Dict[str, DatetimeObject]:
         datetime_formats = {}
 
         for attribute in self.attributes:
@@ -370,12 +374,21 @@ class EventTable:
 
         return datetime_formats
 
+    def get_attribute_value_pairs_filtered(self) -> Dict[str, List[str]]:
+        attribute_value_pairs = {}
+
+        for attribute in self.attributes:
+            if attribute.use_filter:
+                attribute_value_pairs[attribute.name] = attribute.filter_values
+
+        return attribute_value_pairs
+
 
 class SemanticHeader:
     def __init__(self, name: str, version: str, sample_seed: int,
                  event_tables: List[EventTable], entities: List[Entity],
                  relations: List[Relation], classes: List[Class],
-                 use_sample: bool):
+                 log: Log):
         self.name = name
         self.version = version
         self.sample_seed = sample_seed
@@ -390,21 +403,26 @@ class SemanticHeader:
         self.relations = relations
 
         self.classes = classes
-        # self.classes = {_class.label: _class for _class in self.classes}
+        self.log = log
 
-        self.use_sample = use_sample
+    def get_entity(self, entity_label) -> Optional['Entity']:
+        for entity in self.entities:
+            if entity_label == entity.label:
+                return entity
+        return None
 
     @staticmethod
-    def from_dict(obj: Any, use_sample: bool = False) -> 'SemanticHeader':
+    def from_dict(obj: Any) -> Optional['SemanticHeader']:
         if obj is None:
             return None
 
         _name = obj.get("name")
         _version = obj.get("version")
-        _sample_seed = replace_undefined_value(obj.get("sample_seed"), 1)
-        _event_tables = [EventTable.from_dict(y, use_sample) for y in obj.get("event_tables")]
-        _entities = [Entity.from_dict(y) for y in obj.get("entities")]
-        _relations = [Relation.from_dict(y) for y in obj.get("relations")]
-        _classes = [Class.from_dict(y) for y in obj.get("classes")]
+        _sample_seed = 1
+        _event_tables = create_list(EventTable, obj.get("event_tables"))
+        _entities = create_list(Entity, obj.get("entities"))
+        _relations = create_list(Relation, obj.get("relations"))
+        _classes = create_list(Class, obj.get("classes"))
+        _log = Log.from_dict(obj.get("log"))
         return SemanticHeader(_name, _version, _sample_seed, _event_tables, _entities, _relations,
-                              _classes, use_sample=use_sample)
+                              _classes, _log)

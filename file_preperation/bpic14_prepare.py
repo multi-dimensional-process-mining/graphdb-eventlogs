@@ -16,7 +16,7 @@ from csv_to_eventgraph_neo4j.auxiliary_functions import convert_columns_into_cam
 # config
 sample = True
 inputpath = '..\\data\\BPIC14\\'
-path_to_neo4j_import_directory = '..\\data\\BPIC14\\prepared\\'  # where prepared files will be stored
+path_to_neo4j_import_directory = '../data/BPIC14/prepared\\'  # where prepared files will be stored
 
 start = time.time()
 

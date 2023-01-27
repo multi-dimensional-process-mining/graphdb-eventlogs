@@ -1,0 +1,889 @@
+{
+  "name": "BPIC16",
+  "version": "1.0.0",
+  "event_tables": [
+    {
+      "name": "BPIC16Clicks",
+      "file_directory": "..\\data\\BPIC16\\prepared\\",
+      "file_names": [
+        "BPIC16Clicks.csv"
+      ],
+      "labels": [
+        "Event"
+      ],
+      "samples": [
+        {
+          "file_name": "BPIC16Clicks.csv",
+          "use_random_sample": false,
+          "population_column": "customerId",
+          "ids": [
+            2026796,
+            2223803,
+            2023026,
+            114939,
+            2011721,
+            2022933,
+            919259,
+            2079086,
+            466152,
+            2057965,
+            1039204,
+            395673,
+            1710155,
+            2081135,
+            1723340,
+            1893155,
+            1042998,
+            435939,
+            1735039,
+            2045407
+          ]
+        }
+      ],
+      "attributes": [
+        {
+          "name": "idx",
+          "columns": [
+            {
+              "name": "idx",
+              "dtype": "int"
+            }
+          ],
+          "mandatory": true
+        },
+        {
+          "name": "activity",
+          "columns": [
+            {
+              "name": "pageName"
+            }
+          ],
+          "mandatory": true
+        },
+        {
+          "name": "timestamp",
+          "columns": [
+            {
+              "name": "timestamp"
+            }
+          ],
+          "datetime_object": {
+            "format": "y-M-d H:m:s.nX",
+            "timezone_offset": "+01",
+            "convert_to": "ISO_DATE_TIME"
+          },
+          "mandatory": true
+        },
+        {
+          "name": "customerId",
+          "columns": [
+            {
+              "name": "customerId",
+              "dtype": "Int64"
+            }
+          ],
+          "mandatory": true
+        },
+        {
+          "name": "ageCategory",
+          "columns": [
+            {
+              "name": "ageCategory"
+            }
+          ],
+          "mandatory": true
+        },
+        {
+          "name": "gender",
+          "columns": [
+            {
+              "name": "gender"
+            }
+          ],
+          "mandatory": true
+        },
+        {
+          "name": "officeU",
+          "columns": [
+            {
+              "name": "officeU",
+              "dtype": "Int32"
+            }
+          ],
+          "mandatory": true
+        },
+        {
+          "name": "officeW",
+          "columns": [
+            {
+              "name": "officeW",
+              "dtype": "Int32"
+            }
+          ],
+          "mandatory": true
+        },
+        {
+          "name": "sessionId",
+          "columns": [
+            {
+              "name": "sessionId",
+              "dtype": "Int64"
+            }
+          ],
+          "mandatory": true
+        },
+        {
+          "name": "ipid",
+          "columns": [
+            {
+              "name": "ipid",
+              "dtype": "Int64"
+            }
+          ],
+          "mandatory": true
+        },
+        {
+          "name": "vhost",
+          "columns": [
+            {
+              "name": "vhost"
+            }
+          ],
+          "mandatory": true
+        },
+        {
+          "name": "urlFile",
+          "columns": [
+            {
+              "name": "urlFile"
+            }
+          ],
+          "mandatory": true
+        },
+        {
+          "name": "log",
+          "columns": [
+            {
+              "name": "log"
+            }
+          ],
+          "mandatory": true
+        }
+      ]
+    },
+    {
+      "name": "BPIC16Complaints",
+      "file_directory": "..\\data\\BPIC16\\prepared\\",
+      "file_names": [
+        "BPIC16Complaints.csv"
+      ],
+      "labels": [
+        "Event"
+      ],
+      "samples": [
+        {
+          "file_name": "BPIC16Complaints.csv",
+          "use_random_sample": false,
+          "population_column": "customerId",
+          "ids": [
+            2026796,
+            2223803,
+            2023026,
+            114939,
+            2011721,
+            2022933,
+            919259,
+            2079086,
+            466152,
+            2057965,
+            1039204,
+            395673,
+            1710155,
+            2081135,
+            1723340,
+            1893155,
+            1042998,
+            435939,
+            1735039,
+            2045407
+          ]
+        }
+      ],
+      "attributes": [
+        {
+          "name": "idx",
+          "columns": [
+            {
+              "name": "idx",
+              "dtype": "int"
+            }
+          ],
+          "mandatory": true
+        },
+        {
+          "name": "activity",
+          "columns": [
+            {
+              "name": "complaintTheme"
+            }
+          ],
+          "mandatory": true
+        },
+        {
+          "name": "timestamp",
+          "columns": [
+            {
+              "name": "contactDate"
+            }
+          ],
+          "datetime_object": {
+            "format": "y-M-d",
+            "convert_to": "ISO_DATE"
+          },
+          "mandatory": true
+        },
+        {
+          "name": "customerId",
+          "columns": [
+            {
+              "name": "customerId",
+              "dtype": "Int64"
+            }
+          ],
+          "mandatory": true
+        },
+        {
+          "name": "ageCategory",
+          "columns": [
+            {
+              "name": "ageCategory"
+            }
+          ],
+          "mandatory": true
+        },
+        {
+          "name": "gender",
+          "columns": [
+            {
+              "name": "gender"
+            }
+          ],
+          "mandatory": true
+        },
+        {
+          "name": "officeU",
+          "columns": [
+            {
+              "name": "officeU",
+              "dtype": "Int32"
+            }
+          ],
+          "mandatory": true
+        },
+        {
+          "name": "officeW",
+          "columns": [
+            {
+              "name": "officeW",
+              "dtype": "Int32"
+            }
+          ],
+          "mandatory": true
+        },
+        {
+          "name": "complaintDossierId",
+          "columns": [
+            {
+              "name": "complaintDossierId",
+              "dtype": "Int32"
+            }
+          ],
+          "mandatory": true
+        },
+        {
+          "name": "complaintId",
+          "columns": [
+            {
+              "name": "complaintId",
+              "dtype": "Int32"
+            }
+          ],
+          "mandatory": true
+        },
+        {
+          "name": "contactChannelId",
+          "columns": [
+            {
+              "name": "contactChannelId",
+              "dtype": "Int32"
+            }
+          ],
+          "mandatory": true
+        },
+        {
+          "name": "complaintThemeId",
+          "columns": [
+            {
+              "name": "complaintThemeId",
+              "dtype": "Int32"
+            }
+          ],
+          "mandatory": true
+        },
+        {
+          "name": "complaintSubthemeId",
+          "columns": [
+            {
+              "name": "complaintSubthemeId",
+              "dtype": "Int32"
+            }
+          ],
+          "mandatory": true
+        },
+        {
+          "name": "complaintTopicId",
+          "columns": [
+            {
+              "name": "complaintTopicId",
+              "dtype": "Int32"
+            }
+          ],
+          "mandatory": true
+        },
+        {
+          "name": "complaintSubtheme",
+          "columns": [
+            {
+              "name": "complaintSubtheme"
+            }
+          ],
+          "mandatory": true
+        },
+        {
+          "name": "complaintTopic",
+          "columns": [
+            {
+              "name": "complaintTopic"
+            }
+          ],
+          "mandatory": true
+        },
+        {
+          "name": "complaintThemeEn",
+          "columns": [
+            {
+              "name": "complaintThemeEn"
+            }
+          ],
+          "mandatory": true
+        },
+        {
+          "name": "complaintSubthemeEn",
+          "columns": [
+            {
+              "name": "complaintSubthemeEn"
+            }
+          ],
+          "mandatory": true
+        },
+        {
+          "name": "complaintTopicEn",
+          "columns": [
+            {
+              "name": "complaintTopicEn"
+            }
+          ],
+          "mandatory": true
+        },
+        {
+          "name": "log",
+          "columns": [
+            {
+              "name": "log"
+            }
+          ],
+          "mandatory": true
+        }
+      ]
+    },
+    {
+      "name": "BPIC16Questions",
+      "file_directory": "..\\data\\BPIC16\\prepared\\",
+      "file_names": [
+        "BPIC16Questions.csv"
+      ],
+      "labels": [
+        "Event"
+      ],
+      "samples": [
+        {
+          "file_name": "BPIC16Questions.csv",
+          "use_random_sample": false,
+          "population_column": "customerId",
+          "ids": [
+            2026796,
+            2223803,
+            2023026,
+            114939,
+            2011721,
+            2022933,
+            919259,
+            2079086,
+            466152,
+            2057965,
+            1039204,
+            395673,
+            1710155,
+            2081135,
+            1723340,
+            1893155,
+            1042998,
+            435939,
+            1735039,
+            2045407
+          ]
+        }
+      ],
+      "attributes": [
+        {
+          "name": "idx",
+          "columns": [
+            {
+              "name": "idx",
+              "dtype": "int"
+            }
+          ],
+          "mandatory": true
+        },
+        {
+          "name": "activity",
+          "columns": [
+            {
+              "name": "questionTheme"
+            }
+          ],
+          "mandatory": true
+        },
+        {
+          "name": "timestamp",
+          "columns": [
+            {
+              "name": "contactDate"
+            },
+            {
+              "name": "contactTimeEnd"
+            }
+          ],
+          "separator": " ",
+          "datetime_object": {
+            "format": "y-M-d H:m:s.nX",
+            "timezone_offset": "+01",
+            "convert_to": "ISO_DATE_TIME"
+          },
+          "mandatory": true
+        },
+        {
+          "name": "start",
+          "columns": [
+            {
+              "name": "contactDate"
+            },
+            {
+              "name": "contactTimeStart"
+            }
+          ],
+          "separator": " ",
+          "datetime_object": {
+            "format": "y-M-d H:m:s.nX",
+            "timezone_offset": "+01",
+            "convert_to": "ISO_DATE_TIME"
+          },
+          "mandatory": true
+        },
+        {
+          "name": "customerId",
+          "columns": [
+            {
+              "name": "customerId",
+              "dtype": "Int64"
+            }
+          ],
+          "mandatory": true
+        },
+        {
+          "name": "ageCategory",
+          "columns": [
+            {
+              "name": "ageCategory"
+            }
+          ],
+          "mandatory": true
+        },
+        {
+          "name": "gender",
+          "columns": [
+            {
+              "name": "gender"
+            }
+          ],
+          "mandatory": true
+        },
+        {
+          "name": "officeU",
+          "columns": [
+            {
+              "name": "officeU",
+              "dtype": "Int32"
+            }
+          ],
+          "mandatory": true
+        },
+        {
+          "name": "officeW",
+          "columns": [
+            {
+              "name": "officeW",
+              "dtype": "Int32"
+            }
+          ],
+          "mandatory": true
+        },
+        {
+          "name": "questionThemeId",
+          "columns": [
+            {
+              "name": "questionThemeId",
+              "dtype": "Int32"
+            }
+          ],
+          "mandatory": true
+        },
+        {
+          "name": "questionSubthemeId",
+          "columns": [
+            {
+              "name": "questionSubthemeId",
+              "dtype": "Int32"
+            }
+          ],
+          "mandatory": true
+        },
+        {
+          "name": "questionTopicId",
+          "columns": [
+            {
+              "name": "questionTopicId",
+              "dtype": "Int32"
+            }
+          ],
+          "mandatory": true
+        },
+        {
+          "name": "questionSubtheme",
+          "columns": [
+            {
+              "name": "questionSubtheme"
+            }
+          ],
+          "mandatory": true
+        },
+        {
+          "name": "questionTopic",
+          "columns": [
+            {
+              "name": "questionTopic"
+            }
+          ],
+          "mandatory": true
+        },
+        {
+          "name": "questionThemeEn",
+          "columns": [
+            {
+              "name": "questionThemeEn"
+            }
+          ],
+          "mandatory": true
+        },
+        {
+          "name": "questionSubthemeEn",
+          "columns": [
+            {
+              "name": "questionSubthemeEn"
+            }
+          ],
+          "mandatory": true
+        },
+        {
+          "name": "questionTopicEn",
+          "columns": [
+            {
+              "name": "questionTopicEn"
+            }
+          ],
+          "mandatory": true
+        },
+        {
+          "name": "log",
+          "columns": [
+            {
+              "name": "log"
+            }
+          ],
+          "mandatory": true
+        }
+      ]
+    },
+    {
+      "name": "BPIC16Messages",
+      "file_directory": "..\\data\\BPIC16\\prepared\\",
+      "file_names": [
+        "BPIC16Messages.csv"
+      ],
+      "labels": [
+        "Event"
+      ],
+      "samples": [
+        {
+          "file_name": "BPIC16Messages.csv",
+          "use_random_sample": false,
+          "population_column": "customerId",
+          "ids": [
+            2026796,
+            2223803,
+            2023026,
+            114939,
+            2011721,
+            2022933,
+            919259,
+            2079086,
+            466152,
+            2057965,
+            1039204,
+            395673,
+            1710155,
+            2081135,
+            1723340,
+            1893155,
+            1042998,
+            435939,
+            1735039,
+            2045407
+          ]
+        }
+      ],
+      "attributes": [
+        {
+          "name": "idx",
+          "columns": [
+            {
+              "name": "idx",
+              "dtype": "int"
+            }
+          ],
+          "mandatory": true
+        },
+        {
+          "name": "activity",
+          "columns": [
+            {
+              "name": "eventType"
+            }
+          ],
+          "mandatory": true
+        },
+        {
+          "name": "timestamp",
+          "columns": [
+            {
+              "name": "eventDateTime"
+            }
+          ],
+          "separator": " ",
+          "datetime_object": {
+            "format": "y-M-d H:m:s.nX",
+            "timezone_offset": "+01",
+            "convert_to": "ISO_DATE_TIME"
+          },
+          "mandatory": true
+        },
+        {
+          "name": "customerId",
+          "columns": [
+            {
+              "name": "customerId",
+              "dtype": "Int64"
+            }
+          ],
+          "mandatory": true
+        },
+        {
+          "name": "ageCategory",
+          "columns": [
+            {
+              "name": "ageCategory"
+            }
+          ],
+          "mandatory": true
+        },
+        {
+          "name": "gender",
+          "columns": [
+            {
+              "name": "gender"
+            }
+          ],
+          "mandatory": true
+        },
+        {
+          "name": "officeU",
+          "columns": [
+            {
+              "name": "officeU",
+              "dtype": "Int32"
+            }
+          ],
+          "mandatory": true
+        },
+        {
+          "name": "officeW",
+          "columns": [
+            {
+              "name": "officeW",
+              "dtype": "Int32"
+            }
+          ],
+          "mandatory": true
+        },
+        {
+          "name": "handlingChannelId",
+          "columns": [
+            {
+              "name": "handlingChannelId",
+              "dtype": "Int32"
+            }
+          ],
+          "mandatory": true
+        },
+        {
+          "name": "log",
+          "columns": [
+            {
+              "name": "log"
+            }
+          ],
+          "mandatory": true
+        }
+      ]
+    }
+  ],
+  "entities": [
+    {
+      "label": "Customer",
+      "event_attributes": [
+        {
+          "name": "customerId",
+          "is_id": true
+        }
+      ],
+      "df": true,
+      "include_label_in_df": true,
+      "corr": true,
+      "merge_duplicate_df": true
+    },
+    {
+      "label": "OfficeU",
+      "event_attributes": [
+        {
+          "name": "officeU",
+          "is_id": true
+        }
+      ],
+      "df": true,
+      "include_label_in_df": true,
+      "corr": true,
+      "merge_duplicate_df": true
+    },
+    {
+      "label": "OfficeW",
+      "event_attributes": [
+        {
+          "name": "officeW",
+          "is_id": true
+        }
+      ],
+      "df": true,
+      "include_label_in_df": true,
+      "corr": true,
+      "merge_duplicate_df": true
+    },
+    {
+      "label": "Complaint",
+      "event_attributes": [
+        {
+          "name": "complaintId",
+          "is_id": true
+        }
+      ],
+      "df": true,
+      "include_label_in_df": true,
+      "corr": true,
+      "merge_duplicate_df": true
+    },
+    {
+      "label": "ComplaintDossier",
+      "event_attributes": [
+        {
+          "name": "complaintDossierId",
+          "is_id": true
+        }
+      ],
+      "df": true,
+      "include_label_in_df": true,
+      "corr": true,
+      "merge_duplicate_df": true
+    },
+    {
+      "label": "Session",
+      "event_attributes": [
+        {
+          "name": "sessionId",
+          "is_id": true
+        }
+      ],
+      "df": true,
+      "include_label_in_df": true,
+      "corr": true,
+      "merge_duplicate_df": true
+    },
+    {
+      "label": "IP",
+      "event_attributes": [
+        {
+          "name": "ipid",
+          "is_id": true
+        }
+      ],
+      "df": true,
+      "include_label_in_df": true,
+      "corr": true,
+      "merge_duplicate_df": true
+    }
+  ],
+  "classes": [
+    {
+      "label": "Event",
+      "required_attributes": [
+        "activity"
+      ],
+      "ids": [
+        "name"
+      ],
+      "df": false
+    }
+  ],
+  "log": {
+    "include": true,
+    "has": true
+  }
+}
