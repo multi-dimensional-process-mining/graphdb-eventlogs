@@ -1,4 +1,5 @@
 from re import sub
+from typing import Any, Optional, Dict, List
 
 
 def camel_case(s):
@@ -18,3 +19,16 @@ def camel_case(s):
 
 def convert_columns_into_camel_case(columns):
     return [camel_case(column) for column in columns]
+
+
+def replace_undefined_value(item, value):
+    return item if item is not None else value
+
+
+def create_list(class_type: Any, obj: Optional[Dict[str, Any]], *args) -> List[Any]:
+    if obj is None:
+        return []
+    else:
+        return [class_type.from_dict(y, *args) for y in obj]
+
+

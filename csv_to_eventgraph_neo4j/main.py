@@ -1,7 +1,8 @@
 import json
 
 from EventKnowledgeGraph import EventKnowledgeGraph
-from csv_to_eventgraph_neo4j.semantic_header import SemanticHeader
+from csv_to_eventgraph_neo4j.event_table import EventTables
+from csv_to_eventgraph_neo4j.semantic_header_lpg import SemanticHeaderLPG
 
 # several steps of import, each can be switch on/off
 from performance_handling import Performance
@@ -11,15 +12,14 @@ import authentication
 
 connection = authentication.connections_map[authentication.Connections.LOCAL]
 
-dataset_name = 'BPIC17'
-
-with open(f'../json_files/{dataset_name}.json') as f:
-    json_dict = json.load(f)
-
+dataset_name = 'BPIC14'
 use_sample = True
-semantic_header = SemanticHeader.from_dict(json_dict)
-perf_path = f"..\\perf\\{dataset_name}\\{semantic_header.name}Performance.csv"
+
+semantic_header = SemanticHeaderLPG.create_semantic_header(dataset_name)
+perf_path = f"..\\perf\\{dataset_name}\\{dataset_name}Performance.csv"
 number_of_steps = 100
+
+event_tables = EventTables(dataset_name)
 
 step_clear_db = True
 step_populate_graph = True
@@ -47,7 +47,7 @@ def create_graph_instance(perf: Performance) -> EventKnowledgeGraph:
 
     return EventKnowledgeGraph(db_name=connection.user, uri=connection.uri, user=connection.user,
                                password=connection.password, batch_size=5000,
-                               verbose=verbose, use_sample=use_sample,
+                               verbose=verbose, event_tables=event_tables, use_sample=use_sample,
                                semantic_header=semantic_header, perf=perf)
 
 
@@ -131,6 +131,8 @@ def main() -> None:
 
     perf.finish()
     perf.save()
+
+    graph.print_statistics()
 
     graph.close_connection()
 
