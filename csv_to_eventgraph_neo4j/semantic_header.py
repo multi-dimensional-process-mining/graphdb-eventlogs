@@ -1,11 +1,6 @@
 import json
-import os
-import random
-import warnings
-from typing import List, Any, Optional, Self, TypeVar, Generic
-
-import pandas as pd
-from pandas import DataFrame
+from abc import abstractmethod, ABC
+from typing import List, Any, Optional, Self
 
 from dataclasses import dataclass
 
@@ -13,115 +8,134 @@ from csv_to_eventgraph_neo4j.auxiliary_functions import replace_undefined_value,
 
 
 @dataclass
-class Class:
+class Class(ABC):
     label: str
-    required_attributes: List[str]
+    class_identifiers: List[str]
     ids: List[str]
-    df: bool
-    include_label_in_cdf: bool
-    df_entity_labels: List[str]
-    threshold: int
-    relative_threshold: int
 
     @classmethod
-    def from_dict(cls, obj: Any) -> Optional['Class']:
+    def from_dict(cls, obj: Any) -> Optional[Self]:
         if obj is None:
             return None
         _label = obj.get("label")
-        _required_attributes = obj.get("required_attributes")
+        _class_identifiers = obj.get("class_identifiers")
         _ids = obj.get("ids")
-        _df = replace_undefined_value(obj.get("df"), False)
-        _include_label_in_cdf = _df or replace_undefined_value(obj.get("include_label_in_cdf"), True)
-        _df_entity_labels = obj.get("entity_labels")
-        _threshold = replace_undefined_value(obj.get("threshold"), 0)
-        _relative_threshold = replace_undefined_value(obj.get("relative_threshold"), 0)
-        return cls(_label, _required_attributes, _ids, _df, _include_label_in_cdf, _df_entity_labels, _threshold,
-                     _relative_threshold)
+        return cls(_label, _class_identifiers, _ids)
 
 
 @dataclass
-class Condition:
-    name: str
-    values: List[Any]
+class Condition:  # TODO convert to abc, replace undefined values
+    attribute: str
+    include_values: List[Any]
 
     @classmethod
-    def from_dict(cls, obj: Any) -> Optional['Condition']:
+    def from_dict(cls, obj: Any, not_exist_properties=None) -> Optional[Self]:
         if obj is None:
             return None
-        _name = obj.get("name")
-        _values = replace_undefined_value(obj.get("values"), ["IS NOT NULL", '<> "nan"', '<> "None"'])
-        if _values != ["IS NOT NULL", '<> "nan"', '<> "None"']:
-            _values = [f'''= "{value}"''' for value in _values]
-        return cls(_name, _values)
+
+        if not_exist_properties is None:
+            not_exist_properties = ['<> null']
+        _attribute = obj.get("attribute")
+        _include_values = replace_undefined_value(obj.get("include_values"), not_exist_properties)
+        return cls(_attribute, _include_values)
 
 
-# T_entity_list = TypeVar("T_entity_list", bound=List["Entity"])
-# T_entity = TypeVar("T_entity", bound=List["Entity"])
-class Entity:
-
-    def __init__(self, include: bool, type: str, labels: List[str], primary_keys: List[str], conditions: List[Condition],
-                 corr: bool, df: bool, include_label_in_df: bool, merge_duplicate_df: bool, delete_parallel_df: bool):
-        self.include = include
-        self.type = type
-        self.labels = self.determine_labels(labels)
-        self.primary_keys = primary_keys
-        self.conditions = conditions
-        self.corr = corr
-        self.df = df
-        self.include_label_in_df = include_label_in_df
-        self.merge_duplicate_df = merge_duplicate_df
-        self.delete_parallel_df = delete_parallel_df
-
-    def determine_labels(self, labels: List[str]) -> List[str]:
-        if "Entity" in labels:
-            labels.remove("Entity")
-
-        if self.type not in labels:
-            labels.insert(0, self.type)
-
-        return labels
-
-    def get_id_attribute_name(self):
-        return self.primary_keys
-        for event_attribute in self.event_attributes:
-            if event_attribute.is_id:
-                return event_attribute._name
-        return None
-
-    def get_properties(self):
-        properties = {}
-        for event_attribute in self.conditions:
-            properties[event_attribute.name] = event_attribute.values
-
-        return properties
-
-
+@dataclass
+class Relation(ABC):
+    include: bool
+    type: str
+    from_node_label: str
+    to_node_label: str
+    foreign_key: str
 
     @classmethod
-    def from_dict(cls, obj: Any) -> Optional['Entity']:
+    def from_dict(cls, obj: Any) -> Optional[Self]:
         if obj is None:
             return None
         _include = replace_undefined_value(obj.get("include"), True)
         _type = obj.get("type")
-        _labels = replace_undefined_value(obj.get("labels"), [])
-        _primary_keys = obj.get("primary_keys")
-        _conditions = create_list(Condition, obj.get("conditions"))
-        _corr = _include or replace_undefined_value(obj.get("corr"), False)
-        _df = _corr or replace_undefined_value(obj.get("df"), False)
-        _include_label_in_df = _df or replace_undefined_value(obj.get("include_label_in_df"), False)
-        _merge_duplicate_df = _include or replace_undefined_value(obj.get("merge_duplicate_df"), False)
-        _delete_parallel_df = _include or replace_undefined_value(obj.get("delete_parallel_df"), False)
-        return cls(_include, _type, _labels, _primary_keys, _conditions, _df, _include_label_in_df, _corr,
-                      _merge_duplicate_df, _delete_parallel_df)
+        _from_node_label = obj.get("from_node_label")
+        _to_node_label = obj.get("to_node_label")
+        _foreign_key = obj.get("foreign_key")
+        return cls(_include, _type, _from_node_label, _to_node_label, _foreign_key)
 
 
 @dataclass
-class Log:
+class Entity(ABC):
+    include: bool
+    use_nodes: bool
+    based_on: str
+    type: str
+    labels: List[str]
+    primary_keys: List[str]
+    entity_attributes: List[str]
+    corr: bool
+    df: bool
+    include_label_in_df: bool
+    merge_duplicate_df: bool
+    conditions: List[Condition]
+
+    relation: Relation
+    delete_parallel_df: bool
+
+    def get_primary_keys(self):
+        return self.primary_keys
+
+    @staticmethod
+    def determine_labels(labels: List[str], _type: str) -> List[str]:
+        if "Entity" in labels:
+            labels.remove("Entity")
+
+        if _type not in labels:
+            labels.insert(0, _type)
+
+        return labels
+
+    def get_properties(self):
+        properties = {}
+        for condition in self.conditions:
+            properties[condition.attribute] = condition.include_values
+
+        return properties
+
+    @classmethod
+    def from_dict(cls, obj: Any, condition_class_name: Condition = Condition,
+                  relation_class_name: Relation = Relation) -> Optional[Self]:
+        if obj is None:
+            return None
+        _include = replace_undefined_value(obj.get("include"), True)
+        _use_nodes = replace_undefined_value(obj.get("use_nodes"), True)
+        _based_on = replace_undefined_value(obj.get("based_on"), "Event")
+
+        _type = obj.get("type")
+        _labels = replace_undefined_value(obj.get("labels"), [])
+        _labels = Entity.determine_labels(_labels, _type)
+        _primary_keys = obj.get("primary_keys")
+        _entity_attributes = obj.get("entity_attributes")
+
+        _corr = _include and replace_undefined_value(obj.get("corr"), False)
+        _df = _corr and replace_undefined_value(obj.get("df"), False)
+        _include_label_in_df = _df and replace_undefined_value(obj.get("include_label_in_df"), False)
+        _merge_duplicate_df = _df and replace_undefined_value(obj.get("merge_duplicate_df"), False)
+
+        _conditions = create_list(condition_class_name, obj.get("conditions"))
+        _relation = relation_class_name.from_dict(obj.get("relation"))
+        _delete_parallel_df = _df and obj.get("delete_parallel_df")
+
+        return cls(include=_include, use_nodes=_use_nodes, based_on=_based_on, type=_type, labels=_labels,
+                   primary_keys=_primary_keys,
+                   entity_attributes=_entity_attributes,
+                   corr=_corr, df=_df, include_label_in_df=_include_label_in_df, merge_duplicate_df=_merge_duplicate_df,
+                   conditions=_conditions, relation=_relation, delete_parallel_df=_delete_parallel_df)
+
+
+@dataclass
+class Log(ABC):
     include: bool
     has: bool
 
     @classmethod
-    def from_dict(cls, obj: Any) -> 'Log':
+    def from_dict(cls, obj: Any) -> Self:
         if obj is None:
             return Log(True, True)
         _include = replace_undefined_value(obj.get("include"), True)
@@ -129,71 +143,49 @@ class Log:
         return cls(_include, _has)
 
 
-@dataclass
-class Relation:
-    include: bool
-    type: str
-    from_node_label: str
-    to_node_label: str
-    event_reference_attribute: str
-    reify: bool
-    reified_entity: Entity
-
-    @classmethod
-    def from_dict(cls, obj: Any) -> Optional['Relation']:
-        if obj is None:
-            return None
-        _include = replace_undefined_value(obj.get("include"), True)
-        _type = obj.get("type")
-        _from_node_label = obj.get("from_node_label")
-        _to_node_label = obj.get("to_node_label")
-        _event_reference_attribute = obj.get("event_reference_attribute")
-        _reified_entity = Entity.from_dict(obj.get("reified_entity"))
-        _reify = replace_undefined_value(obj.get("reify"), _reified_entity is not None)
-        return cls(_include, _type, _from_node_label, _to_node_label, _event_reference_attribute, _reify,
-                        _reified_entity)
-
-
-
-
-
-class SemanticHeader:
-    def __init__(self, name: str, version: str, entities: List[Entity],
-                 relations: List[Relation], classes: List[Class],
-                 log: Log):
+class SemanticHeader(ABC):
+    def __init__(self, name: str, version: str,
+                 entities_derived_from_events: List[Entity], reified_entities: List[Entity],
+                 relations: List[Relation], classes: List[Class], log: Log):
         self.name = name
         self.version = version
 
-        self.entities = entities
+        self.entities_derived_from_events = entities_derived_from_events
+        self.reified_entities = reified_entities
         self.relations = relations
         self.classes = classes
         self.log = log
 
-    def get_entity(self, entity_label) -> Optional['Entity']:
-        for entity in self.entities:
-            if entity_label == entity.label:
+    def get_entity(self, entity_type) -> Optional[Entity]:
+        for entity in self.entities_derived_from_events:
+            if entity_type == entity.type:
+                return entity
+        for entity in self.reified_entities:
+            if entity_type == entity.type:
                 return entity
         return None
 
     @classmethod
-    def from_dict(cls, obj: Any) -> Optional[Self]:
+    def from_dict(cls, obj: Any, derived_entity_class_name: Entity = Entity,
+                  reified_entity_class_name: Entity = Entity,
+                  relation_class_name: Relation = Relation,
+                  class_class_name: Class = Class, log_class_name: Log = Log) -> Optional[Self]:
         if obj is None:
             return None
-
         _name = obj.get("name")
         _version = obj.get("version")
-        _entities = create_list(Entity, obj.get("entities"))
-        _relations = create_list(Relation, obj.get("relations"))
-        _classes = create_list(Class, obj.get("classes"))
-        _log = Log.from_dict(obj.get("log"))
-        return cls(_name, _version, _entities, _relations,
-                              _classes, _log)
+        _entities_derived_from_events = create_list(derived_entity_class_name, obj.get("entities_derived_from_events"))
+        _reified_entities = create_list(reified_entity_class_name, obj.get("reified_entities"))
+        _relations = create_list(relation_class_name, obj.get("relations"))
+        _classes = create_list(class_class_name, obj.get("classes"))
+        _log = log_class_name.from_dict(obj.get("log"))
+        return cls(_name, _version, _entities_derived_from_events, _reified_entities, _relations,
+                   _classes, _log)
 
     @classmethod
-    def create_semantic_header(cls, dataset_name:str):
+    def create_semantic_header(cls, dataset_name: str, **kwargs):
         with open(f'../json_files/{dataset_name}.json') as f:
             json_semantic_header = json.load(f)
 
-        semantic_header = cls.from_dict(json_semantic_header)
+        semantic_header = cls.from_dict(json_semantic_header, **kwargs)
         return semantic_header
-

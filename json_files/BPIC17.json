@@ -1,268 +1,24 @@
 {
   "name": "BPIC17",
   "version": "1.0.0",
-  "event_tables": [
+  "entities_derived_from_events": [
     {
-      "name": "BPIC17Performance",
-      "file_directory": "..\\data\\BPIC17\\prepared\\",
-      "file_names": [
-        "BPIC17.csv"
-      ],
+      "use_nodes": true,
+      "based_on": "Event",
+      "type": "Application",
       "labels": [
-        "Event"
+        "Application"
       ],
-      "samples": [
-        {
-          "file_name": "BPIC17.csv",
-          "use_random_sample": false,
-          "population_column": "case",
-          "ids": [
-            "Application_2045572635",
-            "Application_2014483796",
-            "Application_1973871032",
-            "Application_1389621581",
-            "Application_1564472847",
-            "Application_430577010",
-            "Application_889180637",
-            "Application_1065734594",
-            "Application_681547497",
-            "Application_1020381296",
-            "Application_180427873",
-            "Application_2103964126",
-            "Application_55972649",
-            "Application_1076724533",
-            "Application_1639247005",
-            "Application_1465025013",
-            "Application_1244956957",
-            "Application_1974117177",
-            "Application_797323371",
-            "Application_1631297810"
-          ]
-        }
+      "primary_keys": [
+        "case"
       ],
-      "attributes": [
+      "entity_attributes": [
+        "case"
+      ],
+      "conditions": [
         {
-          "name": "idx",
-          "columns": [
-            {
-              "name": "idx",
-              "dtype": "int"
-            }
-          ],
-          "mandatory": true
-        },
-        {
-          "name": "activity",
-          "columns": [
-            {
-              "name": "event"
-            }
-          ],
-          "mandatory": true
-        },
-        {
-          "name": "lifecycle",
-          "columns": [
-            {
-              "name": "lifecycleTransition"
-            }
-          ],
-          "mandatory": true,
-          "use_filter": false,
-          "filter_values": [
-            "SUSPEND",
-            "RESUME"
-          ]
-        },
-        {
-          "name": "timestamp",
-          "columns": [
-            {
-              "name": "time"
-            }
-          ],
-          "datetime_object": {
-            "format": "y/M/d H:m:s.nX",
-            "timezone_offset": "+01",
-            "convert_to": "ISO_DATE_TIME"
-          },
-          "mandatory": true
-        },
-        {
-          "name": "case",
-          "columns": [
-            {
-              "name": "case"
-            }
-          ],
-          "mandatory": true
-        },
-        {
-          "name": "applicationType",
-          "columns": [
-            {
-              "name": "applicationType"
-            }
-          ],
-          "mandatory": false
-        },
-        {
-          "name": "loanGoal",
-          "columns": [
-            {
-              "name": "loanGoal"
-            }
-          ],
-          "mandatory": true
-        },
-        {
-          "name": "requestedAmount",
-          "columns": [
-            {
-              "name": "requestedAmount",
-              "dtype": "float"
-            }
-          ],
-          "mandatory": true
-        },
-        {
-          "name": "monthlyCost",
-          "columns": [
-            {
-              "name": "monthlyCost",
-              "dtype": "float"
-            }
-          ],
-          "mandatory": true
-        },
-        {
-          "name": "resource",
-          "columns": [
-            {
-              "name": "orgResource"
-            }
-          ],
-          "mandatory": true
-        },
-        {
-          "name": "selected",
-          "columns": [
-            {
-              "name": "selected",
-              "dtype": "boolean"
-            }
-          ],
-          "mandatory": false
-        },
-        {
-          "name": "eventId",
-          "columns": [
-            {
-              "name": "eventId"
-            }
-          ],
-          "mandatory": false
-        },
-        {
-          "name": "offerId",
-          "columns": [
-            {
-              "name": "offerId"
-            }
-          ],
-          "mandatory": true
-        },
-        {
-          "name": "firstWithdrawalAmount",
-          "columns": [
-            {
-              "name": "firstWithdrawalAmount",
-              "dtype": "float"
-            }
-          ],
-          "mandatory": true
-        },
-        {
-          "name": "action",
-          "columns": [
-            {
-              "name": "action"
-            }
-          ],
-          "mandatory": true
-        },
-        {
-          "name": "accepted",
-          "columns": [
-            {
-              "name": "accepted",
-              "dtype": "boolean"
-            }
-          ],
-          "mandatory": true
-        },
-        {
-          "name": "creditScore",
-          "columns": [
-            {
-              "name": "creditScore",
-              "dtype": "float"
-            }
-          ],
-          "mandatory": true
-        },
-        {
-          "name": "numberOfTerms",
-          "columns": [
-            {
-              "name": "numberOfTerms",
-              "dtype": "Int64"
-            }
-          ],
-          "mandatory": false
-        },
-        {
-          "name": "eventOrigin",
-          "columns": [
-            {
-              "name": "eventOrigin"
-            }
-          ],
-          "mandatory": true
-        },
-        {
-          "name": "offeredAmount",
-          "columns": [
-            {
-              "name": "offeredAmount",
-              "dtype": "float"
-            }
-          ],
-          "mandatory": true
-        },
-        {
-          "name": "log",
-          "columns": [
-            {
-              "name": "log"
-            }
-          ],
-          "mandatory": true
-        }
-      ]
-    }
-  ],
-  "entities": [
-    {
-      "label": "Application",
-      "event_attributes": [
-        {
-          "name": "case",
-          "is_id": true
-        },
-        {
-          "name": "eventOrigin",
-          "values": [
+          "attribute": "eventOrigin",
+          "include_values": [
             "Application"
           ]
         }
@@ -273,15 +29,22 @@
       "merge_duplicate_df": true
     },
     {
-      "label": "Workflow",
-      "event_attributes": [
+      "use_nodes": true,
+      "based_on": "Event",
+      "type": "Workflow",
+      "labels": [
+        "Workflow"
+      ],
+      "primary_keys": [
+        "case"
+      ],
+      "entity_attributes": [
+        "case"
+      ],
+      "conditions": [
         {
-          "name": "case",
-          "is_id": true
-        },
-        {
-          "name": "eventOrigin",
-          "values": [
+          "attribute": "eventOrigin",
+          "include_values": [
             "Workflow"
           ]
         }
@@ -292,15 +55,22 @@
       "merge_duplicate_df": true
     },
     {
-      "label": "Offer",
-      "event_attributes": [
+      "use_nodes": true,
+      "based_on": "Event",
+      "type": "Offer",
+      "labels": [
+        "Offer"
+      ],
+      "primary_keys": [
+        "offerId"
+      ],
+      "entity_attributes": [
+        "offerId"
+      ],
+      "conditions": [
         {
-          "name": "offerId",
-          "is_id": true
-        },
-        {
-          "name": "eventOrigin",
-          "values": [
+          "attribute": "eventOrigin",
+          "include_values": [
             "Offer"
           ]
         }
@@ -311,12 +81,17 @@
       "merge_duplicate_df": true
     },
     {
-      "label": "CaseR",
-      "event_attributes": [
-        {
-          "name": "resource",
-          "is_id": true
-        }
+      "use_nodes": true,
+      "based_on": "Event",
+      "type": "CaseR",
+      "labels": [
+        "CaseR"
+      ],
+      "primary_keys": [
+        "resource"
+      ],
+      "entity_attributes": [
+        "resource"
       ],
       "df": true,
       "include_label_in_df": true,
@@ -324,15 +99,70 @@
       "merge_duplicate_df": true
     },
     {
-      "label": "CaseAWO",
-      "event_attributes": [
-        {
-          "name": "case",
-          "is_id": true
-        }
+      "use_nodes": true,
+      "based_on": "Event",
+      "type": "CaseAWO",
+      "labels": [
+        "CaseAWO"
       ],
-      "df": false,
-      "corr": false
+      "primary_keys": [
+        "case"
+      ],
+      "entity_attributes": [
+        "case"
+      ],
+      "corr": false,
+      "df": false
+    }
+  ],
+  "reified_entities": [
+    {
+      "use_nodes": false,
+      "based_on": "CASE_AO",
+      "type": "CaseAO",
+      "labels": [
+        "CaseAO"
+      ],
+      "primary_keys": [
+        "offerId", "applicationId"
+      ],
+      "entity_attributes": [
+        "offerId", "applicationId"
+      ],
+      "corr": true,
+      "df": false
+    },
+    {
+      "use_nodes": false,
+      "based_on": "CASE_AW",
+      "type": "CaseAW",
+      "labels": [
+        "CaseAW"
+      ],
+      "primary_keys": [
+        "workflowId", "applicationId"
+      ],
+      "entity_attributes": [
+        "workflowId", "applicationId"
+      ],
+      "corr": true,
+      "df": false
+    },
+    {
+      "use_nodes": false,
+      "based_on": "CASE_WO",
+      "type": "CaseWO",
+      "labels": [
+        "CaseWO"
+      ],
+      "primary_keys": [
+        "offerId", "applicationId"
+      ],
+      "entity_attributes": [
+        "offerId", "applicationId"
+      ],
+      "corr": true,
+      "df": false
     }
   ],
   "relations": [
@@ -340,40 +170,25 @@
       "type": "CASE_AO",
       "from_node_label": "Offer",
       "to_node_label": "Application",
-      "event_reference_attribute": "case",
-      "reified_entity": {
-        "label": "CaseAO",
-        "df": false,
-        "corr": true
-      }
+      "foreign_key": "case"
     },
     {
       "type": "CASE_AW",
       "from_node_label": "Workflow",
       "to_node_label": "Application",
-      "event_reference_attribute": "case",
-      "reified_entity": {
-        "label": "CaseAW",
-        "df": false,
-        "corr": true
-      }
+      "foreign_key": "case"
     },
     {
       "type": "CASE_WO",
       "from_node_label": "Offer",
       "to_node_label": "Workflow",
-      "event_reference_attribute": "case",
-      "reified_entity": {
-        "label": "CaseWO",
-        "df": false,
-        "corr": true
-      }
+      "foreign_key": "case"
     }
   ],
   "classes": [
     {
       "label": "Event",
-      "required_attributes": [
+      "class_identifiers": [
         "activity",
         "lifecycle"
       ],

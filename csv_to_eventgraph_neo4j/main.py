@@ -12,7 +12,7 @@ import authentication
 
 connection = authentication.connections_map[authentication.Connections.LOCAL]
 
-dataset_name = 'BPIC14'
+dataset_name = 'BPIC17'
 use_sample = True
 
 semantic_header = SemanticHeaderLPG.create_semantic_header(dataset_name)
@@ -105,8 +105,8 @@ def populate_graph(graph: EventKnowledgeGraph, perf: Performance):
 
     graph.create_classes()
     perf.finished_step(log_message=f"(:Class) nodes done")
-    graph.df_class_relations()
-    perf.finished_step(log_message=f"[:DF_C] edges done")
+    # graph.df_class_relations()
+    # perf.finished_step(log_message=f"[:DF_C] edges done")
 
 
 def main() -> None:

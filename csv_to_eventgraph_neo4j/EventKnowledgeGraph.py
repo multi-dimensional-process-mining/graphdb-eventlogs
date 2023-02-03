@@ -17,7 +17,6 @@ from neo4j import GraphDatabase
 from tabulate import tabulate
 
 
-
 class EventKnowledgeGraph:
     def __init__(self, uri: str, db_name: str, user: str, password: str, batch_size: int,
                  verbose: bool, event_tables: EventTables, use_sample: bool = False,
@@ -92,6 +91,13 @@ class EventKnowledgeGraph:
         if self.perf is not None:
             self.perf.finished_step(activity=message)
 
+    @staticmethod
+    def get_dfc_label(entity_type: str, include_label_in_dfc: bool):
+        if include_label_in_dfc:
+            return f'DF_C_{entity_type.upper()}'
+        else:
+            return f'DF_C'
+
     def clear_db(self) -> None:
 
         # delete_query = f'''
@@ -131,9 +137,6 @@ class EventKnowledgeGraph:
     # endregion
 
     # region CONSISTENT NAMING FOR LABELS
-
-
-
 
     def get_event_label(self, label: str, properties: Optional[Dict[str, Any]] = None):
         """
@@ -368,31 +371,32 @@ class EventKnowledgeGraph:
     # region CREATE ENTITIES
 
     def create_entities(self) -> None:
-        for entity in self.semantic_header.entities:
-            if entity.include:
+        entity: EntityLPG
+        for entity in self.semantic_header.entities_derived_from_events:
+            if entity.include and entity.use_nodes and entity.based_on == "Event":
                 self._create_entity(entity=entity)
                 self._write_message_to_performance(f"Entity (:{entity.get_label_string()}) node created")
 
-    def _create_entity(self, entity: 'EntityLPG') -> None:
+    def _create_entity(self, entity: EntityLPG) -> None:
         # find events that contain the entity as property and not nan
         # save the value of the entity property as id and also whether it is a virtual entity
         # create a new entity node if it not exists yet with properties
-        where_conditions = EventKnowledgeGraph.create_condition("e", entity.get_properties())
 
-        composed_primary_id_query = entity.get_composed_primary_id_query()
-        separate_primary_id_query = entity.get_separate_primary_ids_query()
-        primary_key_properties = entity.get_separate_primary_keys_properties_query()
+        conditions = entity.get_where_condition()
+        composed_primary_id_query = entity.get_composed_primary_id()
+        separate_primary_id_query = entity.get_entity_attributes()
+        primary_key_properties = entity.get_entity_attributes_as_node_properties()
 
         entity_type = entity.type
         entity_labels_string = entity.get_label_string()
 
         q_create_entity = f'''
-                    MATCH (e:Event) WHERE {where_conditions}
+                    MATCH (e:{entity.based_on}) WHERE {conditions}
                     WITH {composed_primary_id_query} AS id, {separate_primary_id_query}
                     MERGE (en:{entity_labels_string}
                             {{ID:id, 
                             uID:"{entity_type}_"+toString(id),                    
-                            EntityType:"{entity_type}",
+                            entityType:"{entity_type}",
                             {primary_key_properties}}})
                     '''
 
@@ -400,7 +404,8 @@ class EventKnowledgeGraph:
 
     def correlate_events_to_entities(self) -> None:
         # correlate events that contain a reference from an entity to that entity node
-        entities = self.semantic_header.entities
+        entities = self.semantic_header.entities_derived_from_events
+        entity: EntityLPG
         for entity in entities:
             if entity.corr:
                 # find events that contain the entity as property and not nan
@@ -409,17 +414,17 @@ class EventKnowledgeGraph:
                 self._correlate_events_to_entity(entity=entity)
 
                 self._write_message_to_performance(
-                    f"Relation (:Event) - [:CORR] -> (:Entity:{entity.get_label_string()}) created")
+                    f"Relation (:Event) - [:CORR] -> (:{entity.get_label_string()}) created")
 
-    def _correlate_events_to_entity(self, entity: 'EntityLPG') -> None:
+    def _correlate_events_to_entity(self, entity: EntityLPG) -> None:
         # correlate events that contain a reference from an entity to that entity node
         entity_labels_string = entity.get_label_string()
-        primary_key_id = entity.get_composed_primary_id_query()
-        properties = entity.get_properties()
+        primary_key_id = entity.get_composed_primary_id()
+        conditions = entity.get_where_condition()
 
         q_correlate = f'''
             CALL apoc.periodic.iterate(
-                'MATCH (e:Event) WHERE {EventKnowledgeGraph.create_condition("e", properties)}
+                'MATCH (e:Event) WHERE {conditions}
                 WITH e, {primary_key_id} as id
                 MATCH (n:{entity_labels_string}) WHERE id = n.ID
                 RETURN e, n',
@@ -431,102 +436,134 @@ class EventKnowledgeGraph:
     def correlate_events_to_derived_entity(self, derived_entity: str) -> None:
         # correlate events that are related to an entity which is reified into a new entity to the new reified entity
         q_correlate = f'''
-            MATCH (e:Event) -[:CORR]-> (n:Entity) <-[:REIFIED ]- (r:Entity {{EntityType:"{derived_entity}"}})
-            MATCH (e:Event) -[:CORR]-> (n:Entity) <-[:REIFIED ]- (r:Entity {{EntityType:"{derived_entity}"}})
+            MATCH (e:Event) -[:CORR]-> (n:Entity) <-[:REIFIED ]- (r:Entity {{entityType:"{derived_entity}"}})
+            MATCH (e:Event) -[:CORR]-> (n:Entity) <-[:REIFIED ]- (r:Entity {{entityType:"{derived_entity}"}})
             MERGE (e)-[:CORR]->(r)'''
         self.exec_query(q_correlate)
 
     def create_entity_relations(self) -> None:
         # find events that are related to different entities of which one event also has a reference to the other entity
         # create a relation between these two entities
+        relation: RelationLPG
         for relation in self.semantic_header.relations:
             if relation.include:
-                self._create_entity_relationships(relation_type=relation.type,
-                                                  entity_label_from_node=relation.from_node_label,
-                                                  entity_label_to_node=relation.to_node_label,
-                                                  reference_in_event_to_to_node=relation.event_reference_attribute)
+                self._create_entity_relationships(relation=relation)
 
                 self._write_message_to_performance(
                     message=f"Relation (:{relation.from_node_label}) - [:{relation.type}] -> "
                             f"(:{relation.to_node_label}) done")
 
-    def _create_entity_relationships(self, relation_type: str, entity_label_from_node: str, entity_label_to_node: str,
-                                     reference_in_event_to_to_node: str) -> None:
+    def _create_entity_relationships(self, relation: RelationLPG) -> None:
         # find events that are related to different entities of which one event also has a reference to the other entity
         # create a relation between these two entities
+        relation_type = relation.type
+        entity_label_from_node = relation.from_node_label
+        entity_label_to_node = relation.to_node_label
+        foreign_key = relation.foreign_key
+
         q_create_relation = f'''
             MATCH (e1:Event) -[:CORR]-> (n1:{entity_label_to_node})
             MATCH (e2:Event) -[:CORR]-> (n2:{entity_label_from_node})
-                WHERE n1 <> n2 AND e2.{reference_in_event_to_to_node} = n1.ID
+                WHERE n1 <> n2 AND e2.{foreign_key} = n1.ID
             WITH DISTINCT n1,n2
-            MERGE (n1) <-[:{relation_type.upper()} {{Type:"Rel"}}]- (n2)'''
+            MERGE (n1) <-[:{relation_type.upper()} {{type:"Rel",
+                                                     {entity_label_to_node.lower()}Id: n1.ID,
+                                                     {entity_label_from_node.lower()}Id: n2.ID                                                    
+                                                    }}]- (n2)'''
         self.exec_query(q_create_relation)
 
     def reify_entity_relations_sh(self) -> None:
-        for relation in self.semantic_header.relations:
-            if relation.reify:
-                reified_entity = relation.reified_entity
-                if reified_entity.include:
-                    self._reify_entity_relations(relation=relation,
-                                                 reified_entity=reified_entity)
-                    self._write_message_to_performance(
-                        message=f"Relation [:{relation.type.upper()}] reified as (:Entity:{reified_entity.get_label_string()}) node")
+        relation: RelationLPG
+        reified_entity: EntityLPG
+        for reified_entity in self.semantic_header.reified_entities:
+            if reified_entity.include:
+                self._reify_entity_relations(reified_entity=reified_entity)
+                self._write_message_to_performance(
+                    message=f"Relation [:{reified_entity.type.upper()}] reified as (:Entity:{reified_entity.get_label_string()}) node")
 
-    def _reify_entity_relations(self, relation: 'RelationLPG', reified_entity: 'EntityLPG') -> None:
+    def _reify_entity_relations(self, reified_entity: EntityLPG) -> None:
 
-        entity_label_to_node = relation.to_node_label
-        entity_label_from_node = relation.from_node_label
-        relation_type = relation.type
-        reified_entity_type = reified_entity.type
-        reified_entity_labels_string = reified_entity.get_label_string()
+        conditions = reified_entity.get_where_condition("r")
+        composed_primary_id_query = reified_entity.get_composed_primary_id("r")
+        separate_primary_id_query = reified_entity.get_entity_attributes("r")
+        primary_key_properties = reified_entity.get_entity_attributes_as_node_properties()
 
-        # create from a relation edge a new :relation node
-        # add a :REIFIED edge between the entities constituting this relationship and the new node
-        q_reify_relation = f'''
-                    MATCH (n1:{entity_label_to_node}) <- [rel:{relation_type.upper()}]- (n2:{entity_label_from_node})
-                    MERGE (new:Entity:{reified_entity_labels_string} {{ 
-                        {entity_label_to_node}: n1.ID,
-                        {entity_label_from_node}: n2.ID,
-                        ID:toString(n1.ID)+"_"+toString(n2.ID),
-                        EntityType: "{reified_entity_type}",
-                        uID:"{reified_entity_type}_"+toString(n1.ID)+"_"+toString(n2.ID)}})
-                    MERGE (n1) <-[:REIFIED ] - (new) -[:REIFIED ]-> (n2)'''
-        self.exec_query(q_reify_relation)
+        entity_type = reified_entity.type
+        entity_labels_string = reified_entity.get_label_string()
+
+        q_create_entity = f'''
+                    MATCH (n1) - [r:{reified_entity.based_on}] -> (n2) WHERE {conditions}
+                    WITH {composed_primary_id_query} AS id, {separate_primary_id_query}
+                    MERGE (en:{entity_labels_string}
+                            {{ID:id, 
+                            uID:"{entity_type}_"+toString(id),                    
+                            entityType:"{entity_type}",
+                            {primary_key_properties}}})
+                    MERGE (n1) <-[:REIFIED ] - (en) -[:REIFIED ]-> (n2)
+                    '''
+        # TODO FINISH
+        q_correlate_entities = f'''
+            MATCH (n1) - [r:{reified_entity.based_on}] -> (n2)
+            MATCH (reified:{entity_labels_string}) 
+        
+        '''
+
+        self.exec_query(q_create_entity)
+
+        # entity_label_to_node = reified_entity.relation.to_node_label
+        # entity_label_from_node = reified_entity.relation.from_node_label
+        # relation_type = reified_entity.relation.type
+        # reified_entity_type = reified_entity.type
+        # reified_entity_labels_string = reified_entity.get_label_string()
+        #
+        # # create from a relation edge a new :relation node
+        # # add a :REIFIED edge between the entities constituting this relationship and the new node
+        # q_reify_relation = f'''
+        #             MATCH (n1:{entity_label_to_node}) <- [rel:{relation_type.upper()}]- (n2:{entity_label_from_node})
+        #             MERGE (new:Entity:{reified_entity_labels_string} {{
+        #                 {entity_label_to_node}: n1.ID,
+        #                 {entity_label_from_node}: n2.ID,
+        #                 ID:toString(n1.ID)+"_"+toString(n2.ID),
+        #                 entityType: "{reified_entity_type}",
+        #                 uID:"{reified_entity_type}_"+toString(n1.ID)+"_"+toString(n2.ID)}})
+        #             MERGE (n1) <-[:REIFIED ] - (new) -[:REIFIED ]-> (n2)'''
+        # self.exec_query(q_reify_relation)
 
     def correlate_events_to_reification(self) -> None:
-        for relation in self.semantic_header.relations:
-            if relation.reify:
-                reified_entity = relation.reified_entity
-                if reified_entity.corr:
-                    reified_entity_labels = relation.reified_entity.get_label_string()
-                    # correlate events that are related to an entity which is reified into a new entity
-                    # to the new reified entity
-                    q_correlate = f'''
+        reified_entity: EntityLPG
+        for reified_entity in self.semantic_header.reified_entities:
+            if reified_entity.corr:
+                reified_entity_labels = reified_entity.get_label_string()
+                # correlate events that are related to an entity which is reified into a new entity
+                # to the new reified entity
+                q_correlate = f'''
                         MATCH (e:Event) -[:CORR]-> (n:Entity) <-[:REIFIED ]- (r:Entity:{reified_entity_labels})
                         MATCH (e:Event) -[:CORR]-> (n:Entity) <-[:REIFIED ]- (r:Entity:{reified_entity_labels})
                         MERGE (e)-[:CORR]->(r)'''
-                    self.exec_query(q_correlate)
+                self.exec_query(q_correlate)
 
-                    self._write_message_to_performance(
-                        f"Relation (:Event) - [:CORR] -> (:Entity:{reified_entity_labels}) created")
+                self._write_message_to_performance(
+                    f"Relation (:Event) - [:CORR] -> (:Entity:{reified_entity_labels}) created")
 
     # endregion
 
     # region CREATE DIRECTLY FOLLOWS RELATIONS
 
     def create_df_edges(self) -> None:
-        for entity in self.semantic_header.entities:
+        entity: EntityLPG
+
+        for entity in self.semantic_header.entities_derived_from_events:
             if entity.df:
                 self._create_directly_follows(entity=entity)
                 self._write_message_to_performance(f"Created [:DF] edge for (:{entity.get_label_string()})")
 
-        for relation in self.semantic_header.relations:
-            if relation.reify and relation.reified_entity.df:
-                self._create_directly_follows(entity=relation.reified_entity)
+        for entity in self.semantic_header.reified_entities:
+            if entity.df:
+                self._create_directly_follows(entity=entity)
                 self._write_message_to_performance(
-                    f"Created [:DF] edge for (:{relation.reified_entity.get_label_string()})")
+                    f"Created [:DF] edge for (:{entity.get_label_string()})")
 
-    def _create_directly_follows(self, entity: 'EntityLPG') -> None:
+    def _create_directly_follows(self, entity: EntityLPG) -> None:
         # find the specific entities and events with a certain label correlated to that entity
         # order all events by time, order_nr and id grouped by a node n
         # collect the sorted nodes as a list
@@ -535,7 +572,7 @@ class EventKnowledgeGraph:
         entity_type = entity.type
         entity_labels_string = entity.get_label_string()
 
-        df_entity_string = entity.df_label
+        df_entity_string = entity.get_df_label()
 
         q_create_df = f'''
          CALL apoc.periodic.iterate(
@@ -545,8 +582,8 @@ class EventKnowledgeGraph:
             UNWIND range(0,size(nodeList)-2) AS i
             WITH n , nodeList[i] as first, nodeList[i+1] as second
             RETURN first, second',
-            'MERGE (first) -[df:{df_entity_string} {{EntityType: "{entity_type}"}}]->(second)
-             SET df.Type = "DF"
+            'MERGE (first) -[df:{df_entity_string} {{entityType: "{entity_type}"}}]->(second)
+             SET df.type = "DF"
             ',
             {{batchSize: {self.batch_size}}})
         '''
@@ -554,52 +591,51 @@ class EventKnowledgeGraph:
         self.exec_query(q_create_df)
 
     def merge_duplicate_df(self):
-        entity: 'EntityLPG'
-        for entity in self.semantic_header.entities:
+        entity: EntityLPG
+        for entity in self.semantic_header.entities_derived_from_events:
             if entity.merge_duplicate_df:
                 self._merge_duplicate_df_entity(entity=entity)
                 self.perf.finished_step(
                     activity=f"Merged duplicate [:DF] edges for (:{entity.get_label_string()}) done")
 
-    def _merge_duplicate_df_entity(self, entity: 'EntityLPG') -> None:
+    def _merge_duplicate_df_entity(self, entity: EntityLPG) -> None:
         q_merge_duplicate_rel = f'''
-                    MATCH (n1:Event)-[r:{entity.df_label} {{EntityType: "{entity.type}"}}]->(n2:Event)
+                    MATCH (n1:Event)-[r:{entity.get_df_label()} {{entityType: "{entity.type}"}}]->(n2:Event)
                     WITH n1, n2, collect(r) AS rels
                     WHERE size(rels) > 1
                     // only include this and the next line if you want to remove the existing relationships
                     UNWIND rels AS r 
                     DELETE r
-                    MERGE (n1)-[:{entity.df_label} {{EntityType: "{entity.type}", Count:size(rels), Type:"DF"}}]->(n2)
+                    MERGE (n1)-[:{entity.get_df_label()} {{entityType: "{entity.type}", Count:size(rels), type:"DF"}}]->(n2)
                 '''
         self.exec_query(q_merge_duplicate_rel)
 
     def delete_parallel_dfs_derived(self):
-        reified_entity: 'EntityLPG'
-        original_entity: 'EntityLPG'
-        relation: 'RelationLPG'
-        for relation in self.semantic_header.relations:
-            if relation.reify:
-                reified_entity = relation.reified_entity
-                if reified_entity.delete_parallel_df:
-                    parent_entity = self.semantic_header.get_entity(relation.from_node_label)
-                    child_entity = self.semantic_header.get_entity(relation.to_node_label)
-                    for original_entity in [parent_entity, child_entity]:
-                        self._delete_parallel_directly_follows_derived(
-                            reified_entity=reified_entity,
-                            original_entity=original_entity)
-                        self._write_message_to_performance(
-                            f"Deleted parallel DF of (:{reified_entity.get_label_string()}) and (:{original_entity.get_label_string()})")
+        reified_entity: EntityLPG
+        original_entity: EntityLPG
+        relation: RelationLPG
+        for reified_entity in self.semantic_header.reified_entities:
+            if reified_entity.delete_parallel_df:
+                relation = reified_entity.relation
+                parent_entity = self.semantic_header.get_entity(relation.from_node_label)
+                child_entity = self.semantic_header.get_entity(relation.to_node_label)
+                for original_entity in [parent_entity, child_entity]:
+                    self._delete_parallel_directly_follows_derived(
+                        reified_entity=reified_entity,
+                        original_entity=original_entity)
+                    self._write_message_to_performance(
+                        f"Deleted parallel DF of (:{reified_entity.get_label_string()}) and (:{original_entity.get_label_string()})")
 
-    def _delete_parallel_directly_follows_derived(self, reified_entity: 'EntityLPG', original_entity: 'EntityLPG'):
+    def _delete_parallel_directly_follows_derived(self, reified_entity: EntityLPG, original_entity: EntityLPG):
         reified_entity_type = reified_entity.type
-        df_reified_entity = reified_entity.df_label
+        df_reified_entity = reified_entity.get_df_label()
 
         original_entity_type = original_entity.type
-        df_original_entity = original_entity.df_label
+        df_original_entity = original_entity.get_df_label()
 
         q_delete_df = f'''
-            MATCH (e1:Event) -[df:{df_reified_entity} {{EntityType: "{reified_entity_type}"}}]-> (e2:Event)
-            WHERE (e1:Event) -[:{df_original_entity} {{EntityType: "{original_entity_type}"}}]-> (e2:Event)
+            MATCH (e1:Event) -[df:{df_reified_entity} {{entityType: "{reified_entity_type}"}}]-> (e2:Event)
+            WHERE (e1:Event) -[:{df_original_entity} {{entityType: "{original_entity_type}"}}]-> (e2:Event)
             DELETE df'''
 
         self.exec_query(q_delete_df)
@@ -607,21 +643,7 @@ class EventKnowledgeGraph:
         self._write_message_to_performance(
             f"Deleted parallel DF between {reified_entity_type} and {original_entity_type}")
 
-    def df_class_relations(self):
-        classes = self.semantic_header.classes
-        for _class in classes:
-            if _class.df:
-                entity_labels = _class.df_entity_labels
-                for entity_label in entity_labels:
-                    entity = self.semantic_header.get_entity(entity_label)
-
-                    self.aggregate_df_relations(entity=entity,
-                                                include_label_in_c_df=_class.include_label_in_cdf,
-                                                classifiers=_class.required_attributes,
-                                                df_threshold=_class.threshold,
-                                                relative_df_threshold=_class.relative_threshold)
-
-    def aggregate_df_relations(self, entity: 'EntityLPG' = None,
+    def aggregate_df_relations(self, entity: EntityLPG = None,
                                include_label_in_c_df: bool = True,
                                classifiers: Optional[List[str]] = None, df_threshold: int = 0,
                                relative_df_threshold: float = 0) -> None:
@@ -630,14 +652,14 @@ class EventKnowledgeGraph:
             q_create_dfc = f'''
                        MATCH (c1:Class) <-[:OBSERVED]- (e1:Event) -[df]-> (e2:Event) -[:OBSERVED]-> (c2:Class)
                        MATCH (e1) -[:CORR] -> (n) <-[:CORR]- (e2)
-                       WHERE c1.Type = c2.Type AND n.EntityType = df.EntityType
-                       WITH n.EntityType as EType,c1 AS c1,count(df) AS df_freq,c2 AS c2
-                       MERGE (c1) -[rel2:DF_C {{EntityType:EType, Type:"DF_C"}}]-> (c2) ON CREATE SET rel2.count=df_freq
+                       WHERE c1.type = c2.type AND n.entityType = df.entityType
+                       WITH n.entityType as EType,c1 AS c1,count(df) AS df_freq,c2 AS c2
+                       MERGE (c1) -[rel2:DF_C {{entityType:EType, type:"DF_C"}}]-> (c2) ON CREATE SET rel2.count=df_freq
                        '''
 
             q_change_label = f'''
                     MATCH (c1) -[rel2:DF_C]-> (c2) 
-                    WITH rel2, rel2.EntityType as EType, rel2.count AS df_freq, c1, c2
+                    WITH rel2, rel2.entityType as EType, rel2.count AS df_freq, c1, c2
                        CALL apoc.do.when(
                         {include_label_in_c_df},
                         "RETURN 'DF_C_'+EType as DFLabel",
@@ -656,39 +678,39 @@ class EventKnowledgeGraph:
             # corresponds to aggregate_df_relations &  aggregate_df_relations_for_entities in graphdb-event-logs
             # aggregate only for a specific entity type and event classifier
             classifier_string = "_".join(classifiers)
-            df_label = entity.df_label
+            df_label = entity.get_df_label()
             entity_type = entity.type
-            dfc_label = self.get_dfc_label(entity_type, include_label_in_c_df)
+            dfc_label = EventKnowledgeGraph.get_dfc_label(entity_type, include_label_in_c_df)
             q_create_dfc = f'''
-                        MATCH (c1:Class) <-[:OBSERVED]- (e1:Event) -[df:{df_label} {{EntityType: '{entity_type}'}}]-> 
+                        MATCH (c1:Class) <-[:OBSERVED]- (e1:Event) -[df:{df_label} {{entityType: '{entity_type}'}}]-> 
                             (e2:Event) -[:OBSERVED]-> (c2:Class)
                         MATCH (e1) -[:CORR] -> (n) <-[:CORR]- (e2)
-                        WHERE n.EntityType = df.EntityType AND 
-                            c1.Type = "{classifier_string}" AND c2.Type="{classifier_string}"
-                        WITH n.EntityType as EType,c1,count(df) AS df_freq,c2
-                        MERGE (c1) -[rel2:{dfc_label} {{EntityType: '{entity_type}', Type:"DF_C"}}]-> (c2) 
+                        WHERE n.entityType = df.entityType AND 
+                            c1.type = "{classifier_string}" AND c2.type="{classifier_string}"
+                        WITH n.entityType as EType,c1,count(df) AS df_freq,c2
+                        MERGE (c1) -[rel2:{dfc_label} {{entityType: '{entity_type}', type:"DF_C"}}]-> (c2) 
                         ON CREATE SET rel2.count=df_freq'''
             self.exec_query(q_create_dfc)
         else:
             # aggregate only for a specific entity type and event classifier
             # include only edges with a minimum threshold, drop weak edges (similar to heuristics miner)
             classifier_string = "_".join(classifiers)
-            df_label = entity.df_label
+            df_label = entity.get_df_label()
             entity_type = entity.type
-            dfc_label = self.get_dfc_label(entity_type, include_label_in_c_df)
+            dfc_label = EventKnowledgeGraph.get_dfc_label(entity_type, include_label_in_c_df)
             q_create_dfc = f'''
-                        MATCH (c1:Class) <-[:OBSERVED]- (e1:Event) -[df:{df_label} {{EntityType: '{entity_type}'}}]-> 
+                        MATCH (c1:Class) <-[:OBSERVED]- (e1:Event) -[df:{df_label} {{entityType: '{entity_type}'}}]-> 
                             (e2:Event) -[:OBSERVED]-> (c2:Class)
                         MATCH (e1) -[:CORR] -> (n) <-[:CORR]- (e2)
-                        WHERE n.EntityType = df.EntityType 
-                            AND c1.Type = "{classifier_string}" AND c2.Type="{classifier_string}"
-                        WITH n.EntityType as EntityType,c1,count(df) AS df_freq,c2
+                        WHERE n.entityType = df.entityType 
+                            AND c1.type = "{classifier_string}" AND c2.type="{classifier_string}"
+                        WITH n.entityType as entityType,c1,count(df) AS df_freq,c2
                         WHERE df_freq > {df_threshold}
                         OPTIONAL MATCH (c2:Class) <-[:OBSERVED]- (e2b:Event) -[df2:DF]-> 
                             (e1b:Event) -[:OBSERVED]-> (c1:Class)
-                        WITH EntityType as EType,c1,df_freq,count(df2) AS df_freq2,c2
+                        WITH entityType as EType,c1,df_freq,count(df2) AS df_freq2,c2
                         WHERE (df_freq*{relative_df_threshold} > df_freq2)
-                        MERGE (c1) -[rel2:{dfc_label} {{EntityType: '{entity_type}', Type:"DF_C"}}]-> (c2) 
+                        MERGE (c1) -[rel2:{dfc_label} {{entityType: '{entity_type}', type:"DF_C"}}]-> (c2) 
                         ON CREATE SET rel2.count=df_freq'''
             self.exec_query(q_create_dfc)
 
@@ -699,7 +721,7 @@ class EventKnowledgeGraph:
         classes = self.semantic_header.classes
         for _class in classes:
             label = _class.label
-            required_attributes = _class.required_attributes
+            required_attributes = _class.class_identifiers
             ids = _class.ids
 
             self.create_class(label, required_attributes, ids)
@@ -725,7 +747,7 @@ class EventKnowledgeGraph:
         required_keys = [_id] + required_keys
 
         node_properties = ', '.join([f"{_id}: {key}" for _id, key in zip(ids, required_keys)])
-        node_properties += f", Type: '{_id}'"  # save ID also as string that captures the type
+        node_properties += f", type: '{_id}'"  # save ID also as string that captures the type
 
         # create new class nodes for event nodes that match the condition
         q_create_ec = f'''
@@ -775,22 +797,6 @@ class EventKnowledgeGraph:
         df_log_timestamp_as_string.drop(["timestamp"], axis=1, inplace=True)
         return df_log_timestamp_as_string
 
-    @staticmethod
-    def create_condition(name: str, properties: Dict[str, List[str]]) -> str:
-        """
-        Converts a dictionary into a string that can be used in a WHERE statement to find the correct node/relation
-        @param name: str, indicating the name of the node/rel
-        @param properties: Dictionary containing of property name and value
-        @return: String that can be used in a where statement
-        """
-
-        condition_list = []
-        for (key, conditions) in properties.items():
-            for condition in conditions:
-                condition_list.append(f"{name}.{key} {condition}")
-        condition = " AND ".join(condition_list)
-        return condition
-
     # endregion
 
     def print_statistics(self):
@@ -822,8 +828,8 @@ class EventKnowledgeGraph:
         query_count_relations = """
             // List all agg rel types and counts
             MATCH () - [r] -> ()
-            WHERE r.Type is NOT NULL
-            WITH toUpper(r.Type) as type, count(r) as numberOfRelations
+            WHERE r.type is NOT NULL
+            WITH toUpper(r.type) as type, count(r) as numberOfRelations
             RETURN type, numberOfRelations 
         """
 
@@ -834,7 +840,7 @@ class EventKnowledgeGraph:
         query_count_relations = """
             // List all rel types and counts
             MATCH () - [r] -> ()
-            WHERE r.Type is  NULL
+            WHERE r.type is  NULL
             WITH r, CASE Type(r)
               WHEN 'CORR' THEN 0
               WHEN 'OBSERVED' THEN 1
