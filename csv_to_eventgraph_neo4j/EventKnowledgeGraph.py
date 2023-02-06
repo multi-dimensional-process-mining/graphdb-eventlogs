@@ -464,7 +464,7 @@ class EventKnowledgeGraph:
         q_create_relation = f'''
             MATCH (from:{entity_label_from_node})
             MATCH (to:{entity_label_to_node})
-                WHERE to <> from AND from.{foreign_key} = to.ID
+                WHERE to <> from AND to.ID in from.{foreign_key}
             WITH DISTINCT from, to
             MERGE (from) - [:{relation_type.upper()} {{type:"Rel",
                                                      {entity_label_from_node.lower()}Id: from.ID,

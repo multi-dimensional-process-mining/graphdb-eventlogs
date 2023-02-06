@@ -12,7 +12,7 @@ import authentication
 
 connection = authentication.connections_map[authentication.Connections.LOCAL]
 
-dataset_name = 'BPIC17'
+dataset_name = 'BPIC14'
 use_sample = True
 
 semantic_header = SemanticHeaderLPG.create_semantic_header(dataset_name)

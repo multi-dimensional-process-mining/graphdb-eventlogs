@@ -44,14 +44,19 @@ class EntityLPG(Entity):
         return "+\"-\"+".join([f"{node_name}.{key}" for key in self.primary_keys])
 
     def get_entity_attributes(self, node_name: str = "e"):
-        return ','.join([f"{node_name}.{key} as {key}" for key in self.entity_attributes])
+        primary_key_list = [f"{node_name}.{key} as {key}" for key in self.primary_keys]
+        entity_attribute_list = [f"COLLECT(distinct {node_name}.{attr}) as {attr}" for attr in
+                                 self.entity_attributes_wo_primary_keys]
+        complete_list = primary_key_list + entity_attribute_list
+        return ','.join(complete_list)
 
     def get_entity_attributes_as_node_properties(self):
         return ',\n'.join([f"{key}: {key}" for key in self.entity_attributes])
 
     def get_primary_key_existing_condition(self, node_name: str = "e"):
         return " AND ".join(
-            [f'''{node_name}.{key} IS NOT NULL AND {node_name}.{key} <> "nan" AND {node_name}.{key}<> "None"''' for key in self.primary_keys])
+            [f'''{node_name}.{key} IS NOT NULL AND {node_name}.{key} <> "nan" AND {node_name}.{key}<> "None"''' for key
+             in self.primary_keys])
 
     def create_condition(self, name: str) -> str:
         """

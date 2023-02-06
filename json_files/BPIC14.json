@@ -2,18 +2,22 @@
   "name": "BPIC14",
   "version": "1.0.0",
 
-  "entities": [
+  "entities_derived_from_events": [
     {
+      "use_nodes": true,
+      "based_on": "Event",
       "type": "ConfigurationItem",
       "labels": ["ConfigurationItem"],
       "primary_keys": ["ciNameAff"],
-      "entity_attributes": ["ciNameAff"],
+      "entity_attributes": ["ciNameAff", "serviceComponentAff"],
       "df": true,
       "include_label_in_df": true,
       "corr": true,
       "merge_duplicate_df": true
     },
     {
+      "use_nodes": true,
+      "based_on": "Event",
       "type": "ServiceComponent",
       "labels": ["ServiceComponent"],
       "primary_keys": ["serviceComponentAff"],
@@ -24,6 +28,8 @@
       "merge_duplicate_df": true
     },
     {
+      "use_nodes": true,
+      "based_on": "Event",
       "type": "Incident",
       "labels": ["Incident"],
       "primary_keys": ["incidentId"],
@@ -34,16 +40,20 @@
       "merge_duplicate_df": true
     },
     {
+      "use_nodes": true,
+      "based_on": "Event",
       "type": "Interaction",
       "labels": ["Interaction"],
       "primary_keys": ["interactionId"],
-      "entity_attributes": ["interactionId"],
+      "entity_attributes": ["interactionId", "relatedIncident"],
       "df": true,
       "include_label_in_df": true,
       "corr": true,
       "merge_duplicate_df": true
     },
     {
+      "use_nodes": true,
+      "based_on": "Event",
       "type": "Change",
       "labels": ["Change"],
       "primary_keys": ["changeId"],
@@ -54,6 +64,8 @@
       "merge_duplicate_df": true
     },
     {
+      "use_nodes": true,
+      "based_on": "Event",
       "type": "CaseR",
       "labels": ["CaseR"],
       "primary_keys": ["resource"],
@@ -64,6 +76,8 @@
       "merge_duplicate_df": true
     },
     {
+      "use_nodes": true,
+      "based_on": "Event",
       "type":"KM",
       "labels": ["KM"],
       "primary_keys": ["kmNumber"],
