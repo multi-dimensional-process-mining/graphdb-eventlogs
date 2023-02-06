@@ -177,8 +177,9 @@ class SemanticHeader(ABC):
             return None
         _name = obj.get("name")
         _version = obj.get("version")
-        _entities_derived_from_events = create_list(derived_entity_class_name, obj.get("entities_derived_from_events"))
-        _reified_entities = create_list(reified_entity_class_name, obj.get("reified_entities"))
+        _entities = create_list(derived_entity_class_name, obj.get("entities"))
+        _entities_derived_from_events = [entity for entity in _entities if entity.use_nodes]
+        _reified_entities = [entity for entity in _entities if not entity.use_nodes]
         _relations = create_list(relation_class_name, obj.get("relations"))
         _classes = create_list(class_class_name, obj.get("classes"))
         _log = log_class_name.from_dict(obj.get("log"))

@@ -1,7 +1,7 @@
 {
   "name": "BPIC17",
   "version": "1.0.0",
-  "entities_derived_from_events": [
+  "entities": [
     {
       "use_nodes": true,
       "based_on": "Event",
@@ -65,7 +65,8 @@
         "offerId"
       ],
       "entity_attributes": [
-        "offerId", "case"
+        "offerId",
+        "case"
       ],
       "conditions": [
         {
@@ -113,9 +114,7 @@
       ],
       "corr": false,
       "df": false
-    }
-  ],
-  "reified_entities": [
+    },
     {
       "use_nodes": false,
       "based_on": "CASE_AO",
@@ -124,10 +123,12 @@
         "CaseAO"
       ],
       "primary_keys": [
-        "offerId", "applicationId"
+        "offerId",
+        "applicationId"
       ],
       "entity_attributes": [
-        "offerId", "applicationId"
+        "offerId",
+        "applicationId"
       ],
       "corr": true,
       "df": false
@@ -140,10 +141,12 @@
         "CaseAW"
       ],
       "primary_keys": [
-        "workflowId", "applicationId"
+        "workflowId",
+        "applicationId"
       ],
       "entity_attributes": [
-        "workflowId", "applicationId"
+        "workflowId",
+        "applicationId"
       ],
       "corr": true,
       "df": false
@@ -156,10 +159,12 @@
         "CaseWO"
       ],
       "primary_keys": [
-        "workflowId","offerId"
+        "workflowId",
+        "offerId"
       ],
       "entity_attributes": [
-        "workflowId","offerId"
+        "workflowId",
+        "offerId"
       ],
       "corr": true,
       "df": false
@@ -190,10 +195,6 @@
       "label": "Event",
       "class_identifiers": [
         "activity",
-        "lifecycle"
-      ],
-      "ids": [
-        "name",
         "lifecycle"
       ]
     }

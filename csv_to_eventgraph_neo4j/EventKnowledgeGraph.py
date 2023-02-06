@@ -6,7 +6,7 @@ from typing import Optional, List, Dict, Set, Any
 from csv_to_eventgraph_neo4j.event_table import EventTables
 from csv_to_eventgraph_neo4j.performance_handling import Performance
 from csv_to_eventgraph_neo4j.semantic_header import Entity
-from csv_to_eventgraph_neo4j.semantic_header_lpg import SemanticHeaderLPG, EntityLPG, RelationLPG
+from csv_to_eventgraph_neo4j.semantic_header_lpg import SemanticHeaderLPG, EntityLPG, RelationLPG, ClassLPG
 
 import neo4j
 import pandas as pd
@@ -373,7 +373,7 @@ class EventKnowledgeGraph:
     def create_entities(self) -> None:
         entity: EntityLPG
         for entity in self.semantic_header.entities_derived_from_events:
-            if entity.include and entity.use_nodes and entity.based_on == "Event":
+            if entity.include and entity.based_on == "Event":
                 self._create_entity(entity=entity)
                 self._write_message_to_performance(f"Entity (:{entity.get_label_string()}) node created")
 
@@ -725,46 +725,30 @@ class EventKnowledgeGraph:
     def create_classes(self):
         classes = self.semantic_header.classes
         for _class in classes:
-            label = _class.label
-            required_attributes = _class.class_identifiers
-            ids = _class.ids
+            self.create_class(_class=_class)
 
-            self.create_class(label, required_attributes, ids)
-
-    def create_class(self, label: str, required_keys: Optional[List[str]],
-                     ids: Optional[List[str]]) -> None:
+    def create_class(self, _class: ClassLPG) -> None:
         # make sure first element of id list is cID
-        if "cID" not in ids:
-            ids = ["cID"] + ids
+        label = _class.label
+        required_keys = _class.class_identifiers
 
-        # reformat to e.key with alias to create with condition
-        alias_keys = [f"e.{key} AS {key}" for key in required_keys]
-        with_condition = ' , '.join([f"{key}" for key in alias_keys])
+        ids = required_keys
 
-        # reformat to where e.key is not null to create with condition
-        not_null_keys = [f"e.{key} IS NOT NULL" for key in required_keys]
-        where_condition_not_null = " AND ".join([f"{key}" for key in not_null_keys])
-
-        # create a combined id in string format
-        _id = "+".join([f"{key}" for key in required_keys])
-        class_label = "_".join([f"{key}" for key in required_keys])
-        # add to the keys
-        required_keys = [_id] + required_keys
-
-        node_properties = ', '.join([f"{_id}: {key}" for _id, key in zip(ids, required_keys)])
-        node_properties += f", type: '{_id}'"  # save ID also as string that captures the type
+        group_by = _class.get_group_by_statement(node_name="e")
+        where_condition_not_null = _class.get_condition(node_name="e")
+        class_properties = _class.get_class_properties()
+        class_label = _class.get_class_label()
 
         # create new class nodes for event nodes that match the condition
         q_create_ec = f'''
                     MATCH (e:{label})
                     WHERE {where_condition_not_null}
-                    WITH distinct {with_condition}
-                    MERGE (c:Class:Class_{class_label} {{ {node_properties} }})'''
+                    WITH {group_by}
+                    MERGE (c:Class:Class_{class_label} {{ {class_properties} }})'''
         self.exec_query(q_create_ec)
 
         # reformat to e.key
-        required_keys = [f"e.{key}" for key in required_keys]
-        where_link_condition = ' AND '.join([f"c.{_id} = {key}" for _id, key in zip(ids[1:], required_keys[1:])])
+        where_link_condition = _class.get_link_condition(class_node_name="c", event_node_name = "e")
 
         # Create :OBSERVED relation between the class and events
         q_link_event_to_class = f'''

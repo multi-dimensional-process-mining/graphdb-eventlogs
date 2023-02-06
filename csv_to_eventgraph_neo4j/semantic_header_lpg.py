@@ -91,7 +91,34 @@ class EntityLPG(Entity):
 
 
 class ClassLPG(Class):
-    pass
+    def get_condition(self, node_name="e"):
+        # reformat to where e.key is not null to create with condition
+        return " AND ".join([f"{node_name}.{key} IS NOT NULL" for key in self.class_identifiers])
+
+    def get_group_by_statement(self, node_name="e"):
+        # reformat to e.key with alias to create with condition
+        return 'distinct ' + ' , '.join([f"{node_name}.{key} AS {key}" for key in self.class_identifiers])
+
+    def get_class_properties(self) -> str:
+        ids = self.class_identifiers
+        if "cID" not in ids:
+            ids = ["cID"] + ids
+
+        # create a combined id in string format
+        _id = "+".join([f"{key}" for key in self.class_identifiers])
+        # add to the keys
+        required_keys = [_id] + self.class_identifiers
+
+        node_properties = ', '.join([f"{_id}: {key}" for _id, key in zip(ids, required_keys)])
+        node_properties += f", type: '{_id}'"  # save ID also as string that captures the type
+
+        return node_properties
+
+    def get_link_condition(self, class_node_name="c", event_node_name = "e"):
+        return ' AND '.join([f"{class_node_name}.{key} = {event_node_name}.{key}" for key in self.class_identifiers])
+
+    def get_class_label(self):
+        return "_".join([f"{key}" for key in self.class_identifiers])
 
 
 class LogLPG(Log):

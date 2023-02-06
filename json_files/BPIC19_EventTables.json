@@ -1,0 +1,252 @@
+[
+  {
+    "name": "BPIC19",
+    "file_directory": "..\\data\\BPIC19\\prepared\\",
+    "file_names": [
+      "BPIC19.csv"
+    ],
+    "labels": [
+      "Event"
+    ],
+    "samples": [
+      {
+        "file_name": "BPIC19.csv",
+        "use_random_sample": false,
+        "population_column": "casePurchasingDocument",
+        "ids": [
+          4508062571,
+          4507010217,
+          4507000321,
+          4507040910,
+          4507021063,
+          4507024440,
+          4507001109,
+          4507020425,
+          4507014406,
+          4507018608,
+          4508066411,
+          4508053414,
+          4507010940,
+          4507022053,
+          4507016146,
+          4508044395,
+          4508072550,
+          4507002104,
+          4507020767,
+          4508057849
+        ]
+      }
+    ],
+    "attributes": [
+      {
+        "name": "idx",
+        "columns": [
+          {
+            "name": "idx",
+            "dtype": "Int64"
+          }
+        ],
+        "mandatory": true
+      },
+      {
+        "name": "activity",
+        "columns": [
+          {
+            "name": "eventConceptName"
+          }
+        ],
+        "mandatory": true
+      },
+      {
+        "name": "timestamp",
+        "columns": [
+          {
+            "name": "eventTimeTimestamp"
+          }
+        ],
+        "datetime_object": {
+          "format": "d-M-y H:m:s.nX",
+          "timezone_offset": "+01",
+          "convert_to": "ISO_DATE_TIME"
+        },
+        "mandatory": true
+      },
+      {
+        "name": "Id",
+        "columns": [
+          {
+            "name": "eventId",
+            "dtype": "Int64"
+          }
+        ],
+        "mandatory": true
+      },
+      {
+        "name": "cSpendAreaText",
+        "columns": [
+          {
+            "name": "caseSpendAreaText"
+          }
+        ],
+        "mandatory": true
+      },
+      {
+        "name": "cCompany",
+        "columns": [
+          {
+            "name": "caseCompany"
+          }
+        ],
+        "mandatory": false
+      },
+      {
+        "name": "cDocType",
+        "columns": [
+          {
+            "name": "caseDocumentType"
+          }
+        ],
+        "mandatory": true
+      },
+      {
+        "name": "cSubSPendAreaText",
+        "columns": [
+          {
+            "name": "caseSubSpendAreaText"
+          }
+        ],
+        "mandatory": true
+      },
+      {
+        "name": "cPoId",
+        "columns": [
+          {
+            "name": "casePurchasingDocument",
+            "dtype": "Int64"
+          }
+        ],
+        "mandatory": true
+      },
+      {
+        "name": "cPurDocCat",
+        "columns": [
+          {
+            "name": "casePurchDocCategoryName"
+          }
+        ],
+        "mandatory": true
+      },
+      {
+        "name": "cVendor",
+        "columns": [
+          {
+            "name": "caseVendor"
+          }
+        ],
+        "mandatory": false
+      },
+      {
+        "name": "cItemType",
+        "columns": [
+          {
+            "name": "caseItemType"
+          }
+        ],
+        "mandatory": false
+      },
+      {
+        "name": "cItemCat",
+        "columns": [
+          {
+            "name": "caseItemCategory"
+          }
+        ],
+        "mandatory": true
+      },
+      {
+        "name": "cSpendClassText",
+        "columns": [
+          {
+            "name": "caseSpendClassificationText"
+          }
+        ],
+        "mandatory": true
+      },
+      {
+        "name": "cVendorName",
+        "columns": [
+          {
+            "name": "caseName"
+          }
+        ],
+        "mandatory": true
+      },
+      {
+        "name": "cGRbasedInvVerif",
+        "columns": [
+          {
+            "name": "caseGrBasedInvVerif",
+            "dtype": "boolean"
+          }
+        ],
+        "mandatory": true
+      },
+      {
+        "name": "cItem",
+        "columns": [
+          {
+            "name": "caseItem",
+            "dtype": "int"
+          }
+        ],
+        "mandatory": true
+      },
+      {
+        "name": "cId",
+        "columns": [
+          {
+            "name": "caseConceptName"
+          }
+        ],
+        "mandatory": false
+      },
+      {
+        "name": "cGR",
+        "columns": [
+          {
+            "name": "caseGoodsReceipt",
+            "dtype": "boolean"
+          }
+        ],
+        "mandatory": true
+      },
+      {
+        "name": "resource",
+        "columns": [
+          {
+            "name": "eventOrgResource"
+          }
+        ],
+        "mandatory": true
+      },
+      {
+        "name": "eCumNetWorth",
+        "columns": [
+          {
+            "name": "eventCumulativeNetWorthEur"
+          }
+        ],
+        "mandatory": true
+      },
+      {
+        "name": "log",
+        "columns": [
+          {
+            "name": "log"
+          }
+        ],
+        "mandatory": true
+      }
+    ]
+  }
+]

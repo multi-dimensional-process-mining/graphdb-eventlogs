@@ -1,0 +1,453 @@
+[
+    {
+      "name": "BPIC15",
+      "file_directory": "..\\data\\BPIC15\\prepared\\",
+      "file_names": [
+        "BPIC15_1.csv",
+        "BPIC15_2.csv",
+        "BPIC15_3.csv",
+        "BPIC15_4.csv",
+        "BPIC15_5.csv"
+      ],
+      "labels": [
+        "Event"
+      ],
+      "true_values": [
+        "J"
+      ],
+      "false_values": [
+        "N"
+      ],
+      "samples": [
+        {
+          "file_name": "BPIC15_1.csv",
+          "use_random_sample": false,
+          "population_column": "case",
+          "ids": [
+            9691153,
+            9294701,
+            3084709,
+            4375473,
+            3837125,
+            4397208,
+            5843747,
+            3606967,
+            11773351,
+            8051084,
+            8021700,
+            2847199,
+            8958665,
+            2794023,
+            2899336,
+            8816378,
+            5288872,
+            5106291,
+            10997930,
+            6985928
+          ]
+        },
+        {
+          "file_name": "BPIC15_2.csv",
+          "use_random_sample": false,
+          "population_column": "case",
+          "ids": [
+            20284125,
+            23142529,
+            3585731,
+            21038392,
+            19995133,
+            3874234,
+            22139866,
+            4623044,
+            3948666,
+            3702964,
+            20930456,
+            20063170,
+            3808540,
+            20025552,
+            20888077,
+            21986652,
+            20235405,
+            19940265,
+            4395219,
+            20742337
+          ]
+        },
+        {
+          "file_name": "BPIC15_3.csv",
+          "use_random_sample": false,
+          "population_column": "case",
+          "ids": [
+            3055383,
+            6616348,
+            3963963,
+            5245298,
+            5007761,
+            6015049,
+            3824284,
+            5489846,
+            3691884,
+            3965191,
+            7313344,
+            3871869,
+            5718151,
+            3721360,
+            5585560,
+            5702384,
+            5562464,
+            5961864,
+            3829589,
+            4350022
+          ]
+        },
+        {
+          "file_name": "BPIC15_4.csv",
+          "use_random_sample": false,
+          "population_column": "case",
+          "ids": [
+            10516319,
+            9279433,
+            4235583,
+            5932529,
+            8577457,
+            6873521,
+            7084443,
+            4968228,
+            5421204,
+            4578191,
+            8352642,
+            4800472,
+            11167513,
+            9665535,
+            7345969,
+            9095800,
+            7533366,
+            5673981,
+            5902757,
+            11164523
+          ]
+        },
+        {
+          "file_name": "BPIC15_5.csv",
+          "use_random_sample": false,
+          "population_column": "case",
+          "ids": [
+            10873742,
+            4171558,
+            4495115,
+            10837828,
+            3634775,
+            8126523,
+            3589696,
+            10286510,
+            7888926,
+            4532439,
+            6365048,
+            8460573,
+            8315159,
+            6793246,
+            6791482,
+            8612436,
+            4927985,
+            4637475,
+            4592223,
+            8114679
+          ]
+        }
+      ],
+      "attributes": [
+        {
+          "name": "idx",
+          "columns": [
+            {
+              "name": "idx",
+              "dtype": "int"
+            }
+          ],
+          "mandatory": true
+        },
+        {
+          "name": "caseId",
+          "columns": [
+            {
+              "name": "case",
+              "dtype": "Int64"
+            }
+          ],
+          "mandatory": true
+        },
+        {
+          "name": "activity",
+          "columns": [
+            {
+              "name": "event"
+            }
+          ],
+          "mandatory": true
+        },
+        {
+          "name": "start",
+          "columns": [
+            {
+              "name": "startTime"
+            }
+          ],
+          "datetime_object": {
+            "format": "y/M/d H:m:s.nX",
+            "timezone_offset": "+01",
+            "convert_to": "ISO_DATE_TIME"
+          },
+          "mandatory": true
+        },
+        {
+          "name": "timestamp",
+          "columns": [
+            {
+              "name": "completeTime"
+            }
+          ],
+          "datetime_object": {
+            "format": "y/M/d H:m:s.nX",
+            "timezone_offset": "+01",
+            "convert_to": "ISO_DATE_TIME"
+          },
+          "mandatory": true
+        },
+        {
+          "name": "termName",
+          "columns": [
+            {
+              "name": "termName"
+            }
+          ],
+          "mandatory": true
+        },
+        {
+          "name": "startDate",
+          "columns": [
+            {
+              "name": "startDate"
+            }
+          ],
+          "datetime_object": {
+            "format": "y/M/d H:m:s.nX",
+            "convert_to": "ISO_DATE"
+          },
+          "mandatory": true
+        },
+        {
+          "name": "caseProcedure",
+          "columns": [
+            {
+              "name": "caseProcedure"
+            }
+          ],
+          "mandatory": false
+        },
+        {
+          "name": "responsibleActor",
+          "columns": [
+            {
+              "name": "responsibleActor",
+              "dtype": "Int64"
+            }
+          ],
+          "mandatory": true
+        },
+        {
+          "name": "caseStatus",
+          "columns": [
+            {
+              "name": "caseStatus"
+            }
+          ],
+          "mandatory": true
+        },
+        {
+          "name": "includesSubCases",
+          "columns": [
+            {
+              "name": "includesSubCases",
+              "dtype": "boolean"
+            }
+          ],
+          "mandatory": true
+        },
+        {
+          "name": "endDate",
+          "columns": [
+            {
+              "name": "endDate"
+            }
+          ],
+          "datetime_object": {
+            "format": "y/M/d H:m:s.nX",
+            "convert_to": "ISO_DATE_TIME"
+          },
+          "mandatory": true
+        },
+        {
+          "name": "parts",
+          "columns": [
+            {
+              "name": "parts"
+            }
+          ],
+          "mandatory": false
+        },
+        {
+          "name": "requestComplete",
+          "columns": [
+            {
+              "name": "requestComplete",
+              "dtype": "boolean"
+            }
+          ],
+          "mandatory": false
+        },
+        {
+          "name": "lastPhase",
+          "columns": [
+            {
+              "name": "lastPhase"
+            }
+          ],
+          "mandatory": true
+        },
+        {
+          "name": "landRegisterId",
+          "columns": [
+            {
+              "name": "landRegisterId",
+              "dtype": "Int64"
+            }
+          ],
+          "mandatory": true
+        },
+        {
+          "name": "sumleges",
+          "columns": [
+            {
+              "name": "sumleges",
+              "dtype": "float"
+            }
+          ],
+          "mandatory": true
+        },
+        {
+          "name": "idofConceptCase",
+          "columns": [
+            {
+              "name": "idofConceptCase",
+              "dtype": "Int64"
+            }
+          ],
+          "mandatory": true
+        },
+        {
+          "name": "resource",
+          "columns": [
+            {
+              "name": "orgResource",
+              "dtype": "Int64"
+            }
+          ],
+          "mandatory": true
+        },
+        {
+          "name": "activityNameEn",
+          "columns": [
+            {
+              "name": "activityNameEn"
+            }
+          ],
+          "mandatory": false
+        },
+        {
+          "name": "planned",
+          "columns": [
+            {
+              "name": "planned"
+            }
+          ],
+          "datetime_object": {
+            "format": "y/M/d H:m:s.nX",
+            "timezone_offset": "+01",
+            "convert_to": "ISO_DATE_TIME"
+          },
+          "mandatory": true
+        },
+        {
+          "name": "dateStop",
+          "columns": [
+            {
+              "name": "dateStop"
+            }
+          ],
+          "datetime_object": {
+            "format": "y-M-d H:m:sX",
+            "timezone_offset": "+01",
+            "convert_to": "ISO_DATE_TIME"
+          },
+          "mandatory": true
+        },
+        {
+          "name": "dateFinished",
+          "columns": [
+            {
+              "name": "dateFinished"
+            }
+          ],
+          "datetime_object": {
+            "format": "y-M-d H:m:sX",
+            "timezone_offset": "+01",
+            "convert_to": "ISO_DATE_TIME"
+          },
+          "mandatory": true
+        },
+        {
+          "name": "question",
+          "columns": [
+            {
+              "name": "question",
+              "dtype": "str"
+            }
+          ],
+          "mandatory": true
+        },
+        {
+          "name": "dueDate",
+          "columns": [
+            {
+              "name": "dueDate"
+            }
+          ],
+          "datetime_object": {
+            "format": "y/M/d H:m:s.nX",
+            "timezone_offset": "+01",
+            "convert_to": "ISO_DATE_TIME"
+          },
+          "mandatory": true
+        },
+        {
+          "name": "monitoringResource",
+          "columns": [
+            {
+              "name": "monitoringResource",
+              "dtype": "Int64"
+            }
+          ],
+          "mandatory": true
+        },
+        {
+          "name": "log",
+          "columns": [
+            {
+              "name": "log"
+            }
+          ],
+          "mandatory": true
+        }
+      ]
+    }
+  ]
