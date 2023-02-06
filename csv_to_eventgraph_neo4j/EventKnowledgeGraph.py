@@ -384,20 +384,20 @@ class EventKnowledgeGraph:
 
         conditions = entity.get_where_condition()
         composed_primary_id_query = entity.get_composed_primary_id()
-        separate_primary_id_query = entity.get_entity_attributes()
-        primary_key_properties = entity.get_entity_attributes_as_node_properties()
+        attribute_properties_with_statement = entity.get_entity_attributes()
+        entity_attributes = entity.get_entity_attributes_as_node_properties()
 
         entity_type = entity.type
         entity_labels_string = entity.get_label_string()
 
         q_create_entity = f'''
                     MATCH (e:{entity.based_on}) WHERE {conditions}
-                    WITH {composed_primary_id_query} AS id, {separate_primary_id_query}
+                    WITH {composed_primary_id_query} AS id, {attribute_properties_with_statement}
                     MERGE (en:{entity_labels_string}
                             {{ID:id, 
                             uID:"{entity_type}_"+toString(id),                    
                             entityType:"{entity_type}",
-                            {primary_key_properties}}})
+                            {entity_attributes}}})
                     '''
 
         self.exec_query(q_create_entity)
@@ -462,14 +462,14 @@ class EventKnowledgeGraph:
         foreign_key = relation.foreign_key
 
         q_create_relation = f'''
-            MATCH (e1:Event) -[:CORR]-> (n1:{entity_label_to_node})
-            MATCH (e2:Event) -[:CORR]-> (n2:{entity_label_from_node})
-                WHERE n1 <> n2 AND e2.{foreign_key} = n1.ID
-            WITH DISTINCT n1,n2
-            MERGE (n1) <-[:{relation_type.upper()} {{type:"Rel",
-                                                     {entity_label_to_node.lower()}Id: n1.ID,
-                                                     {entity_label_from_node.lower()}Id: n2.ID                                                    
-                                                    }}]- (n2)'''
+            MATCH (from:{entity_label_from_node})
+            MATCH (to:{entity_label_to_node})
+                WHERE to <> from AND from.{foreign_key} = to.ID
+            WITH DISTINCT from, to
+            MERGE (from) - [:{relation_type.upper()} {{type:"Rel",
+                                                     {entity_label_from_node.lower()}Id: from.ID,
+                                                     {entity_label_to_node.lower()}Id: to.ID                                              
+                                                    }}]-> (to)'''
         self.exec_query(q_create_relation)
 
     def reify_entity_relations_sh(self) -> None:
@@ -499,16 +499,21 @@ class EventKnowledgeGraph:
                             uID:"{entity_type}_"+toString(id),                    
                             entityType:"{entity_type}",
                             {primary_key_properties}}})
-                    MERGE (n1) <-[:REIFIED ] - (en) -[:REIFIED ]-> (n2)
                     '''
-        # TODO FINISH
+        # TODO replace
         q_correlate_entities = f'''
-            MATCH (n1) - [r:{reified_entity.based_on}] -> (n2)
-            MATCH (reified:{entity_labels_string}) 
+            CALL apoc.periodic.iterate(
+                'MATCH (n1) - [r:{reified_entity.based_on}] -> (n2) WHERE {conditions}
+                WITH n1, n2, {composed_primary_id_query} AS id
+                MATCH (reified:{entity_labels_string}) WHERE id = reified.ID
+                RETURN n1, n2, reified',
+                'MERGE (n1) <-[:REIFIED ] - (reified) -[:REIFIED ]-> (n2)',
+                {{batchSize: {self.batch_size}}})
         
         '''
 
         self.exec_query(q_create_entity)
+        self.exec_query(q_correlate_entities)
 
         # entity_label_to_node = reified_entity.relation.to_node_label
         # entity_label_from_node = reified_entity.relation.from_node_label

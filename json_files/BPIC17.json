@@ -65,7 +65,7 @@
         "offerId"
       ],
       "entity_attributes": [
-        "offerId"
+        "offerId", "case"
       ],
       "conditions": [
         {
@@ -156,10 +156,10 @@
         "CaseWO"
       ],
       "primary_keys": [
-        "offerId", "applicationId"
+        "workflowId","offerId"
       ],
       "entity_attributes": [
-        "offerId", "applicationId"
+        "workflowId","offerId"
       ],
       "corr": true,
       "df": false

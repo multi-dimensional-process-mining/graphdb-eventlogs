@@ -15,8 +15,8 @@ class ConditionLPG(Condition):
         return super().from_dict(obj, not_exist_properties)
 
     def get_values(self):
-        if self.values != ["IS NOT NULL", '<> "nan"', '<> "None"']:
-            return [f'''= "{value}"''' for value in self.values]
+        if self.include_values != ["IS NOT NULL", '<> "nan"', '<> "None"']:
+            return [f'''= "{include_value}"''' for include_value in self.include_values]
 
 
 class RelationLPG(Relation):
@@ -47,7 +47,7 @@ class EntityLPG(Entity):
         return ','.join([f"{node_name}.{key} as {key}" for key in self.entity_attributes])
 
     def get_entity_attributes_as_node_properties(self):
-        return ',\n'.join([f"{key}: {key}" for key in self.primary_keys])
+        return ',\n'.join([f"{key}: {key}" for key in self.entity_attributes])
 
     def get_primary_key_existing_condition(self, node_name: str = "e"):
         return " AND ".join(
