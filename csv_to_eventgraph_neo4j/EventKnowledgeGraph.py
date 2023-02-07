@@ -17,6 +17,61 @@ from neo4j import GraphDatabase
 from tabulate import tabulate
 
 
+# class DatabaseConnection(object):
+#     driver = None
+#     def __init__(self, uri: str, db_name: str, user: str, password: str):
+#         self.db_name = db_name
+#         self.uri = uri
+#         self.user = user
+#         self.password = password
+#
+#     def __call__(self, *args):
+#
+#
+#     @staticmethod
+#     def start_connection(uri: str, user: str, password: str):
+#         # begin config
+#         # connection to Neo4J database
+#         driver = GraphDatabase.driver(uri, auth=(user, password), max_connection_lifetime=200)
+#         return driver
+#
+#     def close_connection(self):
+#         self.driver.close()
+#
+#     def exec_query(self, query: str, database: str = None, **kwargs) -> Optional[List[Dict[str, Any]]]:
+#         """
+#         Write a transaction of the query to  the server and return the result
+#         @param query: string, query to be executed
+#         @param database: string, Name of the database
+#         @return: The result of the query or None
+#         """
+#
+#         def run_query(tx: neo4j.Transaction, _query: str, **_kwargs) -> Optional[List[Dict[str, Any]]]:
+#             """
+#                 Run the query and return the result of the query
+#                 @param tx: transaction class on which we can perform queries to the database
+#                 @param _query: string
+#                 @return: The result of the query or None if there is no result
+#             """
+#             # get the results after the query is executed
+#             _result = tx.run(_query, _kwargs).data()
+#
+#             if _result is not None and _result != []:  # return the values if result is not none or empty list
+#                 return _result
+#             else:
+#                 return None
+#
+#         if self.verbose:
+#             print(query)
+#
+#         if database is None:
+#             database = self.db_name
+#
+#         with self.driver.session(database=database) as session:
+#             result = session.write_transaction(run_query, query, **kwargs)
+#             return result
+
+
 class EventKnowledgeGraph:
     def __init__(self, uri: str, db_name: str, user: str, password: str, batch_size: int,
                  verbose: bool, event_tables: EventTables, use_sample: bool = False,
@@ -748,7 +803,7 @@ class EventKnowledgeGraph:
         self.exec_query(q_create_ec)
 
         # reformat to e.key
-        where_link_condition = _class.get_link_condition(class_node_name="c", event_node_name = "e")
+        where_link_condition = _class.get_link_condition(class_node_name="c", event_node_name="e")
 
         # Create :OBSERVED relation between the class and events
         q_link_event_to_class = f'''
