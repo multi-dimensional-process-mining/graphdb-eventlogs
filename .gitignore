@@ -2,3 +2,5 @@
 /.idea/
 /csv_to_eventgraph_neo4j/*.csv
 /csv_to_eventgraph_neo4j/authentication.py
+*.pyc
+*.csv
