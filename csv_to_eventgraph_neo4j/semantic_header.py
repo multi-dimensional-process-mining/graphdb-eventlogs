@@ -26,7 +26,7 @@ class Class(ABC):
 @dataclass
 class Condition:  # TODO convert to abc, replace undefined values
     attribute: str
-    include_values: List[Any]
+    values: List[Any]
 
     @classmethod
     def from_dict(cls, obj: Any, not_exist_properties=None) -> Optional[Self]:
@@ -36,7 +36,7 @@ class Condition:  # TODO convert to abc, replace undefined values
         if not_exist_properties is None:
             not_exist_properties = ['<> null']
         _attribute = obj.get("attribute")
-        _include_values = replace_undefined_value(obj.get("include_values"), not_exist_properties)
+        _include_values = replace_undefined_value(obj.get("values"), not_exist_properties)
         return cls(_attribute, _include_values)
 
 
@@ -95,7 +95,7 @@ class Entity(ABC):
     def get_properties(self):
         properties = {}
         for condition in self.conditions:
-            properties[condition.attribute] = condition.include_values
+            properties[condition.attribute] = condition.values
 
         return properties
 

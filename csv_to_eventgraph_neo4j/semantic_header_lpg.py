@@ -15,8 +15,8 @@ class ConditionLPG(Condition):
         return super().from_dict(obj, not_exist_properties)
 
     def get_values(self):
-        if self.include_values != ["IS NOT NULL", '<> "nan"', '<> "None"']:
-            return [f'''= "{include_value}"''' for include_value in self.include_values]
+        if self.values != ["IS NOT NULL", '<> "nan"', '<> "None"']:
+            return [f'''= "{include_value}"''' for include_value in self.values]
 
 
 class RelationLPG(Relation):
@@ -70,7 +70,7 @@ class EntityLPG(Entity):
         condition_list = []
         for condition in self.conditions:
             attribute_name = condition.attribute
-            include_values = condition.include_values
+            include_values = condition.values
             for value in include_values:
                 condition_list.append(f'''{name}.{attribute_name} = "{value}"''')
         condition_string = " AND ".join(condition_list)

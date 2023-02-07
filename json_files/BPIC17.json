@@ -18,7 +18,7 @@
       "conditions": [
         {
           "attribute": "eventOrigin",
-          "include_values": [
+          "values": [
             "Application"
           ]
         }
@@ -44,7 +44,7 @@
       "conditions": [
         {
           "attribute": "eventOrigin",
-          "include_values": [
+          "values": [
             "Workflow"
           ]
         }
@@ -71,7 +71,7 @@
       "conditions": [
         {
           "attribute": "eventOrigin",
-          "include_values": [
+          "values": [
             "Offer"
           ]
         }
