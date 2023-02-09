@@ -6,7 +6,7 @@ from csv_to_eventgraph_neo4j.semantic_header_lpg import EntityLPG, RelationLPG, 
 
 @dataclass
 class Query:
-    query: str
+    query_string: str
     kwargs: Optional[Dict[str, any]]
 
 
@@ -54,7 +54,7 @@ class CypherQueryLibrary:
         q_request_rel_types = '''
                     MATCH () - [rel] - () return DISTINCT type(rel) as rel_type
                     '''
-        return Query(query=q_request_rel_types, kwargs={})
+        return Query(query_string=q_request_rel_types, kwargs={})
 
     @staticmethod
     def get_all_node_labels() -> Query:
@@ -62,7 +62,7 @@ class CypherQueryLibrary:
         q_request_node_labels = '''
                     MATCH (n) return DISTINCT labels(n) as label
                     '''
-        return Query(query=q_request_node_labels, kwargs={})
+        return Query(query_string=q_request_node_labels, kwargs={})
 
     @staticmethod
     def get_clear_db_query(db_name) -> Query:
@@ -71,28 +71,28 @@ class CypherQueryLibrary:
                         WAIT
                     '''
 
-        return Query(query= q_replace_database, kwargs={"database": "system"})
+        return Query(query_string= q_replace_database, kwargs={"database": "system"})
 
     @staticmethod
     def get_constraint_unique_event_id_query() -> Query:
         query_constraint_unique_event_id = f'''
                         CREATE CONSTRAINT unique_event_ids IF NOT EXISTS 
                         FOR (e:Event) REQUIRE e.ID IS UNIQUE'''
-        return Query(query=query_constraint_unique_event_id, kwargs={})
+        return Query(query_string=query_constraint_unique_event_id, kwargs={})
 
     @staticmethod
     def get_constraint_unique_entity_uid_query() -> Query:
         query_constraint_unique_entity_uid = f'''
                                 CREATE CONSTRAINT unique_entity_ids IF NOT EXISTS 
                                 FOR (en:Entity) REQUIRE en.uID IS UNIQUE'''
-        return Query(query=query_constraint_unique_entity_uid, kwargs={})
+        return Query(query_string=query_constraint_unique_entity_uid, kwargs={})
 
     @staticmethod
     def get_constraint_unique_log_id_query() -> Query:
         query_constraint_unique_log_id = f'''
                                 CREATE CONSTRAINT unique_entity_ids IF NOT EXISTS 
                                 FOR (l:Log) REQUIRE l.ID IS UNIQUE'''
-        return Query(query=query_constraint_unique_log_id, kwargs={})
+        return Query(query_string=query_constraint_unique_log_id, kwargs={})
 
     @staticmethod
     def get_create_events_batch_query(batch: List[Dict[str, str]], labels: List[str]) -> Query:
@@ -113,7 +113,7 @@ class CypherQueryLibrary:
                 RETURN count(*)
             '''
 
-        return Query(query= q_create_events_batch, kwargs={"batch": batch})
+        return Query(query_string= q_create_events_batch, kwargs={"batch": batch})
 
     @staticmethod
     def get_make_timestamp_date_query(attribute, datetime_object) -> Query:
@@ -134,7 +134,7 @@ class CypherQueryLibrary:
             {{batchSize:10000, parallel:false}})
         '''
 
-        return Query(query=q_make_timestamp, kwargs={})
+        return Query(query_string=q_make_timestamp, kwargs={})
 
     @staticmethod
     def get_finalize_import_events_query() -> Query:
@@ -146,7 +146,7 @@ class CypherQueryLibrary:
             {{batchSize:10000, parallel:false}})
         '''
 
-        return Query(query=q_set_just_imported_to_false, kwargs={})
+        return Query(query_string=q_set_just_imported_to_false, kwargs={})
 
     @staticmethod
     def get_filter_events_by_property_query(prop: str, values: Optional[List[str]] = None, exclude=True) -> Query:
@@ -164,7 +164,7 @@ class CypherQueryLibrary:
                               f"DETACH DELETE e"
 
         # execute query
-        return Query(query=q_filter_events, kwargs={})
+        return Query(query_string=q_filter_events, kwargs={})
 
     @staticmethod
     def get_create_log_query() -> Query:
@@ -173,7 +173,7 @@ class CypherQueryLibrary:
                             WITH e.log AS log
                             MERGE (:Log {{ID:log}})
                         '''
-        return Query(query=q_create_log, kwargs={})
+        return Query(query_string=q_create_log, kwargs={})
 
     @staticmethod
     def get_link_events_to_log_query(batch_size) -> Query:
@@ -185,7 +185,7 @@ class CypherQueryLibrary:
                                     'MERGE (l)-[:HAS]->(e)',
                                     {{batchSize:{batch_size}}})
                                 '''
-        return Query(query=q_link_events_to_log, kwargs={})
+        return Query(query_string=q_link_events_to_log, kwargs={})
 
     @staticmethod
     def get_create_entity_query(entity: EntityLPG) -> Query:
@@ -211,7 +211,7 @@ class CypherQueryLibrary:
                             {entity_attributes}}})
                     '''
 
-        return Query(query=q_create_entity, kwargs={})
+        return Query(query_string=q_create_entity, kwargs={})
 
     @staticmethod
     def get_correlate_events_to_entity_query(entity: EntityLPG, batch_size) -> Query:
@@ -230,7 +230,7 @@ class CypherQueryLibrary:
                 {{batchSize: {batch_size}}})
                 '''
 
-        return Query(query=q_correlate, kwargs={})
+        return Query(query_string=q_correlate, kwargs={})
 
     @staticmethod
     def get_correlate_events_to_derived_entity_query(derived_entity: str) -> Query:
@@ -240,7 +240,7 @@ class CypherQueryLibrary:
             MATCH (e:Event) -[:CORR]-> (n:Entity) <-[:REIFIED ]- (r:Entity {{entityType:"{derived_entity}"}})
             MERGE (e)-[:CORR]->(r)'''
 
-        return Query(query=q_correlate, kwargs={})
+        return Query(query_string=q_correlate, kwargs={})
 
     @staticmethod
     def get_create_entity_relationships_query(relation: RelationLPG) -> Query:
@@ -261,7 +261,7 @@ class CypherQueryLibrary:
                                                      {entity_label_to_node.lower()}Id: to.ID                                              
                                                     }}]-> (to)'''
 
-        return Query(query=q_create_relation, kwargs={})
+        return Query(query_string=q_create_relation, kwargs={})
 
     @staticmethod
     def get_reify_entity_relations_query(reified_entity: EntityLPG) -> Query:
@@ -284,7 +284,7 @@ class CypherQueryLibrary:
                             {primary_key_properties}}})
                     '''
 
-        return Query(query=q_create_entity, kwargs={})
+        return Query(query_string=q_create_entity, kwargs={})
 
     @staticmethod
     def get_add_reified_query(reified_entity: EntityLPG, batch_size: int):
@@ -303,7 +303,7 @@ class CypherQueryLibrary:
 
         '''
 
-        return Query(query=q_correlate_entities, kwargs={})
+        return Query(query_string=q_correlate_entities, kwargs={})
 
     @staticmethod
     def get_correlate_events_to_reification_query(reified_entity: EntityLPG):
@@ -312,7 +312,7 @@ class CypherQueryLibrary:
                                 MATCH (e:Event) -[:CORR]-> (n:Entity) <-[:REIFIED ]- (r:Entity:{reified_entity_labels})
                                 MATCH (e:Event) -[:CORR]-> (n:Entity) <-[:REIFIED ]- (r:Entity:{reified_entity_labels})
                                 MERGE (e)-[:CORR]->(r)'''
-        return Query(query=q_correlate, kwargs={})
+        return Query(query_string=q_correlate, kwargs={})
 
     @staticmethod
     def get_create_directly_follows_query(entity: EntityLPG, batch_size) -> Query:
@@ -340,7 +340,7 @@ class CypherQueryLibrary:
             {{batchSize: {batch_size}}})
         '''
 
-        return Query(query=q_create_df, kwargs={})
+        return Query(query_string=q_create_df, kwargs={})
 
     @staticmethod
     def get_merge_duplicate_df_entity_query(entity: EntityLPG) -> Query:
@@ -353,7 +353,7 @@ class CypherQueryLibrary:
                     DELETE r
                     MERGE (n1)-[:{entity.get_df_label()} {{entityType: "{entity.type}", Count:size(rels), type:"DF"}}]->(n2)
                 '''
-        return Query(query=q_merge_duplicate_rel, kwargs={})
+        return Query(query_string=q_merge_duplicate_rel, kwargs={})
 
     @staticmethod
     def delete_parallel_directly_follows_derived(reified_entity: EntityLPG, original_entity: EntityLPG):
@@ -368,7 +368,7 @@ class CypherQueryLibrary:
             WHERE (e1:Event) -[:{df_original_entity} {{entityType: "{original_entity_type}"}}]-> (e2:Event)
             DELETE df'''
 
-        return Query(query=q_delete_df, kwargs={})
+        return Query(query_string=q_delete_df, kwargs={})
 
     @staticmethod
     def _get_aggregate_df_relations_query(entity: EntityLPG = None,
@@ -401,7 +401,7 @@ class CypherQueryLibrary:
                        RETURN input, output
                     '''
 
-            return [Query(query=q_create_dfc, kwargs={}), Query(query=q_change_label, kwargs={})]
+            return [Query(query_string=q_create_dfc, kwargs={}), Query(query_string=q_change_label, kwargs={})]
 
         elif df_threshold == 0 and relative_df_threshold == 0:
             # corresponds to aggregate_df_relations &  aggregate_df_relations_for_entities in graphdb-event-logs
@@ -419,7 +419,7 @@ class CypherQueryLibrary:
                             WITH n.entityType as EType,c1,count(df) AS df_freq,c2
                             MERGE (c1) -[rel2:{dfc_label} {{entityType: '{entity_type}', type:"DF_C"}}]-> (c2) 
                             ON CREATE SET rel2.count=df_freq'''
-            return [Query(query=q_create_dfc, kwargs={})]
+            return [Query(query_string=q_create_dfc, kwargs={})]
         else:
             # aggregate only for a specific entity type and event classifier
             # include only edges with a minimum threshold, drop weak edges (similar to heuristics miner)
@@ -441,7 +441,7 @@ class CypherQueryLibrary:
                             WHERE (df_freq*{relative_df_threshold} > df_freq2)
                             MERGE (c1) -[rel2:{dfc_label} {{entityType: '{entity_type}', type:"DF_C"}}]-> (c2) 
                             ON CREATE SET rel2.count=df_freq'''
-            return [Query(query=q_create_dfc, kwargs={})]
+            return [Query(query_string=q_create_dfc, kwargs={})]
 
     @staticmethod
     def get_create_class_query(_class: ClassLPG) -> Query:
@@ -460,7 +460,7 @@ class CypherQueryLibrary:
                     WITH {group_by}
                     MERGE (c:Class:Class_{class_label} {{ {class_properties} }})'''
 
-        return Query(query=q_create_ec, kwargs={})
+        return Query(query_string=q_create_ec, kwargs={})
 
     @staticmethod
     def get_link_event_to_class_query(_class: ClassLPG, batch_size: int) -> Query:
@@ -477,7 +477,7 @@ class CypherQueryLibrary:
                     {{batchSize: {batch_size}}})                
                 '''
 
-        return Query(query=q_link_event_to_class, kwargs={})
+        return Query(query_string=q_link_event_to_class, kwargs={})
 
     @staticmethod
     def get_node_count_query() -> Query:
@@ -495,7 +495,7 @@ class CypherQueryLibrary:
                             RETURN label,  numberOfNodes ORDER BY sortOrder
                     """
 
-        return Query(query=query_count_nodes, kwargs={})
+        return Query(query_string=query_count_nodes, kwargs={})
 
     @staticmethod
     def get_edge_count_query() -> Query:
@@ -507,7 +507,7 @@ class CypherQueryLibrary:
                 RETURN type, numberOfRelations 
             """
 
-        return Query(query=query_count_relations, kwargs={})
+        return Query(query_string=query_count_relations, kwargs={})
 
     @staticmethod
     def get_aggregated_edge_count_query() -> Query:
@@ -526,4 +526,4 @@ class CypherQueryLibrary:
                 RETURN type, numberOfRelations ORDER BY sortOrder
             """
 
-        return Query(query=query_count_relations, kwargs={})
+        return Query(query_string=query_count_relations, kwargs={})

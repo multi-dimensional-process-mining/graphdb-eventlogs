@@ -23,7 +23,7 @@ class DatabaseConnection(object):
 
     def exec_query(self, function, **kwargs):
         result = function(**kwargs)
-        query = result.query
+        query = result.query_string
         kwargs = result.kwargs
 
         return self._exec_query(query, **kwargs)
