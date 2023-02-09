@@ -850,7 +850,7 @@ class EventKnowledgeGraph:
         result = node_count + edge_count + agg_edge_count
         print(tabulate(result))
 
-    def get_node_count(self):
+    def get_node_count(self) -> List[Dict[str, any]]:
         query_count_nodes = """
                     // List all node types and counts
                         MATCH (n) 
@@ -866,9 +866,11 @@ class EventKnowledgeGraph:
                 """
 
         result = self.exec_query(query_count_nodes)
+        if result is None:
+            return []
         return result
 
-    def get_edge_count(self):
+    def get_edge_count(self) -> List[Dict[str, any]]:
         query_count_relations = """
             // List all agg rel types and counts
             MATCH () - [r] -> ()
@@ -878,9 +880,12 @@ class EventKnowledgeGraph:
         """
 
         result = self.exec_query(query_count_relations)
+
+        if result is None:
+            return []
         return result
 
-    def get_aggregated_edge_count(self):
+    def get_aggregated_edge_count(self) -> List[Dict[str, any]]:
         query_count_relations = """
             // List all rel types and counts
             MATCH () - [r] -> ()
@@ -897,4 +902,7 @@ class EventKnowledgeGraph:
         """
 
         result = self.exec_query(query_count_relations)
+
+        if result is None:
+            return []
         return result

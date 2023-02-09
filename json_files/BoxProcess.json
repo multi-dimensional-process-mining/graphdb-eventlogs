@@ -1,0 +1,51 @@
+{
+  "name": "BoxProcess",
+  "version": "1.0.0",
+  "entities": [
+    {
+      "use_nodes": true,
+      "based_on": "Event",
+      "type": "Box",
+      "labels": ["Box"],
+      "primary_keys": ["box"],
+      "entity_attributes": ["box", "batchPosition"],
+      "df": true,
+      "include_label_in_df": true,
+      "corr": true,
+      "merge_duplicate_df": true
+    },
+    {
+      "use_nodes": true,
+      "based_on": "Event",
+      "type": "BatchPosition",
+      "labels": ["BatchPosition"],
+      "primary_keys": ["batchPosition"],
+      "entity_attributes": ["batchPosition"],
+      "df": false,
+      "include_label_in_df": true,
+      "corr": true,
+      "merge_duplicate_df": true
+    }
+  ],
+  "relations": [
+    {
+      "type": "AT",
+      "from_node_label": "Box",
+      "to_node_label": "BatchPosition",
+      "foreign_key": "batchPosition"
+    }
+  ],
+  "classes": [
+    {
+      "label": "Event",
+      "class_identifiers": [
+        "manufacturingActivity",
+        "logisticActivity"
+      ]
+    }
+  ],
+  "log": {
+    "include": true,
+    "has": true
+  }
+}

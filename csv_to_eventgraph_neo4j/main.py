@@ -12,8 +12,8 @@ import authentication
 
 connection = authentication.connections_map[authentication.Connections.LOCAL]
 
-dataset_name = 'BPIC19'
-use_sample = True
+dataset_name = 'BoxProcess'
+use_sample = False
 
 semantic_header = SemanticHeaderLPG.create_semantic_header(dataset_name)
 perf_path = f"..\\perf\\{dataset_name}\\{dataset_name}Performance.csv"

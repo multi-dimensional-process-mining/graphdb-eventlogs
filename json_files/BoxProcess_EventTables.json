@@ -1,0 +1,101 @@
+[
+  {
+    "name": "BoxProcess",
+    "file_directory": "..\\data\\BoxProcess\\prepared\\",
+    "file_names": [
+      "data.csv"
+    ],
+    "labels": [
+      "Event"
+    ],
+    "attributes": [
+      {
+        "name": "idx",
+        "columns": [
+          {
+            "name": "idx",
+            "dtype": "int"
+          }
+        ],
+        "mandatory": true
+      },
+      {
+        "name": "manufacturingActivity",
+        "columns": [
+          {
+            "name": "manufacturingActivity"
+          }
+        ],
+        "mandatory": false
+      },
+      {
+        "name": "logisticActivity",
+        "columns": [
+          {
+            "name": "logisticActivity"
+          }
+        ],
+        "mandatory": false
+      },
+      {
+        "name": "timestampVar",
+        "columns": [
+          {
+            "name": "timestampVar"
+          }
+        ],
+        "mandatory": true
+      },
+      {
+        "name": "box",
+        "columns": [
+          {
+            "name": "box"
+          }
+        ],
+        "mandatory": false
+      },
+      {
+        "name": "batchPosition",
+        "columns": [
+          {
+            "name": "batchPosition"
+          }
+        ],
+        "mandatory": false
+      },
+      {
+        "name": "equipment",
+        "columns": [
+          {
+            "name": "equipment"
+          }
+        ],
+        "mandatory": true
+      },
+      {
+        "name": "log",
+        "columns": [
+          {
+            "name": "log"
+          }
+        ],
+        "mandatory": true
+      },
+      {
+        "name": "timestamp",
+        "columns": [
+          {
+            "name": "timestamp"
+          }
+        ],
+        "datetime_object": {
+          "format": "H:m:sX",
+          "timezone_offset": "+01",
+          "convert_to": "ISO_TIME"
+        },
+        "mandatory": true
+      }
+    ]
+  }
+]
