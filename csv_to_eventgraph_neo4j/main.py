@@ -1,6 +1,6 @@
 import json
 
-from EventKnowledgeGraph import EventKnowledgeGraph
+from EventKnowledgeGraph import EventKnowledgeGraph, DatabaseConnection
 from csv_to_eventgraph_neo4j.event_table import EventTables
 from csv_to_eventgraph_neo4j.semantic_header_lpg import SemanticHeaderLPG
 
@@ -12,8 +12,8 @@ import authentication
 
 connection = authentication.connections_map[authentication.Connections.LOCAL]
 
-dataset_name = 'BoxProcess'
-use_sample = False
+dataset_name = 'BPIC14'
+use_sample = True
 
 semantic_header = SemanticHeaderLPG.create_semantic_header(dataset_name)
 perf_path = f"..\\perf\\{dataset_name}\\{dataset_name}Performance.csv"
@@ -38,6 +38,9 @@ step_delete_duplicate_df = True
 use_preloaded_files = False  # if false, read/import files instead
 verbose = False
 
+db_connection = DatabaseConnection(db_name=connection.user, uri=connection.uri, user=connection.user,
+                               password=connection.password, verbose=verbose)
+
 
 def create_graph_instance(perf: Performance) -> EventKnowledgeGraph:
     """
@@ -45,9 +48,8 @@ def create_graph_instance(perf: Performance) -> EventKnowledgeGraph:
     @return: returns an EventKnowledgeGraph
     """
 
-    return EventKnowledgeGraph(db_name=connection.user, uri=connection.uri, user=connection.user,
-                               password=connection.password, batch_size=5000,
-                               verbose=verbose, event_tables=event_tables, use_sample=use_sample,
+    return EventKnowledgeGraph(db_connection=db_connection, db_name=connection.user,
+                               batch_size=5000, event_tables=event_tables, use_sample=use_sample,
                                semantic_header=semantic_header, perf=perf)
 
 
@@ -68,7 +70,7 @@ def populate_graph(graph: EventKnowledgeGraph, perf: Performance):
     graph.create_static_nodes_and_relations()
 
     # import the events from all sublogs in the graph with the corresponding labels
-    graph.create_events()
+    graph.import_events()
     perf.finished_step(log_message=f"(:Event) nodes done")
 
     # TODO: constraints in semantic header?
@@ -88,7 +90,7 @@ def populate_graph(graph: EventKnowledgeGraph, perf: Performance):
     graph.create_entity_relations()
     perf.finished_step(log_message=f"[:REL] edges done")
 
-    graph.reify_entity_relations_sh()
+    graph.reify_entity_relations()
     perf.finished_step(log_message=f"Reified (:Entity) nodes done")
 
     graph.correlate_events_to_reification()
@@ -134,7 +136,7 @@ def main() -> None:
 
     graph.print_statistics()
 
-    graph.close_connection()
+    db_connection.close_connection()
 
 
 if __name__ == "__main__":
