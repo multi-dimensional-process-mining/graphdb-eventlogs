@@ -10,7 +10,8 @@ import pandas as pd
 
 
 class EventImporter:
-    def __init__(self, db_connection: DatabaseConnection, event_tables: EventTables, batch_size: int, use_sample: bool = False,
+    def __init__(self, db_connection: DatabaseConnection, event_tables: EventTables, batch_size: int,
+                 use_sample: bool = False,
                  perf: Performance = None):
         self.connection = db_connection
         self.event_tables = event_tables
@@ -53,7 +54,8 @@ class EventImporter:
                     f"Filtered the events from event table {event_table.name}: {file_name}")
 
                 # finalize the import
-                self.connection.exec_query(CypherQueryLibrary.get_finalize_import_events_query)
+                self.connection.exec_query(CypherQueryLibrary.get_finalize_import_events_query,
+                                           **{"labels": labels})
 
     def _create_event_nodes_from_event_table(self, labels, df_log, file_name):
         # start with batch 0 and increment until everything is imported
@@ -63,8 +65,11 @@ class EventImporter:
         while batch * self.batch_size < len(df_log):
             pbar.set_description(f"Loading events from {file_name} from batch {batch}")
 
+            #
             # import the events in batches, use the records of the log
-            batch_without_nans = [{k: v for k, v in m.items() if not pd.isna(v) and v is not None} for m in
+            batch_without_nans = [{k: v for k, v in m.items()
+                                   if (isinstance(v, list) and len(v) > 0) or (not pd.isna(v) and v is not None)}
+                                  for m in
                                   df_log[batch * self.batch_size:(batch + 1) * self.batch_size].to_dict(
                                       orient='records')]
             self.connection.exec_query(CypherQueryLibrary.get_create_events_batch_query,

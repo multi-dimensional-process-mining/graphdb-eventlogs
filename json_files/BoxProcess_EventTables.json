@@ -90,11 +90,108 @@
           }
         ],
         "datetime_object": {
-          "format": "H:m:sX",
-          "timezone_offset": "+01",
-          "convert_to": "ISO_TIME"
+          "format": "d-M-y H:m:s",
+          "convert_to": "ISO_DATE_TIME"
         },
         "mandatory": true
+      }
+    ]
+  },
+  {
+    "name": "location",
+    "file_directory": "..\\data\\BoxProcess\\",
+    "file_names": [
+      "locations.csv"
+    ],
+    "labels": [
+      "Location"
+    ],
+    "attributes": [
+      {
+        "name": "ID",
+        "columns": [
+          {
+            "name": "name",
+            "dtype": "str"
+          }
+        ],
+        "mandatory": true
+      },
+      {
+        "name": "manufacturingActivity",
+        "columns": [
+          {
+            "name": "manufacturingActivity"
+          }
+        ],
+        "is_foreign_key": true,
+        "mandatory": false
+      },
+      {
+        "name": "logisticActivity",
+        "columns": [
+          {
+            "name": "logisticActivity"
+          }
+        ],
+        "is_foreign_key": true,
+        "mandatory": false
+      },
+      {
+        "name": "equipment",
+        "columns": [
+          {
+            "name": "equipment",
+            "dtype": "str"
+          }
+        ],
+        "is_foreign_key": true,
+        "mandatory": false
+      }
+    ]
+  }, {
+    "name": "logistic_types",
+    "file_directory": "..\\data\\BoxProcess\\",
+    "file_names": [
+      "logistic_types.csv"
+    ],
+    "labels": [
+      "LogisticType"
+    ],
+    "attributes": [
+      {
+        "name": "ID",
+        "columns": [
+          {
+            "name": "name",
+            "dtype": "str"
+          },
+          {
+            "name": "entity",
+            "dtype": "str"
+          }
+        ],
+        "separator": "-",
+        "mandatory": true
+      },
+      {
+        "name": "entity",
+        "columns": [
+          {
+            "name": "entity"
+          }
+        ],
+        "mandatory": false
+      },
+      {
+        "name": "logisticActivity",
+        "columns": [
+          {
+            "name": "logisticActivity"
+          }
+        ],
+        "is_foreign_key": true,
+        "mandatory": false
       }
     ]
   }

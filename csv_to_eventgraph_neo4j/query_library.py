@@ -2,6 +2,7 @@ from dataclasses import dataclass
 from typing import Dict, Optional, Any, List
 
 from csv_to_eventgraph_neo4j.semantic_header_lpg import EntityLPG, RelationLPG, ClassLPG
+from string import Template
 
 
 @dataclass
@@ -71,7 +72,7 @@ class CypherQueryLibrary:
                         WAIT
                     '''
 
-        return Query(query_string= q_replace_database, kwargs={"database": "system"})
+        return Query(query_string=q_replace_database, kwargs={"database": "system"})
 
     @staticmethod
     def get_constraint_unique_event_id_query() -> Query:
@@ -113,7 +114,7 @@ class CypherQueryLibrary:
                 RETURN count(*)
             '''
 
-        return Query(query_string= q_create_events_batch, kwargs={"batch": batch})
+        return Query(query_string=q_create_events_batch, kwargs={"batch": batch})
 
     @staticmethod
     def get_make_timestamp_date_query(attribute, datetime_object) -> Query:
@@ -122,25 +123,28 @@ class CypherQueryLibrary:
         Remove the str_timestamp property
         @return: None
         """
+        offset = datetime_object.timezone_offset
+        offset = f"+'{offset}'" if offset != "" else offset
+
         q_make_timestamp = f'''
             CALL apoc.periodic.iterate(
             "MATCH (e:Event) WHERE e.{attribute} IS NOT NULL AND e.justImported = True 
-            WITH e, e.{attribute}NotConverted+'{datetime_object.timezone_offset}' as timezone_dt
+            WITH e, e.{attribute}{offset} as timezone_dt
             WITH e, datetime(apoc.date.convertFormat(timezone_dt, '{datetime_object.format}', 
                 '{datetime_object.convert_to}')) as converted
             RETURN e, converted",
-            "SET e.{attribute} = converted
-            REMOVE e.{attribute}NotConverted",
+            "SET e.{attribute} = converted",
             {{batchSize:10000, parallel:false}})
         '''
 
         return Query(query_string=q_make_timestamp, kwargs={})
 
     @staticmethod
-    def get_finalize_import_events_query() -> Query:
+    def get_finalize_import_events_query(labels) -> Query:
+        labels = ":".join(labels)
         q_set_just_imported_to_false = f'''
         CALL apoc.periodic.iterate(
-            "MATCH (e:Event) WHERE e.justImported = True 
+            "MATCH (e:{labels}) WHERE e.justImported = True 
             RETURN e",
             "REMOVE e.justImported",
             {{batchSize:10000, parallel:false}})
@@ -250,15 +254,16 @@ class CypherQueryLibrary:
         entity_label_from_node = relation.from_node_label
         entity_label_to_node = relation.to_node_label
         foreign_key = relation.foreign_key
+        primary_key = relation.primary_key
 
         q_create_relation = f'''
             MATCH (_from:{entity_label_from_node})
             MATCH (to:{entity_label_to_node})
-                WHERE to <> _from AND to.ID in _from.{foreign_key}
+                WHERE to <> _from AND to.{primary_key} in _from.{foreign_key}
             WITH DISTINCT _from, to
             MERGE (_from) - [:{relation_type.upper()} {{type:"Rel",
-                                                     {entity_label_from_node.lower()}Id: _from.ID,
-                                                     {entity_label_to_node.lower()}Id: to.ID                                              
+                    {entity_label_from_node.lower()}Id: _from.ID,
+                    {entity_label_to_node.lower()}Id: to.{primary_key}                                              
                                                     }}]-> (to)'''
 
         return Query(query_string=q_create_relation, kwargs={})
@@ -376,7 +381,7 @@ class CypherQueryLibrary:
                                           classifiers: Optional[List[str]] = None, df_threshold: int = 0,
                                           relative_df_threshold: float = 0) -> List[Query]:
         # add relations between classes when desired
-        #TODO: split queries
+        # TODO: split queries
         if entity is None or classifiers is None:
             q_create_dfc = f'''
                            MATCH (c1:Class) <-[:OBSERVED]- (e1:Event) -[df]-> (e2:Event) -[:OBSERVED]-> (c2:Class)
@@ -527,3 +532,45 @@ class CypherQueryLibrary:
             """
 
         return Query(query_string=query_count_relations, kwargs={})
+
+    @staticmethod
+    def infer_bach_items(entity: EntityLPG) -> Query:
+
+        query_str = '''
+            MATCH (e:Event) - [:CORR] -> (n:$entity)
+            MATCH (e) - [:OBSERVED] -> (:Class) <- [:AT] - (l:Location)
+            WITH e, l.equipment as equipment, n
+            CALL {WITH e, equipment
+                MATCH (f:Event) - [:OBSERVED] -> (:Class) <- [:AT] - (l)
+                MATCH (f) - [:OBSERVED] -> (:Class) <- [:IS] - (t:LogisticType {entity: "$entity"})
+                WHERE l.ID in equipment AND f.timestamp <= e.timestamp
+                RETURN f as f_inf
+                ORDER BY f.timestamp DESC
+                LIMIT 1}
+            MERGE (f_inf) - [:CORR] -> (n)
+            '''
+
+        query_str = Template(query_str).substitute(entity=entity.type)
+
+        return Query(query_string=query_str, kwargs={})
+
+    @staticmethod
+    def infer_items_with_known_batch_position(entity: EntityLPG) -> Query:
+
+        query_str = '''
+                MATCH (e:Event) - [:CORR] -> (n:$entity)
+                MATCH (e) - [:OBSERVED] -> (:Class) <- [:AT] - (l:Location)
+                WITH e, l.equipment as equipment, n
+                CALL {WITH e, equipment
+                    MATCH (f:Event) - [:OBSERVED] -> (:Class) <- [:AT] - (l)
+                    MATCH (f) - [:OBSERVED] -> (:Class) <- [:IS] - (t:LogisticType {entity: "$entity"})
+                    WHERE l.ID in equipment AND f.timestamp <= e.timestamp
+                    RETURN f as f_inf
+                    ORDER BY f.timestamp DESC
+                    LIMIT 1}
+                MERGE (f_inf) - [:CORR] -> (n)
+                '''
+
+        query_str = Template(query_str).substitute(entity=entity.type)
+
+        return Query(query_string=query_str, kwargs={})

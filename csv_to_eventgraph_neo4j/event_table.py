@@ -6,6 +6,7 @@ import random
 from typing import List, Dict, Any, Optional
 from dataclasses import dataclass
 
+import numpy as np
 import pandas as pd
 from pandas import DataFrame
 
@@ -57,6 +58,7 @@ class Attribute:
     filter_exclude_values: List[str]
     filter_include_values: List[str]
     use_filter: bool
+    is_foreign_key: bool
 
     @staticmethod
     def from_dict(obj: Any) -> Optional['Attribute']:
@@ -75,8 +77,10 @@ class Attribute:
         _filter_include_values = obj.get("filter_include_values")
         _use_filter = _filter_include_values is not None or _filter_exclude_values is not None  # default value
         _use_filter = replace_undefined_value(obj.get("use_filter"), _use_filter)
+        _is_foreign_key = replace_undefined_value(obj.get("is_foreign_key"), False)
         return Attribute(_name, _columns, _separator, _is_datetime, _is_compound, _mandatory, _datetime_object,
-                         _na_rep_value, _na_rep_columns, _filter_exclude_values, _filter_include_values, _use_filter)
+                         _na_rep_value, _na_rep_columns, _filter_exclude_values, _filter_include_values, _use_filter,
+                         _is_foreign_key)
 
 
 @dataclass
@@ -112,6 +116,7 @@ class EventTable:
         self.false_values = false_values
         self.samples = samples
         self.attributes = attributes
+
 
     @staticmethod
     def from_dict(obj: Any) -> Optional['EventTable']:
@@ -214,6 +219,10 @@ class EventTable:
                 df_log = EventTable.create_compound_attribute(df_log, attribute)
             else:  # not compound, check for renaming
                 df_log = EventTable.rename_column(df_log, attribute)
+
+            if attribute.is_foreign_key:
+                df_log[attribute.name] = df_log[attribute.name].apply(lambda x: x.split(",") if not pd.isna(x) else [])
+
 
         return df_log
 

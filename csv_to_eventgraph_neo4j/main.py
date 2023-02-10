@@ -12,8 +12,8 @@ import authentication
 
 connection = authentication.connections_map[authentication.Connections.LOCAL]
 
-dataset_name = 'BPIC15'
-use_sample = True
+dataset_name = 'BoxProcess'
+use_sample = False
 
 semantic_header = SemanticHeaderLPG.create_semantic_header(dataset_name)
 perf_path = f"..\\perf\\{dataset_name}\\{dataset_name}Performance.csv"
@@ -87,6 +87,9 @@ def populate_graph(graph: EventKnowledgeGraph, perf: Performance):
     graph.correlate_events_to_entities()
     perf.finished_step(log_message=f"[:CORR] edges done")
 
+    graph.create_classes()
+    perf.finished_step(log_message=f"(:Class) nodes done")
+
     graph.create_entity_relations()
     perf.finished_step(log_message=f"[:REL] edges done")
 
@@ -105,8 +108,7 @@ def populate_graph(graph: EventKnowledgeGraph, perf: Performance):
     graph.merge_duplicate_df()
     perf.finished_step(log_message=f"Merged duplicate [:DF] edges done")
 
-    graph.create_classes()
-    perf.finished_step(log_message=f"(:Class) nodes done")
+
     # graph.df_class_relations()
     # perf.finished_step(log_message=f"[:DF_C] edges done")
 

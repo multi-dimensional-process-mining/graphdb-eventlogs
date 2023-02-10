@@ -6,9 +6,16 @@
       "use_nodes": true,
       "based_on": "Event",
       "type": "Box",
-      "labels": ["Box"],
-      "primary_keys": ["box"],
-      "entity_attributes": ["box", "batchPosition"],
+      "labels": [
+        "Box"
+      ],
+      "primary_keys": [
+        "box"
+      ],
+      "entity_attributes": [
+        "box",
+        "batchPosition"
+      ],
       "df": true,
       "include_label_in_df": true,
       "corr": true,
@@ -18,9 +25,15 @@
       "use_nodes": true,
       "based_on": "Event",
       "type": "BatchPosition",
-      "labels": ["BatchPosition"],
-      "primary_keys": ["batchPosition"],
-      "entity_attributes": ["batchPosition"],
+      "labels": [
+        "BatchPosition"
+      ],
+      "primary_keys": [
+        "batchPosition"
+      ],
+      "entity_attributes": [
+        "batchPosition"
+      ],
       "df": false,
       "include_label_in_df": true,
       "corr": true,
@@ -33,19 +46,51 @@
       "from_node_label": "Box",
       "to_node_label": "BatchPosition",
       "foreign_key": "batchPosition"
+    },
+    {
+      "type": "AT",
+      "from_node_label": "Location",
+      "to_node_label": "Class",
+      "primary_key": "cID",
+      "foreign_key": "manufacturingActivity"
+    },
+    {
+      "type": "AT",
+      "from_node_label": "Location",
+      "to_node_label": "Class",
+      "primary_key": "cID",
+      "foreign_key": "logisticActivity"
+    },
+    {
+      "type": "PART_OF",
+      "from_node_label": "Location",
+      "to_node_label": "Location",
+      "primary_key": "ID",
+      "foreign_key": "equipment"
+    },
+    {
+      "type": "IS",
+      "from_node_label": "LogisticType",
+      "to_node_label": "Class",
+      "primary_key": "cID",
+      "foreign_key": "logisticActivity"
     }
   ],
   "classes": [
     {
       "label": "Event",
       "class_identifiers": [
-        "manufacturingActivity",
+        "manufacturingActivity"
+      ]
+    },{
+      "label": "Event",
+      "class_identifiers": [
         "logisticActivity"
       ]
     }
   ],
   "log": {
-    "include": true,
+    "include": false,
     "has": true
   }
 }

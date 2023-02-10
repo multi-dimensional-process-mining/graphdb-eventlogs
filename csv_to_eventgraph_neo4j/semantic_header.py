@@ -46,6 +46,7 @@ class Relation(ABC):
     type: str
     from_node_label: str
     to_node_label: str
+    primary_key: str
     foreign_key: str
 
     @classmethod
@@ -56,8 +57,9 @@ class Relation(ABC):
         _type = obj.get("type")
         _from_node_label = obj.get("from_node_label")
         _to_node_label = obj.get("to_node_label")
+        _primary_key = replace_undefined_value(obj.get("primary_key"), "ID")
         _foreign_key = obj.get("foreign_key")
-        return cls(_include, _type, _from_node_label, _to_node_label, _foreign_key)
+        return cls(_include, _type, _from_node_label, _to_node_label, _primary_key, _foreign_key)
 
 
 @dataclass
