@@ -5,6 +5,7 @@ from csv_to_eventgraph_neo4j.ekg_builder_semantic_header import EKGUsingSemantic
 from csv_to_eventgraph_neo4j.ekg_management import EKGManagement
 from csv_to_eventgraph_neo4j.datastructures import ImportedDataStructures
 from csv_to_eventgraph_neo4j.data_importer import Importer
+from csv_to_eventgraph_neo4j.inference_engine import InferenceEngine
 from csv_to_eventgraph_neo4j.performance_handling import Performance
 from csv_to_eventgraph_neo4j.semantic_header_lpg import SemanticHeaderLPG
 
@@ -21,6 +22,7 @@ class EventKnowledgeGraph:
                                       use_sample=use_sample, perf=perf)
         self.ekg_builder = EKGUsingSemanticHeaderBuilder(db_connection=db_connection, semantic_header=semantic_header,
                                                          batch_size=batch_size, perf=perf)
+        self.inference_engine = InferenceEngine(db_connection=db_connection, perf=perf)
         # ensure to allocate enough memory to your database: dbms.memory.heap.max_size=5G advised
 
     # region EKG management
@@ -92,7 +94,20 @@ class EventKnowledgeGraph:
     def create_static_nodes_and_relations(self):
         self.ekg_builder.create_static_nodes_and_relations()
 
+    def infer_batch_items(self, entity, batch_location):
+        self.inference_engine.infer_batch_items(entity, batch_location)
 
+    def match_entity_with_batch_position(self, entity):
+        self.inference_engine.match_entity_with_batch_position(entity)
+
+    def infer_items_to_events_with_batch_position(self, entity, batch_location):
+        self.inference_engine.infer_items_to_events_with_batch_position(entity, batch_location)
+
+    def infer_items_to_manufacturing_events_at_location(self, entity):
+        self.inference_engine.infer_items_to_manufacturing_events_at_location(entity)
+
+    def add_entity_to_event(self, entity):
+        self.inference_engine.add_entity_to_event(entity)
 
     # endregion
 

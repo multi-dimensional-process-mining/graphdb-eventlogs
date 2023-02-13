@@ -38,6 +38,15 @@
         "mandatory": false
       },
       {
+        "name": "lifecycle",
+        "columns": [
+          {
+            "name": "lifecycle"
+          }
+        ],
+        "mandatory": false
+      },
+      {
         "name": "timestampVar",
         "columns": [
           {
@@ -90,7 +99,7 @@
           }
         ],
         "datetime_object": {
-          "format": "d-M-y H:m:s",
+          "format": "d/M/y H:m:s",
           "convert_to": "ISO_DATE_TIME"
         },
         "mandatory": true

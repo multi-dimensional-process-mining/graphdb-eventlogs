@@ -99,6 +99,15 @@ def populate_graph(graph: EventKnowledgeGraph, perf: Performance):
     graph.correlate_events_to_reification()
     perf.finished_step(log_message=f"[:CORR] edges for Reified (:Entity) nodes done")
 
+    entity = semantic_header.get_entity("Box")
+    graph.infer_batch_items(entity=entity, batch_location="LoadingStation")
+    graph.match_entity_with_batch_position(entity=entity)
+    graph.infer_items_to_events_with_batch_position(entity=entity, batch_location="LoadingStation")
+    graph.infer_items_to_manufacturing_events_at_location(entity=entity)
+    graph.add_entity_to_event(entity=entity)
+    entity = semantic_header.get_entity("BatchPosition")
+    graph.add_entity_to_event(entity=entity)
+
     graph.create_df_edges()
     perf.finished_step(log_message=f"[:DF] edges done")
 

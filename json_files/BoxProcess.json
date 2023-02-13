@@ -52,7 +52,7 @@
       "entity_attributes": [
         "equipment"
       ],
-      "df": false,
+      "df": true,
       "include_label_in_df": true,
       "corr": true,
       "merge_duplicate_df": true
