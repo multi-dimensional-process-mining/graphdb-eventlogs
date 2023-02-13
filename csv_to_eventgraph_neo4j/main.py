@@ -1,7 +1,7 @@
 import json
 
 from EventKnowledgeGraph import EventKnowledgeGraph, DatabaseConnection
-from csv_to_eventgraph_neo4j.event_table import EventTables
+from csv_to_eventgraph_neo4j.datastructures import ImportedDataStructures
 from csv_to_eventgraph_neo4j.semantic_header_lpg import SemanticHeaderLPG
 
 # several steps of import, each can be switch on/off
@@ -19,7 +19,7 @@ semantic_header = SemanticHeaderLPG.create_semantic_header(dataset_name)
 perf_path = f"..\\perf\\{dataset_name}\\{dataset_name}Performance.csv"
 number_of_steps = 100
 
-event_tables = EventTables(dataset_name)
+datastructures = ImportedDataStructures(dataset_name)
 
 step_clear_db = True
 step_populate_graph = True
@@ -49,7 +49,7 @@ def create_graph_instance(perf: Performance) -> EventKnowledgeGraph:
     """
 
     return EventKnowledgeGraph(db_connection=db_connection, db_name=connection.user,
-                               batch_size=5000, event_tables=event_tables, use_sample=use_sample,
+                               batch_size=5000, event_tables=datastructures, use_sample=use_sample,
                                semantic_header=semantic_header, perf=perf)
 
 
@@ -70,7 +70,7 @@ def populate_graph(graph: EventKnowledgeGraph, perf: Performance):
     graph.create_static_nodes_and_relations()
 
     # import the events from all sublogs in the graph with the corresponding labels
-    graph.import_events()
+    graph.import_data()
     perf.finished_step(log_message=f"(:Event) nodes done")
 
     # TODO: constraints in semantic header?

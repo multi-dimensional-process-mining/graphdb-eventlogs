@@ -58,6 +58,7 @@ class Attribute:
     filter_exclude_values: List[str]
     filter_include_values: List[str]
     use_filter: bool
+    is_primary_key: bool
     is_foreign_key: bool
 
     @staticmethod
@@ -77,10 +78,11 @@ class Attribute:
         _filter_include_values = obj.get("filter_include_values")
         _use_filter = _filter_include_values is not None or _filter_exclude_values is not None  # default value
         _use_filter = replace_undefined_value(obj.get("use_filter"), _use_filter)
+        _is_primary_key = replace_undefined_value(obj.get("is_primary_key"), False)
         _is_foreign_key = replace_undefined_value(obj.get("is_foreign_key"), False)
         return Attribute(_name, _columns, _separator, _is_datetime, _is_compound, _mandatory, _datetime_object,
                          _na_rep_value, _na_rep_columns, _filter_exclude_values, _filter_include_values, _use_filter,
-                         _is_foreign_key)
+                         _is_primary_key, _is_foreign_key)
 
 
 @dataclass
@@ -103,23 +105,18 @@ class Sample:
         return Sample(_file_name, _use_random_sample, _population_column, _size, _ids)
 
 
-@read_only_properties('name', 'file_directory', 'file_names', 'labels', 'true_values', 'false_values', 'samples',
-                      'attributes')
-class EventTable:
-    def __init__(self, name: str, file_directory: str, file_names: List[str], labels: List[str], true_values: List[str],
-                 false_values: List[str], samples: Dict[str, Sample], attributes: List[Attribute]):
+class StaticNodes:
+    def __init__(self, name: str, file_directory: str, file_names: List[str], labels: List[str],
+                 true_values: List[str], false_values: List[str], attributes: List[Attribute]):
         self.name = name
         self.file_directory = file_directory
         self.file_names = file_names
         self.labels = labels
         self.true_values = true_values
         self.false_values = false_values
-        self.samples = samples
         self.attributes = attributes
 
-
-    @staticmethod
-    def from_dict(obj: Any) -> Optional['EventTable']:
+    def from_dict(obj: Any) -> Optional['StaticNodes']:
         if obj is None:
             return None
 
@@ -132,8 +129,47 @@ class EventTable:
         _samples = create_list(Sample, obj.get("samples"))
         _samples = {sample.file_name: sample for sample in _samples}
         _attributes = create_list(Attribute, obj.get("attributes"))
-        return EventTable(_name, _file_directory, _file_names, _labels, _true_values, _false_values, _samples,
-                          _attributes)
+        return StaticNodes(_name, _file_directory, _file_names, _labels, _true_values, _false_values, _samples,
+                           _attributes)
+
+
+class DataStructure:
+    def __init__(self, name: str, file_directory: str, file_names: List[str], labels: List[str], true_values: List[str],
+                 false_values: List[str], samples: Dict[str, Sample], attributes: List[Attribute]):
+        self.name = name
+        self.file_directory = file_directory
+        self.file_names = file_names
+        self.labels = labels
+        self.true_values = true_values
+        self.false_values = false_values
+        self.samples = samples
+        self.attributes = attributes
+
+    def is_event_data(self):
+        return "Event" in self.labels
+
+    @staticmethod
+    def from_dict(obj: Any) -> Optional['DataStructure']:
+        if obj is None:
+            return None
+
+        _name = obj.get("name")
+        _file_directory = obj.get("file_directory")
+        _file_names = obj.get("file_names")
+        _labels = obj.get("labels")
+        _true_values = obj.get("true_values")
+        _false_values = obj.get("false_values")
+        _samples = create_list(Sample, obj.get("samples"))
+        _samples = {sample.file_name: sample for sample in _samples}
+        _attributes = create_list(Attribute, obj.get("attributes"))
+        return DataStructure(_name, _file_directory, _file_names, _labels, _true_values, _false_values, _samples,
+                             _attributes)
+
+    def get_primary_keys(self):
+        return [attribute.name for attribute in self.attributes if attribute.is_primary_key]
+
+    def get_foreign_keys(self):
+        return [attribute.name for attribute in self.attributes if attribute.is_foreign_key]
 
     def get_dtype_dict(self):
         dtypes = {}
@@ -212,21 +248,17 @@ class EventTable:
         # loop over all attributes and check if they should be created, renamed or imputed
         for attribute in self.attributes:
             if len(attribute.na_rep_columns) > 0:  # impute values in case of missing values
-                df_log = EventTable.replace_nan_values_based_on_na_rep_columns(df_log, attribute)
+                df_log = DataStructure.replace_nan_values_based_on_na_rep_columns(df_log, attribute)
             if attribute.na_rep_value is not None:
-                df_log = EventTable.replace_nan_values_based_on_na_rep_value(df_log, attribute)
+                df_log = DataStructure.replace_nan_values_based_on_na_rep_value(df_log, attribute)
             if attribute.is_compound:  # create attribute by composing
-                df_log = EventTable.create_compound_attribute(df_log, attribute)
+                df_log = DataStructure.create_compound_attribute(df_log, attribute)
             else:  # not compound, check for renaming
-                df_log = EventTable.rename_column(df_log, attribute)
-
-            if attribute.is_foreign_key:
-                df_log[attribute.name] = df_log[attribute.name].apply(lambda x: x.split(",") if not pd.isna(x) else [])
-
+                df_log = DataStructure.rename_column(df_log, attribute)
 
         return df_log
 
-    def prepare_data_set(self, input_path, file_name, use_sample):
+    def prepare_event_data_sets(self, input_path, file_name, use_sample):
         dtypes = self.get_dtype_dict()
         required_columns = self.get_required_columns()
 
@@ -237,7 +269,7 @@ class EventTable:
                                         usecols=required_columns, dtype=dtypes, true_values=true_values,
                                         false_values=false_values)
 
-        if use_sample:
+        if use_sample and self.is_event_data():
             df_log = self.create_sample(file_name, df_log)
 
         df_log = self.preprocess_according_to_attributes(df_log)
@@ -269,10 +301,10 @@ class EventTable:
         return attribute_value_pairs
 
 
-class EventTables:
+class ImportedDataStructures:
     def __init__(self, dataset_name):
         random.seed(1)
-        with open(f'../json_files/{dataset_name}_EventTables.json') as f:
+        with open(f'../json_files/{dataset_name}_DS.json') as f:
             json_event_tables = json.load(f)
 
-        self.structures = [EventTable.from_dict(item) for item in json_event_tables]
+        self.structures = [DataStructure.from_dict(item) for item in json_event_tables]

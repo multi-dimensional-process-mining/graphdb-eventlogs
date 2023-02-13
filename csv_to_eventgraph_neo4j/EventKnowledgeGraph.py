@@ -3,8 +3,8 @@ from typing import Optional, List, Dict, Set
 from csv_to_eventgraph_neo4j.db_connection import DatabaseConnection
 from csv_to_eventgraph_neo4j.ekg_builder_semantic_header import EKGUsingSemanticHeaderBuilder
 from csv_to_eventgraph_neo4j.ekg_management import EKGManagement
-from csv_to_eventgraph_neo4j.event_table import EventTables
-from csv_to_eventgraph_neo4j.event_table_importer import EventImporter
+from csv_to_eventgraph_neo4j.datastructures import ImportedDataStructures
+from csv_to_eventgraph_neo4j.data_importer import Importer
 from csv_to_eventgraph_neo4j.performance_handling import Performance
 from csv_to_eventgraph_neo4j.semantic_header_lpg import SemanticHeaderLPG
 
@@ -13,12 +13,12 @@ from tabulate import tabulate
 
 class EventKnowledgeGraph:
     def __init__(self, db_connection: DatabaseConnection, db_name: str, batch_size: int,
-                 event_tables: EventTables, use_sample: bool = False,
+                 event_tables: ImportedDataStructures, use_sample: bool = False,
                  semantic_header: SemanticHeaderLPG = None,
                  perf: Performance = None):
         self.ekg_management = EKGManagement(db_connection=db_connection, db_name=db_name, perf=perf)
-        self.event_importer = EventImporter(db_connection, event_tables=event_tables, batch_size=batch_size,
-                                            use_sample=use_sample, perf=perf)
+        self.data_importer = Importer(db_connection, data_structures=event_tables, batch_size=batch_size,
+                                      use_sample=use_sample, perf=perf)
         self.ekg_builder = EKGUsingSemanticHeaderBuilder(db_connection=db_connection, semantic_header=semantic_header,
                                                          batch_size=batch_size, perf=perf)
         # ensure to allocate enough memory to your database: dbms.memory.heap.max_size=5G advised
@@ -52,8 +52,8 @@ class EventKnowledgeGraph:
     # endregion
 
     # region import events
-    def import_events(self):
-        self.event_importer.import_events()
+    def import_data(self):
+        self.data_importer.import_data()
 
     # endregion
 
@@ -91,6 +91,8 @@ class EventKnowledgeGraph:
 
     def create_static_nodes_and_relations(self):
         self.ekg_builder.create_static_nodes_and_relations()
+
+
 
     # endregion
 

@@ -1,6 +1,7 @@
 from dataclasses import dataclass
 from typing import Dict, Optional, Any, List
 
+from csv_to_eventgraph_neo4j.datastructures import DataStructure
 from csv_to_eventgraph_neo4j.semantic_header_lpg import EntityLPG, RelationLPG, ClassLPG
 from string import Template
 
@@ -259,7 +260,7 @@ class CypherQueryLibrary:
         q_create_relation = f'''
             MATCH (_from:{entity_label_from_node})
             MATCH (to:{entity_label_to_node})
-                WHERE to <> _from AND to.{primary_key} in _from.{foreign_key}
+                WHERE to <> _from AND (to.{primary_key} in _from.{foreign_key} OR to.{primary_key} = _from.{foreign_key})
             WITH DISTINCT _from, to
             MERGE (_from) - [:{relation_type.upper()} {{type:"Rel",
                     {entity_label_from_node.lower()}Id: _from.ID,
@@ -534,23 +535,23 @@ class CypherQueryLibrary:
         return Query(query_string=query_count_relations, kwargs={})
 
     @staticmethod
-    def infer_bach_items(entity: EntityLPG) -> Query:
+    def infer_batch_items(entity: EntityLPG) -> Query:
 
         query_str = '''
             MATCH (e:Event) - [:CORR] -> (n:$entity)
             MATCH (e) - [:OBSERVED] -> (:Class) <- [:AT] - (l:Location)
             WITH e, l.equipment as equipment, n
             CALL {WITH e, equipment
-                MATCH (f:Event) - [:OBSERVED] -> (:Class) <- [:AT] - (l)
+                MATCH (f:Event) - [:OBSERVED] -> (:Class) <- [:AT] - (l:Location {ID: "$batch_location")
                 MATCH (f) - [:OBSERVED] -> (:Class) <- [:IS] - (t:LogisticType {entity: "$entity"})
-                WHERE l.ID in equipment AND f.timestamp <= e.timestamp
+                WHERE l.ID = equipment AND f.timestamp <= e.timestamp
                 RETURN f as f_inf
                 ORDER BY f.timestamp DESC
                 LIMIT 1}
             MERGE (f_inf) - [:CORR] -> (n)
             '''
 
-        query_str = Template(query_str).substitute(entity=entity.type)
+        query_str = Template(query_str).substitute(entity=entity.type, batch_location="LoadingStation")
 
         return Query(query_string=query_str, kwargs={})
 
@@ -572,5 +573,25 @@ class CypherQueryLibrary:
                 '''
 
         query_str = Template(query_str).substitute(entity=entity.type)
+
+        return Query(query_string=query_str, kwargs={})
+
+    @staticmethod
+    def merge_same_nodes(data_structure: DataStructure):
+        query_str = '''
+            MATCH (n:$labels)
+            WITH $primary_keys, collect(n) as nodes
+            CALL apoc.refactor.mergeNodes(nodes, {
+                properties:"combine"})
+            YIELD node
+            RETURN node
+        '''
+
+        labels = ":".join(data_structure.labels)
+        primary_keys = data_structure.get_primary_keys()
+        primary_key_with = [f"n.{primary_key} as {primary_key}" for primary_key in primary_keys]
+        primary_key_string = ", ".join(primary_key_with)
+
+        query_str = Template(query_str).substitute(labels=labels, primary_keys=primary_key_string)
 
         return Query(query_string=query_str, kwargs={})

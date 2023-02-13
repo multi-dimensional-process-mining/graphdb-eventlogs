@@ -38,6 +38,24 @@
       "include_label_in_df": true,
       "corr": true,
       "merge_duplicate_df": true
+    },
+    {
+      "use_nodes": true,
+      "based_on": "Event",
+      "type": "Equipment",
+      "labels": [
+        "Equipment"
+      ],
+      "primary_keys": [
+        "equipment"
+      ],
+      "entity_attributes": [
+        "equipment"
+      ],
+      "df": false,
+      "include_label_in_df": true,
+      "corr": true,
+      "merge_duplicate_df": true
     }
   ],
   "relations": [
@@ -64,7 +82,7 @@
     {
       "type": "PART_OF",
       "from_node_label": "Location",
-      "to_node_label": "Location",
+      "to_node_label": "Equipment",
       "primary_key": "ID",
       "foreign_key": "equipment"
     },

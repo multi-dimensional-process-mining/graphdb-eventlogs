@@ -1,8 +1,8 @@
 from typing import Optional, List, Dict, Set
 
 from csv_to_eventgraph_neo4j.db_connection import DatabaseConnection
-from csv_to_eventgraph_neo4j.event_table import EventTables
-from csv_to_eventgraph_neo4j.event_table_importer import EventImporter
+from csv_to_eventgraph_neo4j.datastructures import ImportedDataStructures
+from csv_to_eventgraph_neo4j.data_importer import Importer
 from csv_to_eventgraph_neo4j.performance_handling import Performance
 from csv_to_eventgraph_neo4j.query_library import CypherQueryLibrary
 from csv_to_eventgraph_neo4j.semantic_header_lpg import SemanticHeaderLPG, EntityLPG, RelationLPG

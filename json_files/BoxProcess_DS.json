@@ -115,6 +115,7 @@
             "dtype": "str"
           }
         ],
+        "is_primary_key": true,
         "mandatory": true
       },
       {
@@ -124,7 +125,6 @@
             "name": "manufacturingActivity"
           }
         ],
-        "is_foreign_key": true,
         "mandatory": false
       },
       {
@@ -134,22 +134,20 @@
             "name": "logisticActivity"
           }
         ],
-        "is_foreign_key": true,
         "mandatory": false
       },
       {
         "name": "equipment",
         "columns": [
           {
-            "name": "equipment",
-            "dtype": "str"
+            "name": "equipment"
           }
         ],
-        "is_foreign_key": true,
         "mandatory": false
       }
     ]
-  }, {
+  },
+  {
     "name": "logistic_types",
     "file_directory": "..\\data\\BoxProcess\\",
     "file_names": [
@@ -172,7 +170,8 @@
           }
         ],
         "separator": "-",
-        "mandatory": true
+        "mandatory": true,
+        "is_primary_key": true
       },
       {
         "name": "entity",
@@ -190,7 +189,6 @@
             "name": "logisticActivity"
           }
         ],
-        "is_foreign_key": true,
         "mandatory": false
       }
     ]
