@@ -39,7 +39,7 @@ use_preloaded_files = False  # if false, read/import files instead
 verbose = False
 
 db_connection = DatabaseConnection(db_name=connection.user, uri=connection.uri, user=connection.user,
-                               password=connection.password, verbose=verbose)
+                                   password=connection.password, verbose=verbose)
 
 
 def create_graph_instance(perf: Performance) -> EventKnowledgeGraph:
@@ -93,6 +93,9 @@ def populate_graph(graph: EventKnowledgeGraph, perf: Performance):
     graph.create_entity_relations()
     perf.finished_step(log_message=f"[:REL] edges done")
 
+    graph.add_attributes_to_classifier(relation="IS", label="ActivityType", properties=["entity", "type", "subtype"])
+    graph.add_attributes_to_classifier(relation="AT", label="Location", properties=["ID"], copy_as=["location"])
+
     graph.reify_entity_relations()
     perf.finished_step(log_message=f"Reified (:Entity) nodes done")
 
@@ -100,11 +103,12 @@ def populate_graph(graph: EventKnowledgeGraph, perf: Performance):
     perf.finished_step(log_message=f"[:CORR] edges for Reified (:Entity) nodes done")
 
     entity = semantic_header.get_entity("Box")
-    graph.infer_batch_items(entity=entity, batch_location="LoadingStation")
+    graph.infer_items_to_load_events(entity=entity, use_lifecycle=True, use_start=True)
+    graph.infer_items_to_load_events(entity=entity, use_lifecycle=True, use_start=False)
     graph.match_entity_with_batch_position(entity=entity)
-    graph.infer_items_to_events_with_batch_position(entity=entity, batch_location="LoadingStation")
-    graph.infer_items_to_manufacturing_events_at_location(entity=entity)
-    graph.add_entity_to_event(entity=entity)
+    graph.infer_items_to_events_with_batch_position(entity=entity)
+    graph.infer_items_to_administrative_events_using_location(entity=entity)
+    graph.match_event_with_batch_position(entity=entity)
     entity = semantic_header.get_entity("BatchPosition")
     graph.add_entity_to_event(entity=entity)
 
@@ -116,7 +120,6 @@ def populate_graph(graph: EventKnowledgeGraph, perf: Performance):
 
     graph.merge_duplicate_df()
     perf.finished_step(log_message=f"Merged duplicate [:DF] edges done")
-
 
     # graph.df_class_relations()
     # perf.finished_step(log_message=f"[:DF_C] edges done")

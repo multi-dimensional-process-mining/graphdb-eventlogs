@@ -145,3 +145,8 @@ class EKGUsingSemanticHeaderBuilder:
     def create_static_nodes_and_relations(self):
         # TODO no implementation yet (see if needed)
         self._write_message_to_performance("Static Nodes and Relations are created")
+
+    def add_attributes_to_classifier(self, relation, label, properties, copy_as):
+        self.connection.exec_query(CypherQueryLibrary.add_attributes_to_classifier,
+                                   **{"relation": relation, "label": label, "properties": properties,
+                                      "copy_as": copy_as})

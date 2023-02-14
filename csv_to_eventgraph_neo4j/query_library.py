@@ -209,6 +209,7 @@ class CypherQueryLibrary:
         q_create_entity = f'''
                     MATCH (e:{entity.based_on}) WHERE {conditions}
                     WITH {composed_primary_id_query} AS id, {attribute_properties_with_statement}
+                    WHERE id <> "Unknown"
                     MERGE (en:{entity_labels_string}
                             {{ID:id, 
                             uID:"{entity_type}_"+toString(id),                    
@@ -554,101 +555,100 @@ class CypherQueryLibrary:
 
         return Query(query_string=query_str, kwargs={})
 
+    @staticmethod
+    def add_attributes_to_classifier(relation, label, properties, copy_as):
+        if copy_as is None:
+            copy_as = properties
+
+        query_str = '''
+                    MATCH (c:Class) - [:$relation] - (n:$label)
+                    SET $properties
+                '''
+        properties = [f"c.{copy} = n.{property}" for (property, copy) in zip(properties, copy_as)]
+        properties = ",".join(properties)
+
+        query_str = Template(query_str).substitute(relation=relation, label=label, properties=properties)
+
+        return Query(query_string=query_str, kwargs={})
 
     @staticmethod
-    def infer_batch_items(entity: EntityLPG, batch_location) -> Query:
-
+    def infer_items_to_load_events(entity: EntityLPG, use_lifecycle=False, use_start=True) -> Query:
         query_str = '''
             MATCH (e:Event) - [:CORR] -> (n:$entity)
             MATCH (e) - [:CORR] ->  (equipment:Equipment)
-            WITH e, equipment, n
-            CALL {WITH e, equipment
-                MATCH (f:Event) - [:OBSERVED] -> (c:Class) <- [:AT] - (l:Location {ID: "$batch_location"})
+            MATCH (e) - [:OBSERVED] -> (:Class) - [:AT] - (:Location) - [:PART_OF*0..] -> (l:Location) 
+            MATCH (l) - [:AT] - (c:Class  {subtype: "move", entity: "$entity"})
+            WITH e, c, equipment, n
+            CALL {WITH e, c, equipment
+                MATCH (f:Event $lifecycle_property) - [:OBSERVED] -> (c) 
                 MATCH (f) - [:CORR] ->  (equipment)
-                MATCH (c) <- [:IS] - (t:LogisticType {entity: "$entity"})
-                WHERE f.timestamp <= e.timestamp
-                RETURN f as f_inf
-                ORDER BY f.timestamp DESC
+                WHERE f.timestamp $comparison e.timestamp AND f.$entity_id = "Unknown"
+                RETURN f as $f_type
+                ORDER BY f.timestamp $order_type
                 LIMIT 1}
-            MERGE (f_inf) - [:CORR] -> (n)
+            MERGE ($f_type) - [:CORR] -> (n)
             '''
 
-        query_str = Template(query_str).substitute(entity=entity.type, batch_location=batch_location)
+        lifecycle_property = ""
+        if use_lifecycle:
+            lifecycle_property = "{lifecycle:'start'}" if use_start else "{lifecycle:'complete'}"
+
+        use_start = True if not use_lifecycle else use_start
+
+        f_type = "f_first_preceding" if use_start else "f_first_successive"
+        order_type = "DESC" if use_start else ""
+        comparison = "<=" if use_start else ">="
+        query_str = Template(query_str).substitute(entity=entity.type, entity_id=entity.get_primary_keys()[0], lifecycle_property=lifecycle_property,
+                                                   comparison=comparison, f_type=f_type, order_type=order_type)
 
         return Query(query_string=query_str, kwargs={})
 
     @staticmethod
-    def match_entity_with_batch_position_and_preceding_events(entity: EntityLPG):
+    def infer_items_to_events_with_batch_position(entity: EntityLPG) -> Query:
         query_str = '''
-            MATCH (e:Event) - [:CORR] -> (n:$entity)
-            MATCH (e) - [:CORR] ->  (equipment:Equipment)
-            MATCH (e) - [:OBSERVED] -> (:Class {type:"manufacturingActivity"}) <- [:AT] - (l:Location)
-            MATCH (l) - [:AT] -> (c:Class {type:"logisticActivity"}) <- [:IS] - (:LogisticType {entity: "$entity"})
-            WITH n, e, c, equipment
-            CALL {  WITH e, c, equipment
-                    MATCH (f:Event) - [:OBSERVED] -> (c)
-                    MATCH (f) - [:CORR] ->  (equipment)
-                    WHERE f.timestamp <= e.timestamp
-                    RETURN f as f_inf
-                    ORDER BY f.timestamp DESC
-                    LIMIT 1}
-            MERGE (f_inf) - [:CORR] -> (n) 
-            WITH f_inf, n
-            OPTIONAL MATCH (f_inf) - [:CORR] -> (b:BatchPosition)
-            WHERE b is NOT NULL
-            MERGE (n) - [:AT_POS] -> (b)
+        MATCH (e:Event) - [:CORR] -> (b:BatchPosition)
+        WHERE e.$entity_id = "Unknown"
+        MATCH (e) - [:CORR] -> (equipment:Equipment)
+        MATCH (e) - [:OBSERVED] -> (:Class) - [:AT] - (:Location) - [:PART_OF*0..] -> (l:Location) 
+        MATCH (l) - [:AT] - (c:Class {subtype: "move", entity: "$entity"})
+        WITH e, c, equipment, b
+        CALL {  WITH e, c, equipment, b
+                MATCH (f:Event) - [:OBSERVED] -> (c) 
+                MATCH (f) - [:CORR] -> (equipment)
+                MATCH (f) - [:CORR] -> (n:$entity) - [:AT_POS] -> (b)
+                WHERE f.timestamp <= e.timestamp
+                RETURN f as f_inf, n
+                ORDER BY f.timestamp DESC
+                LIMIT 1
+                }
+        MERGE (e) - [:CORR] -> (n)
         '''
 
-        query_str = Template(query_str).substitute(entity=entity.type)
-        return Query(query_string=query_str, kwargs={})
-
-    @staticmethod
-    def infer_items_to_events_with_batch_position(entity: EntityLPG, batch_location) -> Query:
-        query_str = '''
-                MATCH (e:Event) - [:CORR] -> (b:BatchPosition)
-                WHERE NOT EXISTS ((e) - [:CORR] -> (:$entity))
-                MATCH (e) - [:CORR] -> (equipment:Equipment)
-                CALL {  WITH e, equipment, b
-                        MATCH (f:Event) - [:OBSERVED] -> (c:Class) <- [:AT] - (l:Location {ID: "$batch_location"})
-                        MATCH (c) <- [:IS] - (t:LogisticType {entity: "$entity"})
-                        MATCH (f) - [:CORR] -> (equipment)
-                        MATCH (f) - [:CORR] -> (n:$entity) - [:AT_POS] -> (b)
-                        WHERE f.timestamp <= e.timestamp
-                        RETURN f as f_inf, n
-                        ORDER BY f.timestamp DESC
-                        LIMIT 1
-                        }
-                MERGE (e) - [:CORR] -> (n)
-                '''
-
-        query_str = Template(query_str).substitute(entity=entity.type, batch_location=batch_location)
+        query_str = Template(query_str).substitute(entity=entity.type, entity_id=entity.get_primary_keys()[0])
 
         return Query(query_string=query_str, kwargs={})
 
     @staticmethod
-    def infer_items_to_manufacturing_events_at_location(entity: EntityLPG) -> Query:
+    def infer_items_to_administrative_events_using_location(entity: EntityLPG) -> Query:
         query_str = '''
-                MATCH (e:Event) - [:CORR] -> (equipment:Equipment)
-                MATCH (e) - [:OBSERVED] -> (:Class {type:"manufacturingActivity"}) <- [:AT] - (l:Location)
-                WHERE NOT EXISTS ((e) - [:CORR] -> (:$entity))
-                CALL {  WITH e, equipment, l
-                        MATCH (f:Event) - [:OBSERVED] -> (c:Class {type:"logisticActivity"}) <- [:AT] - (l)
-                        MATCH (c) <- [:IS] - (LogisticType {entity: "$entity"})
-                        MATCH (f) - [:CORR] -> (equipment)
-                        MATCH (f) - [:CORR] -> (n:$entity)
-                        WHERE f.timestamp <= e.timestamp
-                        RETURN f as f_inf, n
-                        ORDER BY f.timestamp DESC
-                        LIMIT 1
-                        }
-                MERGE (e) - [:CORR] -> (n)
-                WITH e, n
-                OPTIONAL MATCH (n) - [:AT_POS] -> (b:BatchPosition)
-                WHERE b is NOT NULL
-                MERGE (e) - [:CORR] -> (b)
-                '''
+                    MATCH (f:Event) - [:CORR] -> (equipment:Equipment)
+                    WHERE f.$entity_id = "Unknown"
+                    MATCH (f) - [:OBSERVED] -> (:Class {type:"administrative"}) <- [:AT] - (l:Location)
+                    MATCH (l) - [:AT] - (c:Class {subtype: "move", entity: "$entity"}) 
+                    WITH f, equipment, c
+                    CALL {  WITH f, equipment, c
+                            MATCH (e:Event) - [:OBSERVED] -> (c)
+                            MATCH (e) - [:CORR] -> (equipment)
+                            MATCH (e) - [:CORR] -> (n:$entity)
+                            WHERE e.timestamp <= f.timestamp
+                            RETURN e as e_inf, n
+                            ORDER BY e.timestamp DESC
+                            LIMIT 1
+                            }
+                    MERGE (f) - [:CORR] -> (n)
+                    '''
 
-        query_str = Template(query_str).substitute(entity=entity.type)
+        query_str = Template(query_str).substitute(entity=entity.type, entity_id=entity.get_primary_keys()[0])
 
         return Query(query_string=query_str, kwargs={})
 
@@ -661,13 +661,33 @@ class CypherQueryLibrary:
                     RETURN
                     CASE size(related_entities_collection)
                     WHEN 1 THEN related_entities_collection[0]
-                    ELSE related_entities_collection
+                    ELSE apoc.text.join(related_entities_collection, ',') 
                     END AS related_entities
                 }
-            SET e.${entity}Id = related_entities
+            SET e.$entity_id = related_entities
         '''
 
-        query_str = Template(query_str).substitute(entity=entity.type)
+        query_str = Template(query_str).substitute(entity=entity.type, entity_id = entity.get_primary_keys()[0])
 
         return Query(query_string=query_str, kwargs={})
 
+    @staticmethod
+    def match_entity_with_batch_position(entity: EntityLPG):
+        query_str = '''
+                MATCH (e:Event) - [:CORR] -> (n:$entity)
+                MATCH (e) - [:CORR] -> (b:BatchPosition)
+                MERGE (n) - [:AT_POS] -> (b)
+            '''
+
+        query_str = Template(query_str).substitute(entity=entity.type)
+        return Query(query_string=query_str, kwargs={})
+
+    @staticmethod
+    def match_event_with_batch_position(entity: EntityLPG):
+        query_str = '''
+                   MATCH (e:Event) - [:CORR] -> (n:$entity) - [:AT_POS] -> (b:BatchPosition)
+                   MERGE (e) - [:CORR] -> (b)
+               '''
+
+        query_str = Template(query_str).substitute(entity=entity.type)
+        return Query(query_string=query_str, kwargs={})

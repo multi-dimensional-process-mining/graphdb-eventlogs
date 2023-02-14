@@ -20,22 +20,13 @@
         "mandatory": true
       },
       {
-        "name": "manufacturingActivity",
+        "name": "activity",
         "columns": [
           {
-            "name": "manufacturingActivity"
+            "name": "activity"
           }
         ],
-        "mandatory": false
-      },
-      {
-        "name": "logisticActivity",
-        "columns": [
-          {
-            "name": "logisticActivity"
-          }
-        ],
-        "mandatory": false
+        "mandatory": true
       },
       {
         "name": "lifecycle",
@@ -56,22 +47,22 @@
         "mandatory": true
       },
       {
-        "name": "box",
+        "name": "boxId",
         "columns": [
           {
             "name": "box"
           }
         ],
-        "mandatory": false
+        "mandatory": true
       },
       {
-        "name": "batchPosition",
+        "name": "batchPositionId",
         "columns": [
           {
             "name": "batchPosition"
           }
         ],
-        "mandatory": false
+        "mandatory": true
       },
       {
         "name": "equipment",
@@ -128,22 +119,24 @@
         "mandatory": true
       },
       {
-        "name": "manufacturingActivity",
+        "name": "partOf",
         "columns": [
           {
-            "name": "manufacturingActivity"
+            "name": "partOf",
+            "dtype": "str"
           }
         ],
+        "is_primary_key": true,
         "mandatory": false
       },
       {
-        "name": "logisticActivity",
+        "name": "activity",
         "columns": [
           {
-            "name": "logisticActivity"
+            "name": "activity"
           }
         ],
-        "mandatory": false
+        "mandatory": true
       },
       {
         "name": "equipment",
@@ -152,35 +145,62 @@
             "name": "equipment"
           }
         ],
-        "mandatory": false
+        "mandatory": true
       }
     ]
   },
   {
-    "name": "logistic_types",
+    "name": "activity_types",
     "file_directory": "..\\data\\BoxProcess\\",
     "file_names": [
-      "logistic_types.csv"
+      "activity_types.csv"
     ],
     "labels": [
-      "LogisticType"
+      "ActivityType"
     ],
     "attributes": [
       {
         "name": "ID",
         "columns": [
           {
-            "name": "name",
-            "dtype": "str"
+            "name": "type",
+            "dtype": "str",
+            "mandatory": true
+          },
+          {
+            "name": "subtype",
+            "dtype": "str",
+            "mandatory": false
           },
           {
             "name": "entity",
-            "dtype": "str"
+            "dtype": "str",
+            "mandatory": true
           }
         ],
         "separator": "-",
         "mandatory": true,
         "is_primary_key": true
+      },
+
+      {
+        "name": "type",
+        "columns": [
+          {
+            "name": "type"
+          }
+        ],
+        "mandatory": true
+      },
+
+      {
+        "name": "subtype",
+        "columns": [
+          {
+            "name": "subtype"
+          }
+        ],
+        "mandatory": false
       },
       {
         "name": "entity",
@@ -189,16 +209,16 @@
             "name": "entity"
           }
         ],
-        "mandatory": false
+        "mandatory": true
       },
       {
-        "name": "logisticActivity",
+        "name": "activity",
         "columns": [
           {
-            "name": "logisticActivity"
+            "name": "activity"
           }
         ],
-        "mandatory": false
+        "mandatory": true
       }
     ]
   }

@@ -110,7 +110,7 @@ class ClassLPG(Class):
         required_keys = [_id] + self.class_identifiers
 
         node_properties = ', '.join([f"{_id}: {key}" for _id, key in zip(ids, required_keys)])
-        node_properties += f", type: '{_id}'"  # save ID also as string that captures the type
+        node_properties += f", classType: '{_id}'"  # save ID also as string that captures the type
 
         return node_properties
 

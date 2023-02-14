@@ -10,11 +10,11 @@
         "Box"
       ],
       "primary_keys": [
-        "box"
+        "boxId"
       ],
       "entity_attributes": [
-        "box",
-        "batchPosition"
+        "boxId",
+        "batchPositionId"
       ],
       "df": true,
       "include_label_in_df": true,
@@ -29,10 +29,10 @@
         "BatchPosition"
       ],
       "primary_keys": [
-        "batchPosition"
+        "batchPositionId"
       ],
       "entity_attributes": [
-        "batchPosition"
+        "batchPositionId"
       ],
       "df": false,
       "include_label_in_df": true,
@@ -50,7 +50,7 @@
         "equipment"
       ],
       "entity_attributes": [
-        "equipment"
+        "equipmentId"
       ],
       "df": true,
       "include_label_in_df": true,
@@ -63,21 +63,14 @@
       "type": "AT",
       "from_node_label": "Box",
       "to_node_label": "BatchPosition",
-      "foreign_key": "batchPosition"
+      "foreign_key": "batchPositionId"
     },
     {
       "type": "AT",
       "from_node_label": "Location",
       "to_node_label": "Class",
       "primary_key": "cID",
-      "foreign_key": "manufacturingActivity"
-    },
-    {
-      "type": "AT",
-      "from_node_label": "Location",
-      "to_node_label": "Class",
-      "primary_key": "cID",
-      "foreign_key": "logisticActivity"
+      "foreign_key": "activity"
     },
     {
       "type": "PART_OF",
@@ -87,23 +80,25 @@
       "foreign_key": "equipment"
     },
     {
+      "type": "PART_OF",
+      "from_node_label": "Location",
+      "to_node_label": "Location",
+      "primary_key": "ID",
+      "foreign_key": "partOf"
+    },
+    {
       "type": "IS",
-      "from_node_label": "LogisticType",
+      "from_node_label": "ActivityType",
       "to_node_label": "Class",
       "primary_key": "cID",
-      "foreign_key": "logisticActivity"
+      "foreign_key": "activity"
     }
   ],
   "classes": [
     {
       "label": "Event",
       "class_identifiers": [
-        "manufacturingActivity"
-      ]
-    },{
-      "label": "Event",
-      "class_identifiers": [
-        "logisticActivity"
+        "activity"
       ]
     }
   ],

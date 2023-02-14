@@ -2,6 +2,7 @@ import json
 import os
 import warnings
 import random
+import math
 
 from typing import List, Dict, Any, Optional
 from dataclasses import dataclass
@@ -34,6 +35,7 @@ class DatetimeObject:
 class Column:
     name: str
     dtype: str
+    mandatory: bool
 
     @staticmethod
     def from_dict(obj: Any) -> Optional['Column']:
@@ -41,7 +43,8 @@ class Column:
             return None
         _name = obj.get("name")
         _dtype = obj.get("dtype")
-        return Column(_name, _dtype)
+        _mandatory = replace_undefined_value(obj.get("mandatory"), True)
+        return Column(_name, _dtype, _mandatory)
 
 
 @dataclass
@@ -225,8 +228,17 @@ class DataStructure:
 
     @staticmethod
     def replace_nan_values_based_on_na_rep_value(df_log, attribute):
-        for column in zip(attribute.columns):
+        for column in attribute.columns:
             df_log[column.name].fillna(attribute.na_rep_value, inplace=True)
+
+        return df_log
+
+    @staticmethod
+    def replace_nan_values_with_unknown(df_log, attribute):
+        column: Column
+        for column in attribute.columns:
+            if column.mandatory:
+                df_log[column.name].fillna("Unknown", inplace=True)
 
         return df_log
 
@@ -234,7 +246,8 @@ class DataStructure:
     def create_compound_attribute(df_log, attribute):
         compound_column_names = [x.name for x in attribute.columns]
         df_log[attribute.name] = df_log[compound_column_names].apply(
-            lambda row: attribute.separator.join(row.values.astype(str)), axis=1)
+            lambda row: attribute.separator.join([value for value in row.values.astype(str) if
+                                                  not(value == 'nan' or value != value)]), axis=1)
         return df_log
 
     @staticmethod
@@ -251,6 +264,8 @@ class DataStructure:
                 df_log = DataStructure.replace_nan_values_based_on_na_rep_columns(df_log, attribute)
             if attribute.na_rep_value is not None:
                 df_log = DataStructure.replace_nan_values_based_on_na_rep_value(df_log, attribute)
+            if attribute.mandatory:
+                df_log = DataStructure.replace_nan_values_with_unknown(df_log, attribute)
             if attribute.is_compound:  # create attribute by composing
                 df_log = DataStructure.create_compound_attribute(df_log, attribute)
             else:  # not compound, check for renaming

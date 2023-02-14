@@ -91,23 +91,36 @@ class EventKnowledgeGraph:
     def create_classes(self):
         self.ekg_builder.create_classes()
 
+    def add_attributes_to_classifier(self, relation, label, properties, copy_as=None):
+        self.ekg_builder.add_attributes_to_classifier(relation, label, properties, copy_as)
+
     def create_static_nodes_and_relations(self):
         self.ekg_builder.create_static_nodes_and_relations()
 
-    def infer_batch_items(self, entity, batch_location):
-        self.inference_engine.infer_batch_items(entity, batch_location)
+    def infer_items_to_load_events(self, entity, use_lifecycle = False, use_start=True):
+        self.inference_engine.infer_items_to_load_events(entity, use_lifecycle, use_start)
+        self.add_entity_to_event(entity=entity)
 
     def match_entity_with_batch_position(self, entity):
         self.inference_engine.match_entity_with_batch_position(entity)
+        self.add_entity_to_event(entity=entity)
 
-    def infer_items_to_events_with_batch_position(self, entity, batch_location):
-        self.inference_engine.infer_items_to_events_with_batch_position(entity, batch_location)
+    def match_event_with_batch_position(self, entity):
+        self.inference_engine.match_event_with_batch_position(entity)
+        self.add_entity_to_event(entity=entity)
 
-    def infer_items_to_manufacturing_events_at_location(self, entity):
-        self.inference_engine.infer_items_to_manufacturing_events_at_location(entity)
+    def infer_items_to_events_with_batch_position(self, entity):
+        self.inference_engine.infer_items_to_events_with_batch_position(entity)
+        self.add_entity_to_event(entity=entity)
+
+    def infer_items_to_administrative_events_using_location(self, entity):
+        self.inference_engine.infer_items_to_administrative_events_using_location(entity)
+        self.add_entity_to_event(entity=entity)
 
     def add_entity_to_event(self, entity):
         self.inference_engine.add_entity_to_event(entity)
+
+
 
     # endregion
 
