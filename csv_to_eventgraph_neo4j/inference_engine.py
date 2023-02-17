@@ -10,11 +10,10 @@ class InferenceEngine:
         if self.perf is not None:
             self.perf.finished_step(activity=message)
 
-    def infer_items_to_load_events(self, entity, use_lifecycle=False, use_start=True):
+    def infer_items_to_load_events(self, entity, is_load=True):
         self.connection.exec_query(cql.infer_items_to_load_events,
                                    **{"entity": entity,
-                                      "use_lifecycle": use_lifecycle,
-                                      "use_start": use_start})
+                                      "is_load": is_load})
         self._write_message_to_performance("Batch items are inferred")
 
     def match_entity_with_batch_position(self, entity):

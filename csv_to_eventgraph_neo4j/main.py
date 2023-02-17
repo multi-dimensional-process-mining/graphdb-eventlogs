@@ -12,8 +12,8 @@ import authentication
 
 connection = authentication.connections_map[authentication.Connections.LOCAL]
 
-dataset_name = 'BoxProcess'
-use_sample = False
+dataset_name = 'BPIC17'
+use_sample = True
 
 semantic_header = SemanticHeaderLPG.create_semantic_header(dataset_name)
 perf_path = f"..\\perf\\{dataset_name}\\{dataset_name}Performance.csv"
@@ -103,8 +103,8 @@ def populate_graph(graph: EventKnowledgeGraph, perf: Performance):
     perf.finished_step(log_message=f"[:CORR] edges for Reified (:Entity) nodes done")
 
     entity = semantic_header.get_entity("Box")
-    graph.infer_items_to_load_events(entity=entity, use_lifecycle=True, use_start=True)
-    graph.infer_items_to_load_events(entity=entity, use_lifecycle=True, use_start=False)
+    graph.infer_items_to_load_events(entity=entity, is_load=True)
+    graph.infer_items_to_load_events(entity=entity, is_load=False)
     graph.match_entity_with_batch_position(entity=entity)
     graph.infer_items_to_events_with_batch_position(entity=entity)
     graph.infer_items_to_administrative_events_using_location(entity=entity)

@@ -97,8 +97,8 @@ class EventKnowledgeGraph:
     def create_static_nodes_and_relations(self):
         self.ekg_builder.create_static_nodes_and_relations()
 
-    def infer_items_to_load_events(self, entity, use_lifecycle = False, use_start=True):
-        self.inference_engine.infer_items_to_load_events(entity, use_lifecycle, use_start)
+    def infer_items_to_load_events(self, entity, is_load=True):
+        self.inference_engine.infer_items_to_load_events(entity, is_load)
         self.add_entity_to_event(entity=entity)
 
     def match_entity_with_batch_position(self, entity):
@@ -120,7 +120,4 @@ class EventKnowledgeGraph:
     def add_entity_to_event(self, entity):
         self.inference_engine.add_entity_to_event(entity)
 
-
-
     # endregion
-

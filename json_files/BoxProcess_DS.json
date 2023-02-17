@@ -29,15 +29,6 @@
         "mandatory": true
       },
       {
-        "name": "lifecycle",
-        "columns": [
-          {
-            "name": "lifecycle"
-          }
-        ],
-        "mandatory": false
-      },
-      {
         "name": "timestampVar",
         "columns": [
           {

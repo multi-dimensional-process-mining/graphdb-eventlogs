@@ -336,7 +336,7 @@ class CypherQueryLibrary:
         q_create_df = f'''
          CALL apoc.periodic.iterate(
             'MATCH (n:{entity_labels_string}) <-[:CORR]- (e)
-            WITH n , e as nodes ORDER BY e.timestamp,e.order_nr, ID(e)
+            WITH n , e as nodes ORDER BY e.timestamp, ID(e)
             WITH n , collect (nodes) as nodeList
             UNWIND range(0,size(nodeList)-2) AS i
             WITH n , nodeList[i] as first, nodeList[i+1] as second
@@ -572,34 +572,31 @@ class CypherQueryLibrary:
         return Query(query_string=query_str, kwargs={})
 
     @staticmethod
-    def infer_items_to_load_events(entity: EntityLPG, use_lifecycle=False, use_start=True) -> Query:
+    def infer_items_to_load_events(entity: EntityLPG, is_load=True) -> Query:
         query_str = '''
             MATCH (e:Event) - [:CORR] -> (n:$entity)
             MATCH (e) - [:CORR] ->  (equipment:Equipment)
             MATCH (e) - [:OBSERVED] -> (:Class) - [:AT] - (:Location) - [:PART_OF*0..] -> (l:Location) 
-            MATCH (l) - [:AT] - (c:Class  {subtype: "move", entity: "$entity"})
+            MATCH (l) - [:AT] - (c:Class  {type: "physical", subtype: "$subtype", entity: "$entity"})
             WITH e, c, equipment, n
             CALL {WITH e, c, equipment
-                MATCH (f:Event $lifecycle_property) - [:OBSERVED] -> (c) 
-                MATCH (f) - [:CORR] ->  (equipment)
-                WHERE f.timestamp $comparison e.timestamp AND f.$entity_id = "Unknown"
-                RETURN f as $f_type
-                ORDER BY f.timestamp $order_type
+                MATCH (load_event:Event) - [:OBSERVED] -> (c) 
+                MATCH (load_event) - [:CORR] ->  (equipment)
+                WHERE load_event.timestamp $comparison e.timestamp AND load_event.$entity_id = "Unknown"
+                RETURN load_event as $load_event_type
+                ORDER BY load_event.timestamp $order_type
                 LIMIT 1}
-            MERGE ($f_type) - [:CORR] -> (n)
+            MERGE ($load_event_type) - [:CORR] -> (n)
             '''
 
-        lifecycle_property = ""
-        if use_lifecycle:
-            lifecycle_property = "{lifecycle:'start'}" if use_start else "{lifecycle:'complete'}"
-
-        use_start = True if not use_lifecycle else use_start
-
-        f_type = "f_first_preceding" if use_start else "f_first_successive"
-        order_type = "DESC" if use_start else ""
-        comparison = "<=" if use_start else ">="
-        query_str = Template(query_str).substitute(entity=entity.type, entity_id=entity.get_primary_keys()[0], lifecycle_property=lifecycle_property,
-                                                   comparison=comparison, f_type=f_type, order_type=order_type)
+        subtype = "load" if is_load else "unload"
+        load_event_type = "load_event_first_preceding" if is_load else "unload_event_first_successive"
+        order_type = "DESC" if is_load else ""
+        comparison = "<=" if is_load else ">="
+        query_str = Template(query_str).substitute(entity=entity.type, entity_id=entity.get_primary_keys()[0],
+                                                   subtype=subtype, comparison=comparison,
+                                                   load_event_type=load_event_type,
+                                                   order_type=order_type)
 
         return Query(query_string=query_str, kwargs={})
 
@@ -610,15 +607,15 @@ class CypherQueryLibrary:
         WHERE e.$entity_id = "Unknown"
         MATCH (e) - [:CORR] -> (equipment:Equipment)
         MATCH (e) - [:OBSERVED] -> (:Class) - [:AT] - (:Location) - [:PART_OF*0..] -> (l:Location) 
-        MATCH (l) - [:AT] - (c:Class {subtype: "move", entity: "$entity"})
+        MATCH (l) - [:AT] - (c:Class {type: "physical", subtype: "load", entity: "$entity"})
         WITH e, c, equipment, b
         CALL {  WITH e, c, equipment, b
-                MATCH (f:Event) - [:OBSERVED] -> (c) 
-                MATCH (f) - [:CORR] -> (equipment)
-                MATCH (f) - [:CORR] -> (n:$entity) - [:AT_POS] -> (b)
-                WHERE f.timestamp <= e.timestamp
-                RETURN f as f_inf, n
-                ORDER BY f.timestamp DESC
+                MATCH (load_event:Event) - [:OBSERVED] -> (c) 
+                MATCH (load_event) - [:CORR] -> (equipment)
+                MATCH (load_event) - [:CORR] -> (n:$entity) - [:AT_POS] -> (b)
+                WHERE load_event.timestamp <= e.timestamp
+                RETURN load_event as load_event_inf, n
+                ORDER BY load_event.timestamp DESC
                 LIMIT 1
                 }
         MERGE (e) - [:CORR] -> (n)
@@ -631,21 +628,21 @@ class CypherQueryLibrary:
     @staticmethod
     def infer_items_to_administrative_events_using_location(entity: EntityLPG) -> Query:
         query_str = '''
-                    MATCH (f:Event) - [:CORR] -> (equipment:Equipment)
-                    WHERE f.$entity_id = "Unknown"
-                    MATCH (f) - [:OBSERVED] -> (:Class {type:"administrative"}) <- [:AT] - (l:Location)
-                    MATCH (l) - [:AT] - (c:Class {subtype: "move", entity: "$entity"}) 
-                    WITH f, equipment, c
-                    CALL {  WITH f, equipment, c
-                            MATCH (e:Event) - [:OBSERVED] -> (c)
-                            MATCH (e) - [:CORR] -> (equipment)
-                            MATCH (e) - [:CORR] -> (n:$entity)
-                            WHERE e.timestamp <= f.timestamp
-                            RETURN e as e_inf, n
-                            ORDER BY e.timestamp DESC
+                    MATCH (e:Event) - [:CORR] -> (equipment:Equipment)
+                    WHERE e.$entity_id = "Unknown"
+                    MATCH (e) - [:OBSERVED] -> (:Class {type:"administrative"}) <- [:AT] - (l:Location)
+                    MATCH (l) - [:AT] - (c:Class {subtype: "load", entity: "$entity"}) 
+                    WITH e, equipment, c
+                    CALL {  WITH e, equipment, c
+                            MATCH (load_event:Event) - [:OBSERVED] -> (c)
+                            MATCH (load_event) - [:CORR] -> (equipment)
+                            MATCH (load_event) - [:CORR] -> (n:$entity)
+                            WHERE load_event.timestamp <= e.timestamp
+                            RETURN load_event as load_event_inf, n
+                            ORDER BY load_event.timestamp DESC
                             LIMIT 1
                             }
-                    MERGE (f) - [:CORR] -> (n)
+                    MERGE (e) - [:CORR] -> (n)
                     '''
 
         query_str = Template(query_str).substitute(entity=entity.type, entity_id=entity.get_primary_keys()[0])
@@ -667,7 +664,7 @@ class CypherQueryLibrary:
             SET e.$entity_id = related_entities
         '''
 
-        query_str = Template(query_str).substitute(entity=entity.type, entity_id = entity.get_primary_keys()[0])
+        query_str = Template(query_str).substitute(entity=entity.type, entity_id=entity.get_primary_keys()[0])
 
         return Query(query_string=query_str, kwargs={})
 

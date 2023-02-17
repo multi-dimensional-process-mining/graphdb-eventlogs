@@ -69,7 +69,7 @@
       "type": "AT",
       "from_node_label": "Location",
       "to_node_label": "Class",
-      "primary_key": "cID",
+      "primary_key": "activity",
       "foreign_key": "activity"
     },
     {
@@ -90,7 +90,7 @@
       "type": "IS",
       "from_node_label": "ActivityType",
       "to_node_label": "Class",
-      "primary_key": "cID",
+      "primary_key": "activity",
       "foreign_key": "activity"
     }
   ],
