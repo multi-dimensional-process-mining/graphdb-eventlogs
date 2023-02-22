@@ -10,7 +10,7 @@ import csv
 from csv_to_eventgraph_neo4j.auxiliary_functions import convert_columns_into_camel_case
 
 # config
-is_sample = False
+is_sample = True
 input_path = '../data/BPIC17\\'
 path_to_neo4j_import_directory = '../data/BPIC17/prepared\\'
 

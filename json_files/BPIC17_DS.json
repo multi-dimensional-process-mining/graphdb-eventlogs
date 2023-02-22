@@ -130,7 +130,7 @@
               "dtype": "float"
             }
           ],
-          "mandatory": true
+          "mandatory": false
         },
         {
           "name": "resource",
@@ -158,7 +158,7 @@
               "name": "eventId"
             }
           ],
-          "mandatory": false
+          "mandatory": true
         },
         {
           "name": "offerId",
@@ -167,7 +167,7 @@
               "name": "offerId"
             }
           ],
-          "mandatory": true
+          "mandatory": false
         },
         {
           "name": "firstWithdrawalAmount",
@@ -177,7 +177,7 @@
               "dtype": "float"
             }
           ],
-          "mandatory": true
+          "mandatory": false
         },
         {
           "name": "action",
@@ -196,7 +196,7 @@
               "dtype": "boolean"
             }
           ],
-          "mandatory": true
+          "mandatory": false
         },
         {
           "name": "creditScore",
@@ -206,7 +206,7 @@
               "dtype": "float"
             }
           ],
-          "mandatory": true
+          "mandatory": false
         },
         {
           "name": "numberOfTerms",
@@ -235,7 +235,7 @@
               "dtype": "float"
             }
           ],
-          "mandatory": true
+          "mandatory": false
         },
         {
           "name": "log",

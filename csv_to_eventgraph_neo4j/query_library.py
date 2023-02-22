@@ -220,7 +220,7 @@ class CypherQueryLibrary:
         return Query(query_string=q_create_entity, kwargs={})
 
     @staticmethod
-    def get_correlate_events_to_entity_query(entity: EntityLPG, batch_size) -> Query:
+    def get_correlate_events_to_entity_query(entity: EntityLPG, batch_size: int) -> Query:
         # correlate events that contain a reference from an entity to that entity node
         entity_labels_string = entity.get_label_string()
         primary_key_id = entity.get_composed_primary_id()
