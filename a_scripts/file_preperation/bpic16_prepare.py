@@ -12,7 +12,6 @@ import time, os
 from a_scripts.additional_functions.auxiliary_functions import convert_columns_into_camel_case
 
 # config
-sample = False
 input_path = '../../data/BPIC16\\'
 output_path = '../../data/BPIC16/prepared\\'  # where prepared files will be stored
 file_name = 'BPIC16'
