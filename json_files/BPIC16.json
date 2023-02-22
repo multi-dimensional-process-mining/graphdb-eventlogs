@@ -4,7 +4,9 @@
   "entities": [
     {
       "use_nodes": true,
-      "based_on": "Event",
+      "constructed_by_node": {
+        "node_label": "Event"
+      },
       "type": "Customer",
       "labels": ["Customer"],
       "primary_keys": ["customerId"],
@@ -16,7 +18,9 @@
     },
     {
       "use_nodes": true,
-      "based_on": "Event",
+      "constructed_by_node": {
+        "node_label": "Event"
+      },
       "type": "OfficeU",
       "labels": ["OfficeU"],
       "primary_keys": ["officeU"],
@@ -28,7 +32,9 @@
     },
     {
       "use_nodes": true,
-      "based_on": "Event",
+      "constructed_by_node": {
+        "node_label": "Event"
+      },
       "type": "OfficeW",
       "labels": ["OfficeW"],
       "primary_keys": ["officeW"],
@@ -40,7 +46,9 @@
     },
     {
       "use_nodes": true,
-      "based_on": "Event",
+      "constructed_by_node": {
+        "node_label": "Event"
+      },
       "type": "Complaint",
       "labels": ["Complaint"],
       "primary_keys": ["complaintId"],
@@ -52,7 +60,9 @@
     },
     {
       "use_nodes": true,
-      "based_on": "Event",
+      "constructed_by_node": {
+        "node_label": "Event"
+      },
       "type": "ComplaintDossier",
       "labels": ["ComplaintDossier"],
       "primary_keys": ["complaintDossierId"],
@@ -64,7 +74,9 @@
     },
     {
       "use_nodes": true,
-      "based_on": "Event",
+      "constructed_by_node": {
+        "node_label": "Event"
+      },
       "type": "Session",
       "labels": ["Session"],
       "primary_keys": ["sessionId"],
@@ -76,7 +88,9 @@
     },
     {
       "use_nodes": true,
-      "based_on": "Event",
+      "constructed_by_node": {
+        "node_label": "Event"
+      },
       "type": "IP",
       "labels": ["IP"],
       "primary_keys": ["ipid"],

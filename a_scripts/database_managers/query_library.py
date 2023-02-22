@@ -207,7 +207,7 @@ class CypherQueryLibrary:
         entity_labels_string = entity.get_label_string()
 
         q_create_entity = f'''
-                    MATCH (e:{entity.based_on}) WHERE {conditions}
+                    MATCH (e:{entity.constructed_by.node_label}) WHERE {conditions}
                     WITH {composed_primary_id_query} AS id, {attribute_properties_with_statement}
                     WHERE id <> "Unknown"
                     MERGE (en:{entity_labels_string}

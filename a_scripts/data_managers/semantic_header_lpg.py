@@ -66,7 +66,7 @@ class EntityLPG(Entity):
 
         condition: ConditionLPG
         condition_list = []
-        for condition in self.conditions:
+        for condition in self.constructed_by.conditions:
             attribute_name = condition.attribute
             include_values = condition.values
             for value in include_values:

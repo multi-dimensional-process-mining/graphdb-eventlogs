@@ -134,7 +134,8 @@ class StaticNodes:
 
 
 class DataStructure:
-    def __init__(self, include: bool, name: str, file_directory: str, file_names: List[str], labels: List[str], true_values: List[str],
+    def __init__(self, include: bool, name: str, file_directory: str, file_names: List[str], labels: List[str],
+                 true_values: List[str],
                  false_values: List[str], samples: Dict[str, Sample], attributes: List[Attribute]):
         self.include = include
         self.name = name
@@ -168,8 +169,8 @@ class DataStructure:
         _samples = create_list(Sample, obj.get("samples"))
         _samples = {sample.file_name: sample for sample in _samples}
         _attributes = create_list(Attribute, obj.get("attributes"))
-        return DataStructure(_name, _file_directory, _file_names, _labels, _true_values, _false_values, _samples,
-                             _attributes)
+        return DataStructure(_include, _name, _file_directory, _file_names, _labels, _true_values, _false_values,
+                             _samples, _attributes)
 
     def get_primary_keys(self):
         return [attribute.name for attribute in self.attributes if attribute.is_primary_key]
@@ -250,7 +251,7 @@ class DataStructure:
         compound_column_names = [x.name for x in attribute.columns]
         df_log[attribute.name] = df_log[compound_column_names].apply(
             lambda row: attribute.separator.join([value for value in row.values.astype(str) if
-                                                  not(value == 'nan' or value != value)]), axis=1)
+                                                  not (value == 'nan' or value != value)]), axis=1)
         return df_log
 
     @staticmethod

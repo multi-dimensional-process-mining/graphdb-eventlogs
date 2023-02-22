@@ -1,6 +1,6 @@
 import json
 from abc import ABC
-from typing import List, Any, Optional, Self
+from typing import List, Any, Optional, Self, Union
 
 from dataclasses import dataclass
 
@@ -54,6 +54,9 @@ class Relation(ABC):
         if obj is None:
             return None
         _include = replace_undefined_value(obj.get("include"), True)
+        if not _include:
+            return None
+
         _type = obj.get("type")
         _from_node_label = obj.get("from_node_label")
         _to_node_label = obj.get("to_node_label")
@@ -63,10 +66,56 @@ class Relation(ABC):
 
 
 @dataclass
+class EntityConstructorByNode(ABC):
+    node_label: str
+    conditions: List[Condition]
+
+    @classmethod
+    def from_dict(cls, obj: Any, condition_class_name: Condition = Condition) -> Optional[Self]:
+        if obj is None:
+            return None
+
+        _node_label = obj.get("node_label")
+        _conditions = create_list(condition_class_name, obj.get("conditions"))
+
+        return cls(node_label=_node_label, conditions=_conditions)
+
+
+@dataclass
+class EntityConstructorByRelation(ABC):
+    relation_type: str
+    conditions: List[Condition]
+
+    @classmethod
+    def from_dict(cls, obj: Any, condition_class_name: Condition = Condition) -> Optional[Self]:
+        if obj is None:
+            return None
+
+        _relation_type = obj.get("relation_type")
+        _conditions = create_list(condition_class_name, obj.get("conditions"))
+
+        return cls(relation_type=_relation_type, conditions=_conditions)
+
+
+@dataclass
+class EntityConstructorByQuery(ABC):
+    query: str
+
+    @classmethod
+    def from_dict(cls, obj: Any) -> Optional[Self]:
+        if obj is None:
+            return None
+
+        _query = obj.get("query")
+
+        return cls(query=_query)
+
+
+@dataclass
 class Entity(ABC):
     include: bool
-    use_nodes: bool
-    based_on: str
+    constructed_by: Union[EntityConstructorByNode, EntityConstructorByRelation, EntityConstructorByQuery]
+    constructor_type: str
     type: str
     labels: List[str]
     primary_keys: List[str]
@@ -76,9 +125,6 @@ class Entity(ABC):
     df: bool
     include_label_in_df: bool
     merge_duplicate_df: bool
-    conditions: List[Condition]
-
-    relation: Relation
     delete_parallel_df: bool
 
     def get_primary_keys(self):
@@ -96,7 +142,7 @@ class Entity(ABC):
 
     def get_properties(self):
         properties = {}
-        for condition in self.conditions:
+        for condition in self.constructed_by.conditions:
             properties[condition.attribute] = condition.values
 
         return properties
@@ -104,12 +150,20 @@ class Entity(ABC):
     @classmethod
     def from_dict(cls, obj: Any, condition_class_name: Condition = Condition,
                   relation_class_name: Relation = Relation) -> Optional[Self]:
+
         if obj is None:
             return None
         _include = replace_undefined_value(obj.get("include"), True)
-        _use_nodes = replace_undefined_value(obj.get("use_nodes"), True)
-        _based_on = replace_undefined_value(obj.get("based_on"), "Event")
+        if not _include:
+            return None
 
+        _constructed_by = EntityConstructorByNode.from_dict(obj.get("constructed_by_node"))
+        if _constructed_by is None:
+            _constructed_by = EntityConstructorByRelation.from_dict(obj.get("constructed_by_relation"))
+        if _constructed_by is None:
+            _constructed_by = EntityConstructorByQuery.from_dict(obj.get("constructed_by_query"))
+
+        _constructor_type = _constructed_by.__class__.__name__
         _type = obj.get("type")
         _labels = replace_undefined_value(obj.get("labels"), [])
         _labels = Entity.determine_labels(_labels, _type)
@@ -122,16 +176,14 @@ class Entity(ABC):
         _include_label_in_df = _df and replace_undefined_value(obj.get("include_label_in_df"), False)
         _merge_duplicate_df = _df and replace_undefined_value(obj.get("merge_duplicate_df"), False)
 
-        _conditions = create_list(condition_class_name, obj.get("conditions"))
-        _relation = relation_class_name.from_dict(obj.get("relation"))
         _delete_parallel_df = _df and obj.get("delete_parallel_df")
 
-        return cls(include=_include, use_nodes=_use_nodes, based_on=_based_on, type=_type, labels=_labels,
-                   primary_keys=_primary_keys,
+        return cls(include=_include, constructed_by=_constructed_by, constructor_type=_constructor_type,
+                   type=_type, labels=_labels, primary_keys=_primary_keys,
                    entity_attributes=_entity_attributes,
                    entity_attributes_wo_primary_keys=_entity_attributes_wo_primary_keys,
                    corr=_corr, df=_df, include_label_in_df=_include_label_in_df, merge_duplicate_df=_merge_duplicate_df,
-                   conditions=_conditions, relation=_relation, delete_parallel_df=_delete_parallel_df)
+                   delete_parallel_df=_delete_parallel_df)
 
 
 @dataclass
@@ -144,28 +196,29 @@ class Log(ABC):
         if obj is None:
             return Log(True, True)
         _include = replace_undefined_value(obj.get("include"), True)
+        if not _include:
+            return None
         _has = replace_undefined_value(obj.get("has"), True)
         return cls(_include, _has)
 
 
 class SemanticHeader(ABC):
     def __init__(self, name: str, version: str,
-                 entities_derived_from_events: List[Entity], reified_entities: List[Entity],
-                 relations: List[Relation], classes: List[Class], log: Log):
+                 entities_derived_from_nodes: List[Entity], entities_derived_from_relations: List[Entity],
+                 entities_derived_from_query: List[Entity], relations: List[Relation], classes: List[Class], log: Log):
         self.name = name
         self.version = version
 
-        self.entities_derived_from_events = entities_derived_from_events
-        self.reified_entities = reified_entities
+        self.entities_derived_from_nodes = entities_derived_from_nodes
+        self.entities_derived_from_relations = entities_derived_from_relations
+        self.entities_derived_from_query = entities_derived_from_query
         self.relations = relations
         self.classes = classes
         self.log = log
 
     def get_entity(self, entity_type) -> Optional[Entity]:
-        for entity in self.entities_derived_from_events:
-            if entity_type == entity.type:
-                return entity
-        for entity in self.reified_entities:
+        for entity in self.entities_derived_from_nodes + self.entities_derived_from_relations + \
+                      self.entities_derived_from_query:
             if entity_type == entity.type:
                 return entity
         return None
@@ -180,12 +233,17 @@ class SemanticHeader(ABC):
         _name = obj.get("name")
         _version = obj.get("version")
         _entities = create_list(derived_entity_class_name, obj.get("entities"))
-        _entities_derived_from_events = [entity for entity in _entities if entity.use_nodes]
-        _reified_entities = [entity for entity in _entities if not entity.use_nodes]
+        _entities_derived_from_nodes = [entity for entity in _entities if
+                                        entity.constructor_type == "EntityConstructorByNode"]
+        _entities_derived_from_relations = [entity for entity in _entities if
+                                            entity.constructor_type == "EntityConstructorByRelation"]
+        _entities_derived_from_query = [entity for entity in _entities if
+                                        entity.constructor_type == "EntityConstructorByQuery"]
         _relations = create_list(relation_class_name, obj.get("relations"))
         _classes = create_list(class_class_name, obj.get("classes"))
         _log = log_class_name.from_dict(obj.get("log"))
-        return cls(_name, _version, _entities_derived_from_events, _reified_entities, _relations,
+        return cls(_name, _version, _entities_derived_from_nodes, _entities_derived_from_relations,
+                   _entities_derived_from_query, _relations,
                    _classes, _log)
 
     @classmethod
