@@ -80,9 +80,6 @@ def populate_graph(graph: EventKnowledgeGraph, perf: Performance):
     graph.create_entity_relations()
     perf.finished_step(log_message=f"[:REL] edges done")
 
-    graph.add_attributes_to_classifier(relation="IS", label="ActivityType", properties=["entity", "type", "subtype"])
-    graph.add_attributes_to_classifier(relation="AT", label="Location", properties=["ID"], copy_as=["location"])
-
     graph.reify_entity_relations()
     perf.finished_step(log_message=f"Reified (:Entity) nodes done")
 
