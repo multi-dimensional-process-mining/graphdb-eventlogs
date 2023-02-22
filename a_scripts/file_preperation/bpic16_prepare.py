@@ -26,6 +26,7 @@ def create_bpic16():
     ids = clicks_log['customerId'].unique().tolist()
     clicks_log = clicks_log[clicks_log['customerId'].isin(ids)]
     clicks_log['log'] = 'BPIC16'
+    clicks_log['timestamp'] = clicks_log['timestamp'].apply(lambda x: f'{x}.000' if '.' not in x else x)
     clicks_log.to_csv(output_path + file_name + 'Clicks.csv', index=True, index_label="idx")
 
     complaints = pd.read_csv(os.path.realpath(input_path + 'BPI2016_Complaints.csv'), keep_default_na=True, sep=';',
