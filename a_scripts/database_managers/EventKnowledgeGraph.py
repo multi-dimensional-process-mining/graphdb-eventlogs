@@ -46,8 +46,11 @@ class EventKnowledgeGraph:
         """
         return self.ekg_management.get_all_node_labels()
 
+    def get_statistics(self):
+        return self.ekg_management.get_statistics()
+
     def print_statistics(self):
-        print(tabulate(self.ekg_management.get_statistics()))
+        print(tabulate(self.get_statistics()))
 
     # endregion
 

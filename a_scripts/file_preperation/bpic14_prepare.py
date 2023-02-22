@@ -12,8 +12,7 @@ import time
 from a_scripts.additional_functions.auxiliary_functions import convert_columns_into_camel_case
 
 # config
-sample = True
-inputpath = '..\\data\\BPIC14\\'
+inputpath = '../../data/BPIC14\\'
 path_to_neo4j_import_directory = '../../data/BPIC14/prepared\\'  # where prepared files will be stored
 
 start = time.time()
