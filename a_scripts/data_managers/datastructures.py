@@ -134,8 +134,9 @@ class StaticNodes:
 
 
 class DataStructure:
-    def __init__(self, name: str, file_directory: str, file_names: List[str], labels: List[str], true_values: List[str],
+    def __init__(self, include: bool, name: str, file_directory: str, file_names: List[str], labels: List[str], true_values: List[str],
                  false_values: List[str], samples: Dict[str, Sample], attributes: List[Attribute]):
+        self.include = include
         self.name = name
         self.file_directory = file_directory
         self.file_names = file_names
@@ -151,6 +152,11 @@ class DataStructure:
     @staticmethod
     def from_dict(obj: Any) -> Optional['DataStructure']:
         if obj is None:
+            return None
+
+        _include = replace_undefined_value(obj.get("include"), True)
+
+        if not _include:
             return None
 
         _name = obj.get("name")
