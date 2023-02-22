@@ -2,17 +2,14 @@ import json
 import os
 import warnings
 import random
-import math
 
 from typing import List, Dict, Any, Optional
 from dataclasses import dataclass
 
-import numpy as np
 import pandas as pd
 from pandas import DataFrame
 
-from csv_to_eventgraph_neo4j.auxiliary_functions import replace_undefined_value, create_list
-from csv_to_eventgraph_neo4j.read_only_properties import read_only_properties
+from a_scripts.additional_functions.auxiliary_functions import replace_undefined_value, create_list
 
 
 @dataclass

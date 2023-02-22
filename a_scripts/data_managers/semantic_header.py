@@ -1,10 +1,10 @@
 import json
-from abc import abstractmethod, ABC
+from abc import ABC
 from typing import List, Any, Optional, Self
 
 from dataclasses import dataclass
 
-from csv_to_eventgraph_neo4j.auxiliary_functions import replace_undefined_value, create_list
+from a_scripts.additional_functions.auxiliary_functions import replace_undefined_value, create_list
 
 
 @dataclass

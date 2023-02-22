@@ -1,9 +1,7 @@
-import json
 from dataclasses import dataclass
-from typing import Optional, Any, Self, List
+from typing import Optional, Any, Self
 
-from csv_to_eventgraph_neo4j.auxiliary_functions import create_list, replace_undefined_value
-from csv_to_eventgraph_neo4j.semantic_header import SemanticHeader, Entity, Relation, Class, Log, Condition
+from a_scripts.data_managers.semantic_header import SemanticHeader, Entity, Relation, Class, Log, Condition
 
 
 @dataclass

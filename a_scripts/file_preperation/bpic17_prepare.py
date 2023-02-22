@@ -5,14 +5,13 @@ import numpy as np
 import pandas as pd
 import time
 import os
-import csv
 
-from csv_to_eventgraph_neo4j.auxiliary_functions import convert_columns_into_camel_case
+from a_scripts.additional_functions.auxiliary_functions import convert_columns_into_camel_case
 
 # config
 is_sample = True
-input_path = '../data/BPIC17\\'
-path_to_neo4j_import_directory = '../data/BPIC17/prepared\\'
+input_path = '../../data/BPIC17\\'
+path_to_neo4j_import_directory = '../../data/BPIC17/prepared\\'
 
 
 def main():

@@ -7,14 +7,14 @@ Created on Mon Jun 17 16:51:36 2019
 
 # website click data, labour services process
 import pandas as pd
-import time, os, csv
+import time, os
 
-from csv_to_eventgraph_neo4j.auxiliary_functions import convert_columns_into_camel_case
+from a_scripts.additional_functions.auxiliary_functions import convert_columns_into_camel_case
 
 # config
 sample = False
-input_path = '../data/BPIC16\\'
-output_path = '../data/BPIC16/prepared\\'  # where prepared files will be stored
+input_path = '../../data/BPIC16\\'
+output_path = '../../data/BPIC16/prepared\\'  # where prepared files will be stored
 file_name = 'BPIC16'
 
 

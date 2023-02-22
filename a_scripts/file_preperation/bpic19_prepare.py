@@ -1,11 +1,11 @@
 import pandas as pd
-import time, csv, os
+import time, os
 
-from csv_to_eventgraph_neo4j.auxiliary_functions import convert_columns_into_camel_case
+from a_scripts.additional_functions.auxiliary_functions import convert_columns_into_camel_case
 
 ### config
-input_path = '../data/BPIC19\\'
-path_to_neo4j_import_directory = '../data/BPIC19/prepared\\'  # where prepared files will be stored
+input_path = '../../data/BPIC19\\'
+path_to_neo4j_import_directory = '../../data/BPIC19/prepared\\'  # where prepared files will be stored
 
 
 

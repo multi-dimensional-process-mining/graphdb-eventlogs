@@ -1,13 +1,12 @@
 # municipalities, building permit applications
-import numpy as np
 import pandas as pd
-import time, os, csv
+import time
 
-from csv_to_eventgraph_neo4j.auxiliary_functions import convert_columns_into_camel_case
+from a_scripts.additional_functions.auxiliary_functions import convert_columns_into_camel_case
 
 ## config
-input_path = '../data/BPIC15\\'
-path_to_neo4j_import_directory = '../data/BPIC15/prepared\\'  # where prepared files will be stored
+input_path = '../../data/BPIC15\\'
+path_to_neo4j_import_directory = '../../data/BPIC15/prepared\\'  # where prepared files will be stored
 
 
 def create_bpi15(path):

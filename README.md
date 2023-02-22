@@ -8,7 +8,7 @@ The following projects are part of this repository
 
 
 ### csv_to_eventgraph_neo4j
-Data model and generic query templates for translating and integrating a set of related CSV event logs into single event graph over multiple behavioral dimensions, stored as labeled property graph in [Neo4J](https://neo4j.com/). See [csv_to_eventgraph_neo4j/README.txt](csv_to_eventgraph_neo4j/README.txt)
+Data model and generic query templates for translating and integrating a set of related CSV event logs into single event graph over multiple behavioral dimensions, stored as labeled property graph in [Neo4J](https://neo4j.com/). See [csv_to_eventgraph_neo4j/README.txt](a_scripts/README.txt)
 
 Publications:
 - Stefan Esser, Dirk Fahland: Multi-Dimensional Event Data in Graph Databases. [CoRR abs/2005.14552](https://arxiv.org/abs/2005.14552), [Journal on Data Semantics, DOI: 10.1007/s13740-021-00122-1](https://dx.doi.org/10.1007/s13740-021-00122-1) (2020)

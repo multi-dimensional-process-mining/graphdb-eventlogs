@@ -5,7 +5,7 @@ from datetime import datetime
 import pandas as pd
 from tqdm import tqdm
 
-from context_manager_tqdm import Nostdout
+from a_scripts.additional_functions.context_manager_tqdm import Nostdout
 
 
 class Performance:

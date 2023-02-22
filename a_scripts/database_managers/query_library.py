@@ -1,8 +1,8 @@
 from dataclasses import dataclass
 from typing import Dict, Optional, Any, List
 
-from csv_to_eventgraph_neo4j.datastructures import DataStructure
-from csv_to_eventgraph_neo4j.semantic_header_lpg import EntityLPG, RelationLPG, ClassLPG
+from a_scripts.data_managers.datastructures import DataStructure
+from a_scripts.data_managers.semantic_header_lpg import EntityLPG, RelationLPG, ClassLPG
 from string import Template
 
 

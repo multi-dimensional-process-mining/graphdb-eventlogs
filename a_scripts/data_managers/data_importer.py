@@ -2,10 +2,10 @@ import math
 
 from tqdm import tqdm
 
-from csv_to_eventgraph_neo4j.db_connection import DatabaseConnection
-from csv_to_eventgraph_neo4j.datastructures import ImportedDataStructures
-from csv_to_eventgraph_neo4j.performance_handling import Performance
-from csv_to_eventgraph_neo4j.query_library import CypherQueryLibrary
+from a_scripts.database_managers.db_connection import DatabaseConnection
+from a_scripts.data_managers.datastructures import ImportedDataStructures
+from a_scripts.additional_functions.performance_handling import Performance
+from a_scripts.database_managers.query_library import CypherQueryLibrary
 import pandas as pd
 
 

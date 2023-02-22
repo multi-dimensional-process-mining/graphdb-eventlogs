@@ -1,14 +1,12 @@
-import json
-
-from EventKnowledgeGraph import EventKnowledgeGraph, DatabaseConnection
-from csv_to_eventgraph_neo4j.datastructures import ImportedDataStructures
-from csv_to_eventgraph_neo4j.semantic_header_lpg import SemanticHeaderLPG
+from database_managers.EventKnowledgeGraph import EventKnowledgeGraph, DatabaseConnection
+from data_managers.datastructures import ImportedDataStructures
+from data_managers.semantic_header_lpg import SemanticHeaderLPG
 
 # several steps of import, each can be switch on/off
-from performance_handling import Performance
+from a_scripts.additional_functions.performance_handling import Performance
 from colorama import Fore
 
-import authentication
+from database_managers import authentication
 
 connection = authentication.connections_map[authentication.Connections.LOCAL]
 

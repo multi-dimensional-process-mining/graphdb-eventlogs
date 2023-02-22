@@ -7,16 +7,14 @@ Created on Mon Jul  1 14:02:29 2019
 import numpy as np
 # incidents
 import pandas as pd
-import math, random
-import time, os, csv
-from re import sub
+import time
 
-from csv_to_eventgraph_neo4j.auxiliary_functions import convert_columns_into_camel_case
+from a_scripts.additional_functions.auxiliary_functions import convert_columns_into_camel_case
 
 # config
 sample = True
 inputpath = '..\\data\\BPIC14\\'
-path_to_neo4j_import_directory = '../data/BPIC14/prepared\\'  # where prepared files will be stored
+path_to_neo4j_import_directory = '../../data/BPIC14/prepared\\'  # where prepared files will be stored
 
 start = time.time()
 

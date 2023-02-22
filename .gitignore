@@ -1,6 +1,5 @@
 /data/
 /.idea/
-/csv_to_eventgraph_neo4j/*.csv
-/csv_to_eventgraph_neo4j/authentication.py
+/a_scripts/database_managers/authentication.py
 *.pyc
 *.csv
