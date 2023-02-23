@@ -3,3 +3,8 @@
 /a_scripts/database_managers/authentication.py
 *.pyc
 *.csv
+/json_files/ECESample.json
+/json_files/ECESample_DS.json
+/a_scripts/ece_sample/
+/a_scripts/file_preperation/ece_prepare.py
+/perf/ECESample/
