@@ -29,6 +29,8 @@ def create_list(class_type: Any, obj: Optional[Dict[str, Any]], *args) -> List[A
     if obj is None:
         return []
     else:
-        return [class_type.from_dict(y, *args) for y in obj]
+        new_list = [class_type.from_dict(y, *args) for y in obj]
+        new_list = [item for item in new_list if item is not None]
+        return new_list
 
 

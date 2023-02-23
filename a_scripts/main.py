@@ -10,7 +10,7 @@ from database_managers import authentication
 
 connection = authentication.connections_map[authentication.Connections.LOCAL]
 
-dataset_name = 'BPIC16'
+dataset_name = 'BPIC19'
 use_sample = True
 
 semantic_header = SemanticHeaderLPG.create_semantic_header(dataset_name)
@@ -80,7 +80,7 @@ def populate_graph(graph: EventKnowledgeGraph, perf: Performance):
     graph.create_entity_relations()
     perf.finished_step(log_message=f"[:REL] edges done")
 
-    graph.reify_entity_relations()
+    graph.create_entities_by_relations()
     perf.finished_step(log_message=f"Reified (:Entity) nodes done")
 
     graph.correlate_events_to_reification()

@@ -101,16 +101,17 @@
               "name": "applicationType"
             }
           ],
-          "mandatory": false
+          "mandatory": true
         },
         {
           "name": "loanGoal",
           "columns": [
             {
-              "name": "loanGoal"
+              "name": "loanGoal",
+              "nan_values": ["Unknown"]
             }
           ],
-          "mandatory": true
+          "mandatory": false
         },
         {
           "name": "requestedAmount",

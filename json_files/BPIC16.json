@@ -3,98 +3,84 @@
   "version": "1.0.0",
   "entities": [
     {
-      "use_nodes": true,
       "constructed_by_node": {
         "node_label": "Event"
       },
       "type": "Customer",
       "labels": ["Customer"],
       "primary_keys": ["customerId"],
-      "entity_attributes": ["customerId"],
       "df": true,
       "include_label_in_df": true,
       "corr": true,
       "merge_duplicate_df": true
     },
     {
-      "use_nodes": true,
       "constructed_by_node": {
         "node_label": "Event"
       },
       "type": "OfficeU",
       "labels": ["OfficeU"],
       "primary_keys": ["officeU"],
-      "entity_attributes": ["officeU"],
       "df": true,
       "include_label_in_df": true,
       "corr": true,
       "merge_duplicate_df": true
     },
     {
-      "use_nodes": true,
       "constructed_by_node": {
         "node_label": "Event"
       },
       "type": "OfficeW",
       "labels": ["OfficeW"],
       "primary_keys": ["officeW"],
-      "entity_attributes": ["officeW"],
       "df": true,
       "include_label_in_df": true,
       "corr": true,
       "merge_duplicate_df": true
     },
     {
-      "use_nodes": true,
       "constructed_by_node": {
         "node_label": "Event"
       },
       "type": "Complaint",
       "labels": ["Complaint"],
       "primary_keys": ["complaintId"],
-      "entity_attributes": ["complaintId"],
       "df": true,
       "include_label_in_df": true,
       "corr": true,
       "merge_duplicate_df": true
     },
     {
-      "use_nodes": true,
       "constructed_by_node": {
         "node_label": "Event"
       },
       "type": "ComplaintDossier",
       "labels": ["ComplaintDossier"],
       "primary_keys": ["complaintDossierId"],
-      "entity_attributes": ["complaintDossierId"],
       "df": true,
       "include_label_in_df": true,
       "corr": true,
       "merge_duplicate_df": true
     },
     {
-      "use_nodes": true,
       "constructed_by_node": {
         "node_label": "Event"
       },
       "type": "Session",
       "labels": ["Session"],
       "primary_keys": ["sessionId"],
-      "entity_attributes": ["sessionId"],
       "df": true,
       "include_label_in_df": true,
       "corr": true,
       "merge_duplicate_df": true
     },
     {
-      "use_nodes": true,
       "constructed_by_node": {
         "node_label": "Event"
       },
       "type": "IP",
       "labels": ["IP"],
       "primary_keys": ["ipid"],
-      "entity_attributes": ["ipid"],
       "df": true,
       "include_label_in_df": true,
       "corr": true,

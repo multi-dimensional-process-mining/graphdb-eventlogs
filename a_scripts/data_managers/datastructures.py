@@ -6,6 +6,7 @@ import random
 from typing import List, Dict, Any, Optional
 from dataclasses import dataclass
 
+import numpy as np
 import pandas as pd
 from pandas import DataFrame
 
@@ -32,6 +33,7 @@ class DatetimeObject:
 class Column:
     name: str
     dtype: str
+    nan_values: List[str]
     mandatory: bool
 
     @staticmethod
@@ -40,8 +42,9 @@ class Column:
             return None
         _name = obj.get("name")
         _dtype = obj.get("dtype")
+        _nan_values = replace_undefined_value(obj.get("nan_values"), [])
         _mandatory = replace_undefined_value(obj.get("mandatory"), True)
-        return Column(_name, _dtype, _mandatory)
+        return Column(_name, _dtype, _nan_values, _mandatory)
 
 
 @dataclass
@@ -80,9 +83,12 @@ class Attribute:
         _use_filter = replace_undefined_value(obj.get("use_filter"), _use_filter)
         _is_primary_key = replace_undefined_value(obj.get("is_primary_key"), False)
         _is_foreign_key = replace_undefined_value(obj.get("is_foreign_key"), False)
-        return Attribute(_name, _columns, _separator, _is_datetime, _is_compound, _mandatory, _datetime_object,
-                         _na_rep_value, _na_rep_columns, _filter_exclude_values, _filter_include_values, _use_filter,
-                         _is_primary_key, _is_foreign_key)
+        return Attribute(name=_name, mandatory=_mandatory, columns=_columns, separator=_separator,
+                         is_compound=_is_compound,
+                         is_datetime=_is_datetime, datetime_object=_datetime_object,
+                         na_rep_value=_na_rep_value, na_rep_columns=_na_rep_columns,
+                         filter_exclude_values=_filter_exclude_values, filter_include_values=_filter_include_values,
+                         use_filter=_use_filter, is_primary_key=_is_primary_key, is_foreign_key=_is_foreign_key)
 
 
 @dataclass
@@ -242,8 +248,10 @@ class DataStructure:
         column: Column
         for column in attribute.columns:
             if column.mandatory:
-                df_log[column.name].fillna("Unknown", inplace=True)
-
+                try:
+                    df_log[column.name].fillna("Unknown", inplace=True)
+                except:
+                    df_log[column.name].fillna(-1, inplace=True)
         return df_log
 
     @staticmethod
@@ -261,9 +269,17 @@ class DataStructure:
             df_log = df_log.rename(columns={column_name: attribute.name})
         return df_log
 
+    @staticmethod
+    def replace_with_nan(df_log, attribute):
+        for column in attribute.columns:
+            for nan_value in column.nan_values:
+                df_log[column.name] = df_log[column.name].replace(nan_value, np.nan, regex=False)
+        return df_log
+
     def preprocess_according_to_attributes(self, df_log):
         # loop over all attributes and check if they should be created, renamed or imputed
         for attribute in self.attributes:
+            df_log = DataStructure.replace_with_nan(df_log, attribute)
             if len(attribute.na_rep_columns) > 0:  # impute values in case of missing values
                 df_log = DataStructure.replace_nan_values_based_on_na_rep_columns(df_log, attribute)
             if attribute.na_rep_value is not None:

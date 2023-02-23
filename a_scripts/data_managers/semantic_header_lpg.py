@@ -49,7 +49,7 @@ class EntityLPG(Entity):
         return ','.join(complete_list)
 
     def get_entity_attributes_as_node_properties(self):
-        return ',\n'.join([f"{key}: {key}" for key in self.entity_attributes])
+        return ',\n'.join([f"{key}: {key}" for key in self.all_entity_attributes])
 
     def get_primary_key_existing_condition(self, node_name: str = "e"):
         return " AND ".join(

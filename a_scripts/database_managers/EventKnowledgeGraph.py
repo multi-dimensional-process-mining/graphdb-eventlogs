@@ -74,8 +74,8 @@ class EventKnowledgeGraph:
     def create_entity_relations(self) -> None:
         self.ekg_builder.create_entity_relations()
 
-    def reify_entity_relations(self) -> None:
-        self.ekg_builder.reify_entity_relations()
+    def create_entities_by_relations(self) -> None:
+        self.ekg_builder.create_entities_by_relations()
 
     def correlate_events_to_reification(self) -> None:
         self.ekg_builder.correlate_events_to_reification()

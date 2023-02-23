@@ -3,23 +3,12 @@
   "version": "1.0.0",
   "entities": [
     {
-      "use_nodes": true,
-      "based_on": "Event",
+      "constructed_by_node": {
+        "node_label": "Event"
+      },
       "type": "ConfigurationItem",
       "labels": ["ConfigurationItem"],
       "primary_keys": ["ciNameAff"],
-      "entity_attributes": ["ciNameAff", "serviceComponentAff"],
-      "df": true,
-      "include_label_in_df": true,
-      "corr": true,
-      "merge_duplicate_df": true
-    },
-    {
-      "use_nodes": true,
-      "based_on": "Event",
-      "type": "ServiceComponent",
-      "labels": ["ServiceComponent"],
-      "primary_keys": ["serviceComponentAff"],
       "entity_attributes": ["serviceComponentAff"],
       "df": true,
       "include_label_in_df": true,
@@ -27,60 +16,73 @@
       "merge_duplicate_df": true
     },
     {
-      "use_nodes": true,
-      "based_on": "Event",
+      "constructed_by_node": {
+        "node_label": "Event"
+      },
+      "type": "ServiceComponent",
+      "labels": ["ServiceComponent"],
+      "primary_keys": ["serviceComponentAff"],
+      "df": true,
+      "include_label_in_df": true,
+      "corr": true,
+      "merge_duplicate_df": true
+    },
+    {
+      "constructed_by_node": {
+        "node_label": "Event"
+      },
       "type": "Incident",
       "labels": ["Incident"],
       "primary_keys": ["incidentId"],
-      "entity_attributes": ["incidentId"],
       "df": true,
       "include_label_in_df": true,
       "corr": true,
       "merge_duplicate_df": true
     },
     {
-      "use_nodes": true,
-      "based_on": "Event",
+      "constructed_by_node": {
+        "node_label": "Event"
+      },
       "type": "Interaction",
       "labels": ["Interaction"],
       "primary_keys": ["interactionId"],
-      "entity_attributes": ["interactionId", "relatedIncident"],
+      "entity_attributes": ["relatedIncident"],
       "df": true,
       "include_label_in_df": true,
       "corr": true,
       "merge_duplicate_df": true
     },
     {
-      "use_nodes": true,
-      "based_on": "Event",
+      "constructed_by_node": {
+        "node_label": "Event"
+      },
       "type": "Change",
       "labels": ["Change"],
       "primary_keys": ["changeId"],
-      "entity_attributes": ["changeId"],
       "df": true,
       "include_label_in_df": true,
       "corr": true,
       "merge_duplicate_df": true
     },
     {
-      "use_nodes": true,
-      "based_on": "Event",
+      "constructed_by_node": {
+        "node_label": "Event"
+      },
       "type": "CaseR",
       "labels": ["CaseR"],
       "primary_keys": ["resource"],
-      "entity_attributes": ["resource"],
       "df": true,
       "include_label_in_df": true,
       "corr": true,
       "merge_duplicate_df": true
     },
     {
-      "use_nodes": true,
-      "based_on": "Event",
+      "constructed_by_node": {
+        "node_label": "Event"
+      },
       "type":"KM",
       "labels": ["KM"],
       "primary_keys": ["kmNumber"],
-      "entity_attributes": ["kmNumber"],
       "df": true,
       "include_label_in_df": true,
       "corr": true,

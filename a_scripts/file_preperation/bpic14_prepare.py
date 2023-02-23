@@ -33,7 +33,6 @@ incident["urgency"] = incident["urgency"].astype('Int64')
 incident['log'] = 'BPIC14'
 incident = incident.dropna(how='all', axis=1)  # drop all columns in which all values are nan (empty)
 incident = incident.dropna(thresh=19)  # drops all 'nan-only' rows
-incident = incident.replace(['#MULTIVALUE', '#N/B'], np.NaN)
 incident = incident.reset_index(drop=True)
 incident.to_csv(path_to_neo4j_import_directory + "BPIC14Incident.csv",
                 index=True, index_label="idx")
@@ -53,7 +52,6 @@ interaction["urgency"] = interaction["urgency"].str.replace('(\D+)', '', regex=T
 interaction["urgency"] = interaction["urgency"].astype('Int64')
 interaction['log'] = 'BPIC14'
 interaction = interaction.reset_index(drop=True)
-interaction = interaction.replace(['#MULTIVALUE', '#N/B'], np.NaN)
 interaction.to_csv(path_to_neo4j_import_directory + "BPIC14Interaction.csv",
                    index=True, index_label="idx")
 

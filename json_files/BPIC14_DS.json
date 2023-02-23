@@ -46,19 +46,21 @@
         "name": "ciTypeAff",
         "columns": [
           {
-            "name": "ciTypeAff"
+            "name": "ciTypeAff",
+            "nan_values": ["no type"]
           }
         ],
-        "mandatory": true
+        "mandatory": false
       },
       {
         "name": "ciSubtypeAff",
         "columns": [
           {
-            "name": "ciSubtypeAff"
+            "name": "ciSubtypeAff",
+            "nan_values": ["no subtype"]
           }
         ],
-        "mandatory": true
+        "mandatory": false
       },
       {
         "name": "serviceComponentAff",
@@ -142,7 +144,7 @@
           "timezone_offset": "+01",
           "convert_to": "ISO_DATE_TIME"
         },
-        "mandatory": true
+        "mandatory": false
       },
       {
         "name": "scheduledDowntimeStart",
@@ -327,13 +329,14 @@
             "name": "ciNameAff"
           }
         ],
-        "mandatory": false
+        "mandatory": true
       },
       {
         "name": "ciTypeAff",
         "columns": [
           {
-            "name": "ciTypeAff"
+            "name": "ciTypeAff",
+            "nan_values": ["no type"]
           }
         ],
         "mandatory": false
@@ -342,7 +345,8 @@
         "name": "ciSubtypeAff",
         "columns": [
           {
-            "name": "ciSubtypeAff"
+            "name": "ciSubtypeAff",
+            "nan_values": ["no subtype"]
           }
         ],
         "mandatory": false
@@ -467,7 +471,7 @@
           "timezone_offset": "+01",
           "convert_to": "ISO_DATE_TIME"
         },
-        "mandatory": true
+        "mandatory": false
       },
       {
         "name": "resolvedTime",
@@ -481,7 +485,7 @@
           "timezone_offset": "+01",
           "convert_to": "ISO_DATE_TIME"
         },
-        "mandatory": true
+        "mandatory": false
       },
       {
         "name": "timestamp",
@@ -505,7 +509,7 @@
             "dtype": "float"
           }
         ],
-        "mandatory": true
+        "mandatory": false
       },
       {
         "name": "numRelatedInteractions",
@@ -515,16 +519,17 @@
             "dtype": "Int64"
           }
         ],
-        "mandatory": true
+        "mandatory": false
       },
       {
         "name": "relatedInteraction",
         "columns": [
           {
-            "name": "relatedInteraction"
+            "name": "relatedInteraction",
+            "nan_values": ["#N/B", "#MULTIVALUE"]
           }
         ],
-        "mandatory": true
+        "mandatory": false
       },
       {
         "name": "numRelatedIncidents",
@@ -534,7 +539,7 @@
             "dtype": "Int64"
           }
         ],
-        "mandatory": true
+        "mandatory": false
       },
       {
         "name": "numRelatedChanges",
@@ -544,52 +549,57 @@
             "dtype": "Int64"
           }
         ],
-        "mandatory": true
+        "mandatory": false
       },
       {
         "name": "relatedChange",
         "columns": [
           {
-            "name": "relatedChange"
+            "name": "relatedChange",
+            "nan_values": ["#MULTIVALUE"]
           }
         ],
-        "mandatory": true
+        "mandatory": false
       },
       {
         "name": "ciNameCby",
         "columns": [
           {
-            "name": "ciNameCby"
+            "name": "ciNameCby",
+            "nan_values": ["#N/B"]
           }
         ],
-        "mandatory": true
+        "mandatory": false
       },
       {
         "name": "ciTypeCby",
         "columns": [
           {
-            "name": "ciTypeCby"
+            "name": "ciTypeCby",
+            "nan_values": ["#N/B"]
           }
         ],
-        "mandatory": true
+        "mandatory": false
       },
       {
         "name": "ciSubtypeCby",
         "columns": [
           {
-            "name": "ciSubtypeCby"
+            "name": "ciSubtypeCby",
+            "nan_values": ["#N/B"]
           }
         ],
-        "mandatory": true
+        "mandatory": false
       },
       {
         "name": "serviceComponentCBy",
         "columns": [
           {
-            "name": "serviceCompWbsCby"
+            "name": "serviceCompWbsCby",
+            "nan_values": ["#N/B"]
           }
         ],
-        "mandatory": true
+        "mandatory": false
       },
       {
         "name": "log",
@@ -607,7 +617,8 @@
             "name": "category"
           },
           {
-            "name": "closureCode"
+            "name": "closureCode",
+            "nan_values": ["Unknown"]
           }
         ],
         "separator": ": ",
@@ -650,7 +661,7 @@
             "name": "incidentId"
           }
         ],
-        "mandatory": false
+        "mandatory": true
       },
       {
         "name": "timestamp",
@@ -664,7 +675,7 @@
           "timezone_offset": "+01",
           "convert_to": "ISO_DATE_TIME"
         },
-        "mandatory": false
+        "mandatory": true
       },
       {
         "name": "incidentActivityNumber",
@@ -673,7 +684,7 @@
             "name": "incidentActivityNumber"
           }
         ],
-        "mandatory": false
+        "mandatory": true
       },
       {
         "name": "activity",
@@ -706,10 +717,11 @@
         "name": "interactionId",
         "columns": [
           {
-            "name": "interactionId"
+            "name": "interactionId",
+            "nan-values": ["#N/B"]
           }
         ],
-        "mandatory": true
+        "mandatory": false
       },
       {
         "name": "log",
@@ -754,7 +766,8 @@
         "name": "ciNameAff",
         "columns": [
           {
-            "name": "ciNameAff"
+            "name": "ciNameAff",
+            "nan_values": ["#N/B"]
           }
         ],
         "mandatory": false
@@ -763,7 +776,8 @@
         "name": "ciSubtypeAff",
         "columns": [
           {
-            "name": "ciSubtypeAff"
+            "name": "ciSubtypeAff",
+            "nan_values": ["no type", "#N/B"]
           }
         ],
         "mandatory": false
@@ -772,7 +786,8 @@
         "name": "serviceComponentAff",
         "columns": [
           {
-            "name": "serviceCompWbsAff"
+            "name": "serviceCompWbsAff",
+            "nan_values": ["no subtype", "#N/B"]
           }
         ],
         "mandatory": false
@@ -784,7 +799,7 @@
             "name": "interactionId"
           }
         ],
-        "mandatory": false
+        "mandatory": true
       },
       {
         "name": "status",
@@ -793,7 +808,7 @@
             "name": "status"
           }
         ],
-        "mandatory": false
+        "mandatory": true
       },
       {
         "name": "impact",
@@ -803,7 +818,7 @@
             "dtype": "Int64"
           }
         ],
-        "mandatory": false
+        "mandatory": true
       },
       {
         "name": "urgency",
@@ -813,7 +828,7 @@
             "dtype": "Int64"
           }
         ],
-        "mandatory": false
+        "mandatory": true
       },
       {
         "name": "priority",
@@ -823,7 +838,7 @@
             "dtype": "Int64"
           }
         ],
-        "mandatory": false
+        "mandatory": true
       },
       {
         "name": "category",
@@ -832,7 +847,7 @@
             "name": "category"
           }
         ],
-        "mandatory": false
+        "mandatory": true
       },
       {
         "name": "kmNumber",
@@ -841,7 +856,7 @@
             "name": "kmNumber"
           }
         ],
-        "mandatory": false
+        "mandatory": true
       },
       {
         "name": "start",
@@ -855,7 +870,7 @@
           "timezone_offset": "+01",
           "convert_to": "ISO_DATE_TIME"
         },
-        "mandatory": false
+        "mandatory": true
       },
       {
         "name": "timestamp",
@@ -869,13 +884,14 @@
           "timezone_offset": "+01",
           "convert_to": "ISO_DATE_TIME"
         },
-        "mandatory": false
+        "mandatory": true
       },
       {
         "name": "closureCode",
         "columns": [
           {
-            "name": "closureCode"
+            "name": "closureCode",
+            "nan_values": ["Unknown"]
           }
         ],
         "mandatory": false
@@ -887,7 +903,7 @@
             "name": "firstCallResolution"
           }
         ],
-        "mandatory": false
+        "mandatory": true
       },
       {
         "name": "handleTimeSecs",
@@ -897,13 +913,14 @@
             "dtype": "Int64"
           }
         ],
-        "mandatory": false
+        "mandatory": true
       },
       {
         "name": "relatedIncident",
         "columns": [
           {
-            "name": "relatedIncident"
+            "name": "relatedIncident",
+            "nan_values": ["#MULTIVALUE"]
           }
         ],
         "mandatory": false

@@ -61,19 +61,19 @@ class EKGUsingSemanticHeaderBuilder:
                     message=f"Relation (:{relation.from_node_label}) - [:{relation.type}] -> "
                             f"(:{relation.to_node_label}) done")
 
-    def reify_entity_relations(self) -> None:
+    def create_entities_by_relations(self) -> None:
         relation: RelationLPG
-        reified_entity: EntityLPG
-        for reified_entity in self.semantic_header.entities_derived_from_relations:
-            if reified_entity.include:
-                self.connection.exec_query(CypherQueryLibrary.get_reify_entity_relations_query,
-                                           **{"reified_entity": reified_entity})
+        entity: EntityLPG
+        for entity in self.semantic_header.entities_derived_from_relations:
+            if entity.include:
+                self.connection.exec_query(CypherQueryLibrary.get_create_entities_by_relations_query,
+                                           **{"entity": entity})
 
-                self.connection.exec_query(CypherQueryLibrary.get_add_reified_query,
-                                           **{"reified_entity": reified_entity, "batch_size": self.batch_size})
+                self.connection.exec_query(CypherQueryLibrary.get_add_reified_relation_query,
+                                           **{"entity": entity, "batch_size": self.batch_size})
                 self._write_message_to_performance(
-                    message=f"Relation [:{reified_entity.type.upper()}] reified as "
-                            f"(:Entity:{reified_entity.get_label_string()}) node")
+                    message=f"Relation [:{entity.type.upper()}] reified as "
+                            f"(:Entity:{entity.get_label_string()}) node")
 
     def correlate_events_to_reification(self) -> None:
         reified_entity: EntityLPG

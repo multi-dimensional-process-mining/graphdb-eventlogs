@@ -3,8 +3,9 @@
   "version": "1.0.0",
   "entities": [
     {
-      "use_nodes": true,
-      "based_on": "Event",
+      "constructed_by_node": {
+        "node_label": "Event"
+      },
       "type": "Application",
       "labels": [
         "Application"
@@ -21,8 +22,9 @@
       "merge_duplicate_df": true
     },
     {
-      "use_nodes": true,
-      "based_on": "Event",
+      "constructed_by_node": {
+        "node_label": "Event"
+      },
       "type": "CaseR",
       "label": "CaseR",
       "primary_keys": [
@@ -39,8 +41,9 @@
       "merge_duplicate_df": true
     },
     {
-      "use_nodes": true,
-      "based_on": "Event",
+      "constructed_by_node": {
+        "node_label": "Event"
+      },
       "type": "ResponsibleActor",
       "label": [
         "ResponsibleActor"
@@ -57,8 +60,9 @@
       "merge_duplicate_df": true
     },
     {
-      "use_nodes": true,
-      "based_on": "Event",
+      "constructed_by_node": {
+        "node_label": "Event"
+      },
       "type": "MonitoringResource",
       "labels": [
         "MonitoringResource"

@@ -220,7 +220,7 @@
               "name": "termName"
             }
           ],
-          "mandatory": true
+          "mandatory": false
         },
         {
           "name": "startDate",
@@ -230,7 +230,7 @@
             }
           ],
           "datetime_object": {
-            "format": "y/M/d H:m:s.nX",
+            "format": "y/M/d H:m:s.n",
             "convert_to": "ISO_DATE"
           },
           "mandatory": true
@@ -252,7 +252,7 @@
               "dtype": "Int64"
             }
           ],
-          "mandatory": true
+          "mandatory": false
         },
         {
           "name": "caseStatus",
@@ -271,7 +271,7 @@
               "dtype": "boolean"
             }
           ],
-          "mandatory": true
+          "mandatory": false
         },
         {
           "name": "endDate",
@@ -281,10 +281,10 @@
             }
           ],
           "datetime_object": {
-            "format": "y/M/d H:m:s.nX",
-            "convert_to": "ISO_DATE_TIME"
+            "format": "y/M/d H:m:s.n",
+            "convert_to": "ISO_DATE"
           },
-          "mandatory": true
+          "mandatory": false
         },
         {
           "name": "parts",
@@ -322,7 +322,7 @@
               "dtype": "Int64"
             }
           ],
-          "mandatory": true
+          "mandatory": false
         },
         {
           "name": "sumleges",
@@ -332,7 +332,7 @@
               "dtype": "float"
             }
           ],
-          "mandatory": true
+          "mandatory": false
         },
         {
           "name": "idofConceptCase",
@@ -342,7 +342,7 @@
               "dtype": "Int64"
             }
           ],
-          "mandatory": true
+          "mandatory": false
         },
         {
           "name": "resource",
@@ -361,7 +361,7 @@
               "name": "activityNameEn"
             }
           ],
-          "mandatory": false
+          "mandatory": true
         },
         {
           "name": "planned",
@@ -375,7 +375,7 @@
             "timezone_offset": "+01",
             "convert_to": "ISO_DATE_TIME"
           },
-          "mandatory": true
+          "mandatory": false
         },
         {
           "name": "dateStop",
@@ -389,7 +389,7 @@
             "timezone_offset": "+01",
             "convert_to": "ISO_DATE_TIME"
           },
-          "mandatory": true
+          "mandatory": false
         },
         {
           "name": "dateFinished",
@@ -427,7 +427,7 @@
             "timezone_offset": "+01",
             "convert_to": "ISO_DATE_TIME"
           },
-          "mandatory": true
+          "mandatory": false
         },
         {
           "name": "monitoringResource",

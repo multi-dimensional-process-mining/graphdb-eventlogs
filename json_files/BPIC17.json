@@ -3,8 +3,17 @@
   "version": "1.0.0",
   "entities": [
     {
-      "use_nodes": true,
-      "based_on": "Event",
+      "constructed_by_node": {
+        "node_label": "Event",
+        "conditions": [
+          {
+            "attribute": "eventOrigin",
+            "values": [
+              "Application"
+            ]
+          }
+        ]
+      },
       "type": "Application",
       "labels": [
         "Application"
@@ -12,26 +21,23 @@
       "primary_keys": [
         "case"
       ],
-      "entity_attributes": [
-        "case"
-      ],
-      "conditions": [
-        {
-          "attribute": "eventOrigin",
-          "values": [
-            "Application"
-          ]
-        }
-      ],
-
       "corr": true,
       "df": true,
       "include_label_in_df": true,
       "merge_duplicate_df": true
     },
     {
-      "use_nodes": true,
-      "based_on": "Event",
+      "constructed_by_node": {
+        "node_label": "Event",
+        "conditions": [
+          {
+            "attribute": "eventOrigin",
+            "values": [
+              "Workflow"
+            ]
+          }
+        ]
+      },
       "type": "Workflow",
       "labels": [
         "Workflow"
@@ -39,25 +45,23 @@
       "primary_keys": [
         "case"
       ],
-      "entity_attributes": [
-        "case"
-      ],
-      "conditions": [
-        {
-          "attribute": "eventOrigin",
-          "values": [
-            "Workflow"
-          ]
-        }
-      ],
       "df": true,
       "include_label_in_df": true,
       "corr": true,
       "merge_duplicate_df": true
     },
     {
-      "use_nodes": true,
-      "based_on": "Event",
+      "constructed_by_node": {
+        "node_label": "Event",
+        "conditions": [
+          {
+            "attribute": "eventOrigin",
+            "values": [
+              "Offer"
+            ]
+          }
+        ]
+      },
       "type": "Offer",
       "labels": [
         "Offer"
@@ -66,16 +70,7 @@
         "offerId"
       ],
       "entity_attributes": [
-        "offerId",
         "case"
-      ],
-      "conditions": [
-        {
-          "attribute": "eventOrigin",
-          "values": [
-            "Offer"
-          ]
-        }
       ],
       "df": true,
       "include_label_in_df": true,
@@ -83,8 +78,9 @@
       "merge_duplicate_df": true
     },
     {
-      "use_nodes": true,
-      "based_on": "Event",
+      "constructed_by_node": {
+        "node_label": "Event"
+      },
       "type": "CaseR",
       "labels": [
         "CaseR"
@@ -92,17 +88,15 @@
       "primary_keys": [
         "resource"
       ],
-      "entity_attributes": [
-        "resource"
-      ],
       "df": true,
       "include_label_in_df": true,
       "corr": true,
       "merge_duplicate_df": true
     },
     {
-      "use_nodes": true,
-      "based_on": "Event",
+      "constructed_by_node": {
+        "node_label": "Event"
+      },
       "type": "CaseAWO",
       "labels": [
         "CaseAWO"
@@ -110,15 +104,13 @@
       "primary_keys": [
         "case"
       ],
-      "entity_attributes": [
-        "case"
-      ],
       "corr": false,
       "df": false
     },
     {
-      "use_nodes": false,
-      "based_on": "CASE_AO",
+      "constructed_by_relation": {
+        "relation_type": "CASE_AO"
+      },
       "type": "CaseAO",
       "labels": [
         "CaseAO"
@@ -127,16 +119,13 @@
         "offerId",
         "applicationId"
       ],
-      "entity_attributes": [
-        "offerId",
-        "applicationId"
-      ],
       "corr": true,
       "df": false
     },
     {
-      "use_nodes": false,
-      "based_on": "CASE_AW",
+      "constructed_by_relation": {
+        "relation_type": "CASE_AW"
+      },
       "type": "CaseAW",
       "labels": [
         "CaseAW"
@@ -145,25 +134,18 @@
         "workflowId",
         "applicationId"
       ],
-      "entity_attributes": [
-        "workflowId",
-        "applicationId"
-      ],
       "corr": true,
       "df": false
     },
     {
-      "use_nodes": false,
-      "based_on": "CASE_WO",
+      "constructed_by_relation": {
+        "relation_type": "CASE_WO"
+      },
       "type": "CaseWO",
       "labels": [
         "CaseWO"
       ],
       "primary_keys": [
-        "workflowId",
-        "offerId"
-      ],
-      "entity_attributes": [
         "workflowId",
         "offerId"
       ],

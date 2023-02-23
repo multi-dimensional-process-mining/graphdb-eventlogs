@@ -119,7 +119,7 @@ class Entity(ABC):
     type: str
     labels: List[str]
     primary_keys: List[str]
-    entity_attributes: List[str]
+    all_entity_attributes: List[str]
     entity_attributes_wo_primary_keys: List[str]
     corr: bool
     df: bool
@@ -168,8 +168,12 @@ class Entity(ABC):
         _labels = replace_undefined_value(obj.get("labels"), [])
         _labels = Entity.determine_labels(_labels, _type)
         _primary_keys = obj.get("primary_keys")
-        _entity_attributes = obj.get("entity_attributes")
-        _entity_attributes_wo_primary_keys = [attr for attr in _entity_attributes if attr not in _primary_keys]
+        # entity attributes may have primary keys (or not)
+        _entity_attributes = replace_undefined_value(obj.get("entity_attributes"), [])
+        # create a list of all entity attributes
+        _all_entity_attributes = list(set(_entity_attributes + _primary_keys))
+        # remove the primary keys
+        _entity_attributes_wo_primary_keys = [attr for attr in _all_entity_attributes if attr not in _primary_keys]
 
         _corr = _include and replace_undefined_value(obj.get("corr"), False)
         _df = _corr and replace_undefined_value(obj.get("df"), False)
@@ -180,7 +184,7 @@ class Entity(ABC):
 
         return cls(include=_include, constructed_by=_constructed_by, constructor_type=_constructor_type,
                    type=_type, labels=_labels, primary_keys=_primary_keys,
-                   entity_attributes=_entity_attributes,
+                   all_entity_attributes=_all_entity_attributes,
                    entity_attributes_wo_primary_keys=_entity_attributes_wo_primary_keys,
                    corr=_corr, df=_df, include_label_in_df=_include_label_in_df, merge_duplicate_df=_merge_duplicate_df,
                    delete_parallel_df=_delete_parallel_df)

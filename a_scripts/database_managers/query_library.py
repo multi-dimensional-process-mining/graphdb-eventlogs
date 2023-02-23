@@ -271,18 +271,18 @@ class CypherQueryLibrary:
         return Query(query_string=q_create_relation, kwargs={})
 
     @staticmethod
-    def get_reify_entity_relations_query(reified_entity: EntityLPG) -> Query:
+    def get_create_entities_by_relations_query(entity: EntityLPG) -> Query:
 
-        conditions = reified_entity.get_where_condition("r")
-        composed_primary_id_query = reified_entity.get_composed_primary_id("r")
-        separate_primary_id_query = reified_entity.get_entity_attributes("r")
-        primary_key_properties = reified_entity.get_entity_attributes_as_node_properties()
+        conditions = entity.get_where_condition("r")
+        composed_primary_id_query = entity.get_composed_primary_id("r")
+        separate_primary_id_query = entity.get_entity_attributes("r")
+        primary_key_properties = entity.get_entity_attributes_as_node_properties()
 
-        entity_type = reified_entity.type
-        entity_labels_string = reified_entity.get_label_string()
+        entity_type = entity.type
+        entity_labels_string = entity.get_label_string()
 
         q_create_entity = f'''
-                    MATCH (n1) - [r:{reified_entity.based_on}] -> (n2) WHERE {conditions}
+                    MATCH (n1) - [r:{entity.constructed_by.relation_type}] -> (n2) WHERE {conditions}
                     WITH {composed_primary_id_query} AS id, {separate_primary_id_query}
                     MERGE (en:{entity_labels_string}
                             {{ID:id, 
@@ -294,14 +294,14 @@ class CypherQueryLibrary:
         return Query(query_string=q_create_entity, kwargs={})
 
     @staticmethod
-    def get_add_reified_query(reified_entity: EntityLPG, batch_size: int):
-        conditions = reified_entity.get_where_condition("r")
-        composed_primary_id_query = reified_entity.get_composed_primary_id("r")
-        entity_labels_string = reified_entity.get_label_string()
+    def get_add_reified_relation_query(entity: EntityLPG, batch_size: int):
+        conditions = entity.get_where_condition("r")
+        composed_primary_id_query = entity.get_composed_primary_id("r")
+        entity_labels_string = entity.get_label_string()
 
         q_correlate_entities = f'''
             CALL apoc.periodic.iterate(
-                'MATCH (n1) - [r:{reified_entity.based_on}] -> (n2) WHERE {conditions}
+                'MATCH (n1) - [r:{entity.constructed_by.relation_type}] -> (n2) WHERE {conditions}
                 WITH n1, n2, {composed_primary_id_query} AS id
                 MATCH (reified:{entity_labels_string}) WHERE id = reified.ID
                 RETURN n1, n2, reified',

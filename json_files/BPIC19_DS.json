@@ -72,7 +72,7 @@
         "mandatory": true
       },
       {
-        "name": "Id",
+        "name": "id",
         "columns": [
           {
             "name": "eventId",
@@ -88,7 +88,7 @@
             "name": "caseSpendAreaText"
           }
         ],
-        "mandatory": true
+        "mandatory": false
       },
       {
         "name": "cCompany",
@@ -97,7 +97,7 @@
             "name": "caseCompany"
           }
         ],
-        "mandatory": false
+        "mandatory": true
       },
       {
         "name": "cDocType",
@@ -115,7 +115,7 @@
             "name": "caseSubSpendAreaText"
           }
         ],
-        "mandatory": true
+        "mandatory": false
       },
       {
         "name": "cPoId",
@@ -170,7 +170,7 @@
             "name": "caseSpendClassificationText"
           }
         ],
-        "mandatory": true
+        "mandatory": false
       },
       {
         "name": "cVendorName",
@@ -224,10 +224,11 @@
         "name": "resource",
         "columns": [
           {
-            "name": "eventOrgResource"
+            "name": "eventOrgResource",
+            "nan_values": ["NONE"]
           }
         ],
-        "mandatory": true
+        "mandatory": false
       },
       {
         "name": "eCumNetWorth",

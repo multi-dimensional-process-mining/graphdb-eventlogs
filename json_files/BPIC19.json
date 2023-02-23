@@ -3,8 +3,9 @@
   "version": "1.0.0",
   "entities": [
     {
-      "use_nodes": true,
-      "based_on": "Event",
+      "constructed_by_node": {
+        "node_label": "Event"
+      },
       "type": "POItem",
       "labels": [
         "POItem"
@@ -13,7 +14,6 @@
         "cId"
       ],
       "entity_attributes": [
-        "cId",
         "cPoId"
       ],
       "corr": true,
@@ -22,16 +22,14 @@
       "merge_duplicate_df": true
     },
     {
-      "use_nodes": true,
-      "based_on": "Event",
+      "constructed_by_node": {
+        "node_label": "Event"
+      },
       "type": "PO",
       "labels": [
         "PO"
       ],
       "primary_keys": [
-        "cPoId"
-      ],
-      "entity_attributes": [
         "cPoId"
       ],
       "corr": true,
@@ -41,8 +39,9 @@
     },
     {
       "include": false,
-      "use_nodes": true,
-      "based_on": "Event",
+      "constructed_by_node": {
+        "node_label": "Event"
+      },
       "type": "Resource",
       "labels": [
         "Resource"
@@ -50,9 +49,6 @@
       "primary_keys": [
         "resource"
       ],
-      "entity_attributes": [
-        "resource"
-      ],
       "corr": true,
       "df": true,
       "include_label_in_df": true,
@@ -60,8 +56,9 @@
     },
     {
       "include": false,
-      "use_nodes": true,
-      "based_on": "Event",
+      "constructed_by_node": {
+        "node_label": "Event"
+      },
       "type": "Vendor",
       "labels": [
         "Vendor"
@@ -69,9 +66,6 @@
       "primary_keys": [
         "cVendor"
       ],
-      "entity_attributes": [
-        "cVendor"
-      ],
       "corr": true,
       "df": true,
       "include_label_in_df": true,
@@ -79,17 +73,14 @@
     },
     {
       "include": false,
-      "use_nodes": false,
-      "based_on": "PO",
+      "constructed_by_relation": {
+        "relation_type": "PO"
+      },
       "type": "PO",
       "labels": [
         "PO"
       ],
       "primary_keys": [
-        "poitemId",
-        "poId"
-      ],
-      "entity_attributes": [
         "poitemId",
         "poId"
       ],
