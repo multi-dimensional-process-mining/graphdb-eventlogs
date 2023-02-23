@@ -26,6 +26,7 @@ Install Neo4j from https://neo4j.com/download/
 - The scripts assume the server to be available at the default URL bolt://localhost:7687
 - You can modify this also in the script.
 - ensure to allocate enough memory to your database, advised: dbms.memory.heap.max_size=5G
+- the script expects the Neo4j APOC library to be installed as a plugin, see https://neo4j.com/labs/apoc/
 
 ### Data set specific information
 We provide data and scripts for
