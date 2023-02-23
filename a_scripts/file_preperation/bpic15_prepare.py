@@ -1,4 +1,6 @@
 # municipalities, building permit applications
+import os
+
 import pandas as pd
 import time
 
@@ -6,8 +8,9 @@ from a_scripts.additional_functions.auxiliary_functions import convert_columns_i
 
 ## config
 input_path = '../../data/BPIC15\\'
-path_to_neo4j_import_directory = '../../data/BPIC15/prepared\\'  # where prepared files will be stored
-
+output_path = '../../data/BPIC15/prepared\\'  # where prepared files will be stored
+if not os.path.isdir(output_path):
+    os.makedirs(output_path)
 
 def create_bpi15(path):
     for i in range(1, 6):
@@ -19,6 +22,6 @@ def create_bpi15(path):
 
 
 start = time.time()
-create_bpi15(path_to_neo4j_import_directory)
+create_bpi15(output_path)
 end = time.time()
 print("Prepared data for import in: " + str((end - start)) + " seconds.")

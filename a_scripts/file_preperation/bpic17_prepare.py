@@ -10,8 +10,9 @@ from a_scripts.additional_functions.auxiliary_functions import convert_columns_i
 
 # config
 input_path = '../../data/BPIC17\\'
-path_to_neo4j_import_directory = '../../data/BPIC17/prepared\\'
-
+output_path = '../../data/BPIC17/prepared\\'
+if not os.path.isdir(output_path):
+    os.makedirs(output_path)
 
 def main():
     file_name = 'BPIC17.csv'
@@ -45,7 +46,7 @@ def create_bpi17(file_name: str):
                                   csv_log["offerId"])
 
     csv_log = csv_log.drop(columns=["nextActivity", "nextOfferID"])
-    csv_log.to_csv(path_to_neo4j_import_directory + file_name, index=True, index_label="idx")
+    csv_log.to_csv(output_path + file_name, index=True, index_label="idx")
 
 
 if __name__ == '__main__':

@@ -5,8 +5,9 @@ from a_scripts.additional_functions.auxiliary_functions import convert_columns_i
 
 ### config
 input_path = '../../data/BPIC19\\'
-path_to_neo4j_import_directory = '../../data/BPIC19/prepared\\'  # where prepared files will be stored
-
+output_path = '../../data/BPIC19/prepared\\'  # where prepared files will be stored
+if not os.path.isdir(output_path):
+    os.makedirs(output_path)
 
 
 def create_bpi19(input_path, path_to_neo4j_import_directory, file_name):
@@ -22,7 +23,7 @@ def create_bpi19(input_path, path_to_neo4j_import_directory, file_name):
 
 fileName = 'BPIC19.csv'
 start = time.time()
-create_bpi19(input_path, path_to_neo4j_import_directory, fileName)
+create_bpi19(input_path, output_path, fileName)
 end = time.time()
 print("Prepared data for import in: "+str((end - start))+" seconds.") 
 

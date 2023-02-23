@@ -4,6 +4,8 @@ Created on Mon Jul  1 14:02:29 2019
 
 @author: 20175070
 """
+import os
+
 import numpy as np
 # incidents
 import pandas as pd
@@ -13,7 +15,10 @@ from a_scripts.additional_functions.auxiliary_functions import convert_columns_i
 
 # config
 inputpath = '../../data/BPIC14\\'
-path_to_neo4j_import_directory = '../../data/BPIC14/prepared\\'  # where prepared files will be stored
+output_path = '../../data/BPIC14/prepared\\'  # where prepared files will be stored
+if not os.path.isdir(output_path):
+    os.makedirs(output_path)
+
 
 start = time.time()
 
@@ -21,7 +26,7 @@ change = pd.read_csv(inputpath + f'Detail_Change.csv', keep_default_na=True, sep
 change.columns = convert_columns_into_camel_case(change.columns.values)
 change['log'] = 'BPIC14'
 change = change.reset_index(drop=True)
-change.to_csv(path_to_neo4j_import_directory + "BPIC14Change.csv",
+change.to_csv(output_path + "BPIC14Change.csv",
               index=True, index_label="idx")
 
 incident = pd.read_csv(inputpath + f'Detail_Incident.csv', keep_default_na=True, sep=';', decimal=",",
@@ -34,14 +39,14 @@ incident['log'] = 'BPIC14'
 incident = incident.dropna(how='all', axis=1)  # drop all columns in which all values are nan (empty)
 incident = incident.dropna(thresh=19)  # drops all 'nan-only' rows
 incident = incident.reset_index(drop=True)
-incident.to_csv(path_to_neo4j_import_directory + "BPIC14Incident.csv",
+incident.to_csv(output_path + "BPIC14Incident.csv",
                 index=True, index_label="idx")
 
 incidentDetail = pd.read_csv(inputpath + f'Detail_Incident_Activity.csv', keep_default_na=True, sep=';')
 incidentDetail.columns = convert_columns_into_camel_case(incidentDetail.columns.values)
 incidentDetail['log'] = 'BPIC14'
 incidentDetail = incidentDetail.reset_index(drop=True)
-incidentDetail.to_csv(path_to_neo4j_import_directory + "BPIC14IncidentDetail.csv",
+incidentDetail.to_csv(output_path + "BPIC14IncidentDetail.csv",
                       index=True, index_label="idx")
 
 interaction = pd.read_csv(inputpath + f'Detail_Interaction.csv', keep_default_na=True, sep=';',
@@ -52,7 +57,7 @@ interaction["urgency"] = interaction["urgency"].str.replace('(\D+)', '', regex=T
 interaction["urgency"] = interaction["urgency"].astype('Int64')
 interaction['log'] = 'BPIC14'
 interaction = interaction.reset_index(drop=True)
-interaction.to_csv(path_to_neo4j_import_directory + "BPIC14Interaction.csv",
+interaction.to_csv(output_path + "BPIC14Interaction.csv",
                    index=True, index_label="idx")
 
 end = time.time()

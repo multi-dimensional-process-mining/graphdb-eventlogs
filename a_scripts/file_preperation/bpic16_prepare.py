@@ -14,6 +14,9 @@ from a_scripts.additional_functions.auxiliary_functions import convert_columns_i
 # config
 input_path = '../../data/BPIC16\\'
 output_path = '../../data/BPIC16/prepared\\'  # where prepared files will be stored
+if not os.path.isdir(output_path):
+    os.makedirs(output_path)
+
 file_name = 'BPIC16'
 
 
