@@ -10,9 +10,9 @@
       "labels": ["ConfigurationItem"],
       "primary_keys": ["ciNameAff"],
       "entity_attributes": ["serviceComponentAff"],
+      "corr": true,
       "df": true,
       "include_label_in_df": true,
-      "corr": true,
       "merge_duplicate_df": true
     },
     {
@@ -22,9 +22,9 @@
       "type": "ServiceComponent",
       "labels": ["ServiceComponent"],
       "primary_keys": ["serviceComponentAff"],
+      "corr": true,
       "df": true,
       "include_label_in_df": true,
-      "corr": true,
       "merge_duplicate_df": true
     },
     {
@@ -34,9 +34,9 @@
       "type": "Incident",
       "labels": ["Incident"],
       "primary_keys": ["incidentId"],
+      "corr": true,
       "df": true,
       "include_label_in_df": true,
-      "corr": true,
       "merge_duplicate_df": true
     },
     {

@@ -11,7 +11,7 @@ from database_managers import authentication
 connection = authentication.connections_map[authentication.Connections.LOCAL]
 
 dataset_name = 'BPIC14'
-use_sample = True
+use_sample = False
 
 semantic_header = SemanticHeaderLPG.create_semantic_header(dataset_name)
 perf_path = f"..\\perf\\{dataset_name}\\{dataset_name}Performance.csv"
@@ -54,8 +54,8 @@ def clear_graph(graph: EventKnowledgeGraph, perf: Performance) -> None:
 
 
 def populate_graph(graph: EventKnowledgeGraph, perf: Performance):
-    graph.create_static_nodes_and_relations()
-
+    # graph.create_static_nodes_and_relations()
+    #
     # import the events from all sublogs in the graph with the corresponding labels
     graph.import_data()
     perf.finished_step(log_message=f"(:Event) nodes done")
@@ -71,7 +71,7 @@ def populate_graph(graph: EventKnowledgeGraph, perf: Performance):
     graph.create_entities_by_nodes(node_label="Event")
     perf.finished_step(log_message=f"(:Entity) nodes done")
 
-    graph.correlate_events_to_entities()
+    graph.correlate_events_to_entities(node_label="Event")
     perf.finished_step(log_message=f"[:CORR] edges done")
 
     graph.create_classes()

@@ -68,8 +68,8 @@ class EventKnowledgeGraph:
     def create_entities_by_nodes(self, node_label=None) -> None:
         self.ekg_builder.create_entities(node_label)
 
-    def correlate_events_to_entities(self) -> None:
-        self.ekg_builder.correlate_events_to_entities()
+    def correlate_events_to_entities(self, node_label=None) -> None:
+        self.ekg_builder.correlate_events_to_entities(node_label)
 
     def create_entity_relations(self) -> None:
         self.ekg_builder.create_entity_relations()

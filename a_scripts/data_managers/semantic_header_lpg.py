@@ -42,6 +42,7 @@ class EntityLPG(Entity):
         return "+\"-\"+".join([f"{node_name}.{key}" for key in self.primary_keys])
 
     def get_entity_attributes(self, node_name: str = "e"):
+        #TODO: check what happens when entity does not exist
         primary_key_list = [f"{node_name}.{key} as {key}" for key in self.primary_keys]
         entity_attribute_list = [f"COLLECT(distinct {node_name}.{attr}) as {attr}" for attr in
                                  self.entity_attributes_wo_primary_keys]
@@ -81,6 +82,14 @@ class EntityLPG(Entity):
             return f'''{primary_key_existing_condition} AND {extra_conditions}'''
         else:
             return primary_key_existing_condition
+
+    def get_where_condition_correlation(self, node_name: str = "e", node_name_id: str = "n"):
+        primary_key_condition = f"{self.get_composed_primary_id(node_name)} = {node_name_id}.ID"
+        extra_conditions = self.create_condition(node_name)
+        if extra_conditions != "":
+            return f'''{primary_key_condition} AND {extra_conditions}'''
+        else:
+            return primary_key_condition
 
     @classmethod
     def from_dict(cls, obj: Any, condition_class_name: Condition = ConditionLPG,

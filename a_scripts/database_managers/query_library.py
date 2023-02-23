@@ -224,13 +224,13 @@ class CypherQueryLibrary:
         # correlate events that contain a reference from an entity to that entity node
         entity_labels_string = entity.get_label_string()
         primary_key_id = entity.get_composed_primary_id()
-        conditions = entity.get_where_condition()
+        conditions = entity.get_where_condition_correlation()
 
         q_correlate = f'''
             CALL apoc.periodic.iterate(
-                'MATCH (e:Event) WHERE {conditions}
-                WITH e, {primary_key_id} as id
-                MATCH (n:{entity_labels_string}) WHERE id = n.ID
+                '
+                MATCH (n:{entity_labels_string})
+                MATCH (e:Event) WHERE {conditions}
                 RETURN e, n',
                 'MERGE (e)-[:CORR]->(n)',
                 {{batchSize: {batch_size}}})
@@ -249,7 +249,7 @@ class CypherQueryLibrary:
         return Query(query_string=q_correlate, kwargs={})
 
     @staticmethod
-    def get_create_entity_relationships_query(relation: RelationLPG) -> Query:
+    def get_create_entity_relationships_query(relation: RelationLPG, batch_size: int) -> Query:
         # find events that are related to different entities of which one event also has a reference to the other entity
         # create a relation between these two entities
         relation_type = relation.type
@@ -258,15 +258,19 @@ class CypherQueryLibrary:
         foreign_key = relation.foreign_key
         primary_key = relation.primary_key
 
+        #TODO figure out what to do in case entities do not share an event (especially with run time)
         q_create_relation = f'''
-            MATCH (_from:{entity_label_from_node})
-            MATCH (to:{entity_label_to_node})
+                CALL apoc.periodic.iterate(
+                '
+                MATCH (_from:{entity_label_from_node}) - [:CORR*..2] - (to:{entity_label_to_node})
                 WHERE to <> _from AND (to.{primary_key} in _from.{foreign_key} OR to.{primary_key} = _from.{foreign_key})
-            WITH DISTINCT _from, to
-            MERGE (_from) - [:{relation_type.upper()} {{type:"Rel",
+                RETURN DISTINCT _from, to',
+                'MERGE (_from) - [:{relation_type.upper()} {{type:"Rel",
                     {entity_label_from_node.lower()}Id: _from.ID,
                     {entity_label_to_node.lower()}Id: to.{primary_key}                                              
-                                                    }}]-> (to)'''
+                                                    }}]-> (to)',
+                {{batchSize: {batch_size}}})
+                '''
 
         return Query(query_string=q_create_relation, kwargs={})
 
