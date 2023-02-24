@@ -4,7 +4,7 @@ from typing import List, Any, Optional, Self, Union
 
 from dataclasses import dataclass
 
-from a_scripts.additional_functions.auxiliary_functions import replace_undefined_value, create_list
+from utilities.auxiliary_functions import replace_undefined_value, create_list
 
 
 @dataclass

@@ -10,7 +10,7 @@ import numpy as np
 import pandas as pd
 from pandas import DataFrame
 
-from a_scripts.additional_functions.auxiliary_functions import replace_undefined_value, create_list
+from utilities.auxiliary_functions import replace_undefined_value, create_list
 
 
 @dataclass
@@ -108,35 +108,6 @@ class Sample:
         _population_column = obj.get("population_column")
         _size = obj.get("size")
         _ids = obj.get("ids")
-        return Sample(_file_name, _use_random_sample, _population_column, _size, _ids)
-
-
-class StaticNodes:
-    def __init__(self, name: str, file_directory: str, file_names: List[str], labels: List[str],
-                 true_values: List[str], false_values: List[str], attributes: List[Attribute]):
-        self.name = name
-        self.file_directory = file_directory
-        self.file_names = file_names
-        self.labels = labels
-        self.true_values = true_values
-        self.false_values = false_values
-        self.attributes = attributes
-
-    def from_dict(obj: Any) -> Optional['StaticNodes']:
-        if obj is None:
-            return None
-
-        _name = obj.get("name")
-        _file_directory = obj.get("file_directory")
-        _file_names = obj.get("file_names")
-        _labels = obj.get("labels")
-        _true_values = obj.get("true_values")
-        _false_values = obj.get("false_values")
-        _samples = create_list(Sample, obj.get("samples"))
-        _samples = {sample.file_name: sample for sample in _samples}
-        _attributes = create_list(Attribute, obj.get("attributes"))
-        return StaticNodes(_name, _file_directory, _file_names, _labels, _true_values, _false_values, _samples,
-                           _attributes)
 
 
 class DataStructure:
@@ -167,7 +138,7 @@ class DataStructure:
             return None
 
         _name = obj.get("name")
-        _file_directory = obj.get("file_directory")
+        _file_directory = os.path.join(*obj.get("file_directory").split("\\"))
         _file_names = obj.get("file_names")
         _labels = obj.get("labels")
         _true_values = obj.get("true_values")
@@ -300,7 +271,7 @@ class DataStructure:
         true_values = self.true_values
         false_values = self.false_values
 
-        df_log: DataFrame = pd.read_csv(os.path.realpath(input_path + file_name), keep_default_na=True,
+        df_log: DataFrame = pd.read_csv(os.path.join(input_path, file_name), keep_default_na=True,
                                         usecols=required_columns, dtype=dtypes, true_values=true_values,
                                         false_values=false_values)
 

@@ -1,6 +1,6 @@
 from enum import Enum
 
-from a_scripts.database_managers.credentials import Credentials
+from database_managers.credentials import Credentials
 
 # from remote_authentication import remote
 

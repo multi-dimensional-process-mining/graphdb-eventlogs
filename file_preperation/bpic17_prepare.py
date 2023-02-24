@@ -6,13 +6,17 @@ import pandas as pd
 import time
 import os
 
-from a_scripts.additional_functions.auxiliary_functions import convert_columns_into_camel_case
+from utilities.auxiliary_functions import convert_columns_into_camel_case
 
 # config
-input_path = '../../data/BPIC17\\'
-output_path = '../../data/BPIC17/prepared\\'
+current_file_path = os.path.dirname(__file__)
+
+input_path = os.path.join(current_file_path,  '..', 'data', 'BPIC17')
+output_path = os.path.join(current_file_path,  '..', 'data', 'BPIC17', 'prepared')
+
 if not os.path.isdir(output_path):
     os.makedirs(output_path)
+
 
 def main():
     file_name = 'BPIC17.csv'
@@ -23,7 +27,7 @@ def main():
 
 
 def create_bpi17(file_name: str):
-    csv_log = pd.read_csv(os.path.realpath(input_path + 'BPI_Challenge_2017.csv'),
+    csv_log = pd.read_csv(os.path.join(input_path, 'BPI_Challenge_2017.csv'),
                           keep_default_na=True)  # load full log from csv
     csv_log.drop_duplicates(keep='first', inplace=True)  # remove duplicates from the dataset
     csv_log = csv_log.reset_index(drop=True)  # renew the index to close gaps of removed duplicates
@@ -46,8 +50,8 @@ def create_bpi17(file_name: str):
                                   csv_log["offerId"])
 
     csv_log = csv_log.drop(columns=["nextActivity", "nextOfferID"])
-    csv_log.to_csv(output_path + file_name, index=True, index_label="idx")
+    csv_log.to_csv(os.path.join(output_path, file_name), index=True, index_label="idx")
 
 
 if __name__ == '__main__':
-    sys.exit(main())
+    main()

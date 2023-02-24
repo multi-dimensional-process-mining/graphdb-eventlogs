@@ -1,12 +1,11 @@
 from typing import List, Set
-
-from a_scripts.database_managers.db_connection import DatabaseConnection
-from a_scripts.database_managers.ekg_builder_semantic_header import EKGUsingSemanticHeaderBuilder
-from a_scripts.database_managers.ekg_management import EKGManagement
-from a_scripts.data_managers.datastructures import ImportedDataStructures
-from a_scripts.data_managers.data_importer import Importer
-from a_scripts.additional_functions.performance_handling import Performance
-from a_scripts.data_managers.semantic_header_lpg import SemanticHeaderLPG
+from database_managers.db_connection import DatabaseConnection
+from database_managers.ekg_builder_semantic_header import EKGUsingSemanticHeaderBuilder
+from database_managers.ekg_management import EKGManagement
+from data_managers.datastructures import ImportedDataStructures
+from data_managers.data_importer import Importer
+from utilities.performance_handling import Performance
+from data_managers.semantic_header_lpg import SemanticHeaderLPG
 
 from tabulate import tabulate
 

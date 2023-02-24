@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 from typing import Optional, Any, Self
 
-from a_scripts.data_managers.semantic_header import SemanticHeader, Entity, Relation, Class, Log, Condition
+from data_managers.semantic_header import SemanticHeader, Entity, Relation, Class, Log, Condition
 
 
 @dataclass

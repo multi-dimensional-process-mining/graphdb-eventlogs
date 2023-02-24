@@ -3,10 +3,8 @@ from typing import Any, Optional, Dict, List
 
 
 def camel_case(s):
-    # remove all _ or - and replace by a space
-    s = sub(r"[_-]+", " ", s)
-    # remove all (, ), :, . with empty space
-    s = sub(r"[():.]+", " ", s)
+    # remove all _, -, (, ), :, . and replace by a space
+    s = sub(r"[_\-():.]+", " ", s)
     # Add Space Before Capital Letter If and Only If Previous Letter is Not Also Capital
     # So 'HelloCHARLIE this isBob.' should become 'Hello CHARLIE this is Bob.'
     s = sub(r"(?<![A-Z])(?<!^)([A-Z])", r" \1", s)

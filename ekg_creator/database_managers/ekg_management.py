@@ -1,8 +1,8 @@
 from typing import List, Set, Optional, Dict
 
-from a_scripts.database_managers.db_connection import DatabaseConnection
-from a_scripts.additional_functions.performance_handling import Performance
-from a_scripts.database_managers.query_library import CypherQueryLibrary as cql
+from database_managers.db_connection import DatabaseConnection
+from utilities.performance_handling import Performance
+from database_managers.query_library import CypherQueryLibrary as cql
 
 
 class EKGManagement:

@@ -1,7 +1,7 @@
-from a_scripts.database_managers.db_connection import DatabaseConnection
-from a_scripts.additional_functions.performance_handling import Performance
-from a_scripts.database_managers.query_library import CypherQueryLibrary
-from a_scripts.data_managers.semantic_header_lpg import SemanticHeaderLPG, EntityLPG, RelationLPG
+from database_managers.db_connection import DatabaseConnection
+from utilities.performance_handling import Performance
+from database_managers.query_library import CypherQueryLibrary
+from data_managers.semantic_header_lpg import SemanticHeaderLPG, EntityLPG, RelationLPG
 
 
 class EKGUsingSemanticHeaderBuilder:
@@ -53,13 +53,26 @@ class EKGUsingSemanticHeaderBuilder:
         relation: RelationLPG
         for relation in self.semantic_header.relations:
             if relation.include:
+                self.create_foreign_nodes(relation)
                 self.connection.exec_query(CypherQueryLibrary.get_create_entity_relationships_query,
                                            **{"relation": relation,
                                               "batch_size": self.batch_size})
+                self.delete_foreign_nodes(relation)
 
                 self._write_message_to_performance(
                     message=f"Relation (:{relation.from_node_label}) - [:{relation.type}] -> "
                             f"(:{relation.to_node_label}) done")
+
+    def create_foreign_nodes(self, relation: RelationLPG):
+        self.connection.exec_query(CypherQueryLibrary.create_foreign_key_relation,
+                                   **{"relation": relation})
+        self.connection.exec_query(CypherQueryLibrary.merge_foreign_key_nodes,
+                                   **{"relation": relation})
+
+    def delete_foreign_nodes(self, relation: RelationLPG):
+        self.connection.exec_query(CypherQueryLibrary.get_delete_foreign_nodes_query,
+                                   **{"relation": relation})
+
 
     def create_entities_by_relations(self) -> None:
         relation: RelationLPG

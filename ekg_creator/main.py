@@ -1,9 +1,11 @@
+import os
+
 from database_managers.EventKnowledgeGraph import EventKnowledgeGraph, DatabaseConnection
 from data_managers.datastructures import ImportedDataStructures
 from data_managers.semantic_header_lpg import SemanticHeaderLPG
 
 # several steps of import, each can be switch on/off
-from a_scripts.additional_functions.performance_handling import Performance
+from utilities.performance_handling import Performance
 from colorama import Fore
 
 from database_managers import authentication
@@ -14,7 +16,7 @@ dataset_name = 'BPIC14'
 use_sample = False
 
 semantic_header = SemanticHeaderLPG.create_semantic_header(dataset_name)
-perf_path = f"..\\perf\\{dataset_name}\\{dataset_name}Performance.csv"
+perf_path = os.path.join("..", "perf", dataset_name, f"{dataset_name}Performance.csv")
 number_of_steps = 100
 
 datastructures = ImportedDataStructures(dataset_name)
@@ -54,8 +56,8 @@ def clear_graph(graph: EventKnowledgeGraph, perf: Performance) -> None:
 
 
 def populate_graph(graph: EventKnowledgeGraph, perf: Performance):
-    # graph.create_static_nodes_and_relations()
-    #
+    graph.create_static_nodes_and_relations()
+
     # import the events from all sublogs in the graph with the corresponding labels
     graph.import_data()
     perf.finished_step(log_message=f"(:Event) nodes done")

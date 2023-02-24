@@ -50,11 +50,11 @@ For each of the datasets, we provide
 - **json_files/BPICXX_DS.json** - json file that contains a description for the different datasets for BPICXX (event
   tables etc)
 
-- **a_scripts/file_preparation/bpicXX_prepare.py** - normalizes the original CSV data to an event table in CSV
+- **file_preparation/bpicXX_prepare.py** - normalizes the original CSV data to an event table in CSV
   format required for the import and stores the output in the directory _ROOT/data/.BPICXX/prepared/_
 
 ### main script
-There is one script that creates the Event/System knowledge graph: **a_scripts/main.py**
+There is one script that creates the Event/System knowledge graph: **ekg_creator/main.py**
 
 script to let Neo4J read the normalized event table of BPICXX from CSV files and executes several data modeling queries to construct
 an event graph using 
@@ -96,7 +96,7 @@ First version for semantic header for system/event knowledge graphs: https://mul
 
 Data model and generic query templates for translating and integrating a set of related CSV event logs into single event
 graph over multiple behavioral dimensions, stored as labeled property graph in [Neo4J](https://neo4j.com/).
-See [csv_to_eventgraph_neo4j/README.txt](a_scripts/README.txt)
+See [csv_to_eventgraph_neo4j/README.txt](ekg_creator/README.txt)
 
 Publications:
 

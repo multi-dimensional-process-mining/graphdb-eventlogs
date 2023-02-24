@@ -4,7 +4,7 @@
 *.csv
 /json_files/ECESample.json
 /json_files/ECESample_DS.json
-/a_scripts/ece_sample/
-/a_scripts/file_preperation/ece_prepare.py
-/a_scripts/database_managers/remote_authentication.py
+/ekg_creator/ece_sample/
+/file_preperation/ece_prepare.py
+/ekg_creator/database_managers/remote_authentication.py
 /perf/ECESample/
