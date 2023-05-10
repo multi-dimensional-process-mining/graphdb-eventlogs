@@ -16,14 +16,14 @@ from neo4j import GraphDatabase
 
 ### begin config
 # connection to Neo4J database
-driver = GraphDatabase.driver("bolt://localhost:7687", auth=("neo4j", "1234"), encrypted=False)
+driver = GraphDatabase.driver("bolt://localhost:7687", auth=("neo4j", "12341234"), encrypted=False)
 # Neo4j can import local files only from its own import directory, see https://neo4j.com/docs/cypher-manual/current/clauses/load-csv/
 # Neo4j's default configuration enables import from local file directory
 #    if it is not enabled, change Neo4j'c configuration file: dbms.security.allow_csv_import_from_file_urls=true
 # Neo4j's default import directory is <NEO4J_HOME>/import, 
 #    to use this script
 #    - EITHER change the variable path_to_neo4j_import_directory to <NEO4J_HOME>/import and move the input files to this directory
-#    - OR set the import directory in Neo4j's configuration file: dbms.directories.import=
+#    - OR set the import directory in Neo4j's configuration file: server.directories.import=
 #    see https://neo4j.com/docs/cypher-manual/current/clauses/load-csv/#query-load-csv-introduction
 path_to_neo4j_import_directory = 'C:\\temp\\import\\'
 # ensure to allocate enough memory to your database: dbms.memory.heap.max_size=20G advised
@@ -46,13 +46,13 @@ else:
 
 include_entities = ['Customer','Office_U','Office_W','Complaint','ComplaintDossier','Session','IP']
                  
-model_entities = [['Customer','CustomerID', 'WHERE EXISTS(e.CustomerID)'],
-                  ['Office_U','Office_U', 'WHERE EXISTS(e.Office_U)'],
-                  ['Office_W','Office_W', 'WHERE EXISTS(e.Office_W)'],
-                  ['Complaint','ComplaintID', 'WHERE EXISTS(e.ComplaintID)'],
-                  ['ComplaintDossier','ComplaintDossierID', 'WHERE EXISTS(e.ComplaintDossierID)'],
-                  ['Session','SessionID', 'WHERE EXISTS(e.SessionID)'],
-                  ['IP','IPID', 'WHERE EXISTS(e.IPID)']]
+model_entities = [['Customer','CustomerID', 'WHERE e.CustomerID IS NOT NULL'],
+                  ['Office_U','Office_U', 'WHERE e.Office_U IS NOT NULL'],
+                  ['Office_W','Office_W', 'WHERE e.Office_W IS NOT NULL'],
+                  ['Complaint','ComplaintID', 'WHERE e.ComplaintID IS NOT NULL'],
+                  ['ComplaintDossier','ComplaintDossierID', 'WHERE e.ComplaintDossierID IS NOT NULL'],
+                  ['Session','SessionID', 'WHERE e.SessionID IS NOT NULL'],
+                  ['IP','IPID', 'WHERE e.IPID IS NOT NULL']]
 
 # specification of relations between entities
 #    1 name of the relation
@@ -112,7 +112,7 @@ def LoadLog(localFile):
 
 # create events from CSV table: one event node per row, one property per column
 def CreateEventQuery(logHeader, fileName, LogID = ""):
-    query = f'USING PERIODIC COMMIT LOAD CSV WITH HEADERS FROM \"file:///{fileName}\" as line'
+    query = f'CALL {{ LOAD CSV WITH HEADERS FROM \"file:///{fileName}\" as line'
     for col in logHeader:
         if col == 'idx':
             column = f'toInteger(line.{col})'
@@ -122,7 +122,7 @@ def CreateEventQuery(logHeader, fileName, LogID = ""):
             column = 'line.'+col
         newLine = ''
         if (logHeader.index(col) == 0 and LogID != ""):
-            newLine = f' CREATE (e:Event {{Log: "BPIC16", SubLog: "{LogID}",{col}: {column},'
+            newLine = f' CREATE (e:Event {{Log: "{LogID}",{col}: {column},'
         elif (logHeader.index(col) == 0):
             newLine = f' CREATE (e:Event {{ {col}: {column},'
         else:
@@ -131,7 +131,8 @@ def CreateEventQuery(logHeader, fileName, LogID = ""):
             newLine = f' {col}: {column} }})'
             
         query = query + newLine
-        # print(query)
+
+    query = query + f'}} IN TRANSACTIONS'
     return query
 
 
@@ -374,9 +375,9 @@ start = time.time()
 last = start
 
 #create unique constraints
-runQuery(driver, 'CREATE CONSTRAINT ON (e:Event) ASSERT e.ID IS UNIQUE;') #for implementation only (not required by schema or patterns)
-runQuery(driver, 'CREATE CONSTRAINT ON (en:Entity) ASSERT en.uID IS UNIQUE;') #required by core pattern
-runQuery(driver, 'CREATE CONSTRAINT ON (l:Log) ASSERT l.ID IS UNIQUE;') #required by core pattern
+runQuery(driver, 'CREATE CONSTRAINT IF NOT EXISTS FOR (e:Event) REQUIRE e.ID IS UNIQUE;') #for implementation only (not required by schema or patterns)
+runQuery(driver, 'CREATE CONSTRAINT IF NOT EXISTS FOR (en:Entity) REQUIRE en.uID IS UNIQUE;') #required by core pattern
+runQuery(driver, 'CREATE CONSTRAINT IF NOT EXISTS FOR (l:Log) REQUIRE l.ID IS UNIQUE;') #required by core pattern
     
 for fileName in logfiles:
     start = time.time() #per log

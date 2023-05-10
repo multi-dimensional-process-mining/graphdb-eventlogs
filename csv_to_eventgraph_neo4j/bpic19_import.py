@@ -4,14 +4,14 @@ from neo4j import GraphDatabase
 
 ### begin config
 # connection to Neo4J database
-driver = GraphDatabase.driver("bolt://localhost:7687", auth=("neo4j", "1234"))
+driver = GraphDatabase.driver("bolt://localhost:7687", auth=("neo4j", "12341234"))
 # Neo4j can import local files only from its own import directory, see https://neo4j.com/docs/cypher-manual/current/clauses/load-csv/
 # Neo4j's default configuration enables import from local file directory
 #    if it is not enabled, change Neo4j'c configuration file: dbms.security.allow_csv_import_from_file_urls=true
 # Neo4j's default import directory is <NEO4J_HOME>/import, 
 #    to use this script
 #    - EITHER change the variable path_to_neo4j_import_directory to <NEO4J_HOME>/import and move the input files to this directory
-#    - OR set the import directory in Neo4j's configuration file: dbms.directories.import=
+#    - OR set the import directory in Neo4j's configuration file: server.directories.import=
 #    see https://neo4j.com/docs/cypher-manual/current/clauses/load-csv/#query-load-csv-introduction
 path_to_neo4j_import_directory = 'C:\\temp\\import\\'
 # ensure to allocate enough memory to your database: dbms.memory.heap.max_size=20G advised
@@ -30,10 +30,10 @@ dataSet = 'BPIC19'
 
 include_entities = ['POItem','PO','Resource','Vendor']
 
-model_entities = [['POItem','cID', 'WHERE EXISTS(e.cID)'], # Purchase Order Items (Original Case ID)
-                  ['PO', 'cPOID', 'WHERE EXISTS(e.cPOID)'],  # Purchase Orders
-                  ['Resource','resource', 'WHERE EXISTS(e.resource) AND e.resource <> "NONE"'], # resources/users
-                  ['Vendor','cVendor','WHERE EXISTS(e.cVendor)']] # vendors
+model_entities = [['POItem','cID', 'WHERE e.cID IS NOT NULL'], # Purchase Order Items (Original Case ID)
+                  ['PO', 'cPOID', 'WHERE e.cPOID IS NOT NULL'],  # Purchase Orders
+                  ['Resource','resource', 'WHERE e.resource IS NOT NULL AND e.resource <> "NONE"'], # resources/users
+                  ['Vendor','cVendor','WHERE e.cVendor IS NOT NULL']] # vendors
 
 
 # specification of relations between entities
@@ -96,10 +96,10 @@ def LoadLog(localFile):
 
 # create events from CSV table: one event node per row, one property per column
 def CreateEventQuery(logHeader, fileName, LogID = ""):
-    query = f'USING PERIODIC COMMIT LOAD CSV WITH HEADERS FROM \"file:///{fileName}\" as line'
+    query = f'CALL {{ LOAD CSV WITH HEADERS FROM \"file:///{fileName}\" as line'
     for col in logHeader:
         if col == 'idx':
-            column = f'toInt(line.{col})'
+            column = f'toInteger(line.{col})'
         elif col in ['timestamp','start','end']:
             column = f'datetime(line.{col})'
         else:
@@ -115,6 +115,8 @@ def CreateEventQuery(logHeader, fileName, LogID = ""):
             newLine = f' {col}: {column} }})'
             
         query = query + newLine
+
+    query = query + f'}} IN TRANSACTIONS'
     return query
 
 
@@ -360,9 +362,9 @@ if step_LoadEventsFromCSV:
     runQuery(driver, qCreateEvents)
 
     #create unique constraints
-    runQuery(driver, 'CREATE CONSTRAINT ON (e:Event) ASSERT e.ID IS UNIQUE;') #for implementation only (not required by schema or patterns)
-    runQuery(driver, 'CREATE CONSTRAINT ON (en:Entity) ASSERT en.uID IS UNIQUE;') #required by core pattern
-    runQuery(driver, 'CREATE CONSTRAINT ON (l:Log) ASSERT l.ID IS UNIQUE;') #required by core pattern
+    runQuery(driver, 'CREATE CONSTRAINT IF NOT EXISTS FOR (e:Event) REQUIRE e.ID IS UNIQUE;') #for implementation only (not required by schema or patterns)
+    runQuery(driver, 'CREATE CONSTRAINT IF NOT EXISTS FOR (en:Entity) REQUIRE en.uID IS UNIQUE;') #required by core pattern
+    runQuery(driver, 'CREATE CONSTRAINT IF NOT EXISTS FOR (l:Log) REQUIRE l.ID IS UNIQUE;') #required by core pattern
 
     end = time.time()
     perf = perf.append({'name':dataSet+'_event_import', 'start':last, 'end':end, 'duration':(end - last)},ignore_index=True)

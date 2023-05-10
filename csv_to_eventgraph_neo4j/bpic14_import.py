@@ -17,7 +17,7 @@ driver = GraphDatabase.driver("bolt://localhost:7687", auth=("neo4j", "1234"))
 # Neo4j's default import directory is <NEO4J_HOME>/import, 
 #    to use this script
 #    - EITHER change the variable path_to_neo4j_import_directory to <NEO4J_HOME>/import and move the input files to this directory
-#    - OR set the import directory in Neo4j's configuration file: dbms.directories.import=
+#    - OR set the import directory in Neo4j's configuration file: server.directories.import=
 #    see https://neo4j.com/docs/cypher-manual/current/clauses/load-csv/#query-load-csv-introduction
 path_to_neo4j_import_directory = 'C:\\temp\\import\\'
 # ensure to allocate enough memory to your database: dbms.memory.heap.max_size=20G advised
@@ -40,13 +40,13 @@ dataSet = 'BPIC14'
 
 include_entities = ['ConfigurationItem','ServiceComponent','Incident','Interaction','Change','Case_R','KM']
 
-model_entities = [['ConfigurationItem','CINameAff', 'WHERE EXISTS(e.CINameAff)'], # Configuration Item
-                  ['ServiceComponent','ServiceComponentAff', 'WHERE EXISTS(e.ServiceComponentAff)'], # Service Component
-                  ['Incident','IncidentID', 'WHERE EXISTS(e.IncidentID)'], # Incident reported on a configuration item
-                  ['Interaction','InteractionID', 'WHERE EXISTS(e.InteractionID)'], # Interaction carried out in relation to a configuration item
-                  ['Change','ChangeID', 'WHERE EXISTS(e.ChangeID)'],
-                  ['Case_R','AssignmentGroup','WHERE EXISTS(e.AssignmentGroup)'], # resource perspective
-                  ['KM','KMNo','WHERE EXISTS(e.KMNo)']]
+model_entities = [['ConfigurationItem','CINameAff', 'WHERE e.CINameAff IS NOT NULL'], # Configuration Item
+                  ['ServiceComponent','ServiceComponentAff', 'WHERE e.ServiceComponentAff IS NOT NULL'], # Service Component
+                  ['Incident','IncidentID', 'WHERE e.IncidentID IS NOT NULL'], # Incident reported on a configuration item
+                  ['Interaction','InteractionID', 'WHERE e.InteractionID IS NOT NULL'], # Interaction carried out in relation to a configuration item
+                  ['Change','ChangeID', 'WHERE IS NOT NULL e.ChangeID'],
+                  ['Case_R','AssignmentGroup','WHERE e.AssignmentGroup IS NOT NULL'], # resource perspective
+                  ['KM','KMNo','WHERE e.KMNo IS NOT NULL']]
 
 # specification of relations between entities
 #    1 name of the relation
@@ -107,17 +107,17 @@ def LoadLog(localFile):
 
 # create events from CSV table: one event node per row, one property per column
 def CreateEventQuery(logHeader, fileName, LogID = ""):
-    query = f'USING PERIODIC COMMIT LOAD CSV WITH HEADERS FROM \"file:///{fileName}\" as line'
+    query = f'CALL {{ LOAD CSV WITH HEADERS FROM \"file:///{fileName}\" as line'
     for col in logHeader:
         if col == 'idx':
-            column = f'toInt(line.{col})'
+            column = f'toInteger(line.{col})'
         elif col in ['timestamp','start','end']:
             column = f'datetime(line.{col})'
         else:
             column = 'line.'+col
         newLine = ''
         if (logHeader.index(col) == 0 and LogID != ""):
-            newLine = f' CREATE (e:Event {{Log: "BPIC14", SubLog: "{LogID}",{col}: {column},'
+            newLine = f' CREATE (e:Event {{Log: "{LogID}",{col}: {column},'
         elif (logHeader.index(col) == 0):
             newLine = f' CREATE (e:Event {{ {col}: {column},'
         else:
@@ -126,6 +126,8 @@ def CreateEventQuery(logHeader, fileName, LogID = ""):
             newLine = f' {col}: {column} }})'
             
         query = query + newLine
+
+    query = query + f'}} IN TRANSACTIONS'
     return query
 
 
@@ -377,9 +379,9 @@ for fileName in logfiles:
         runQuery(driver, qCreateEvents)
     
         #create unique constraints
-        runQuery(driver, 'CREATE CONSTRAINT ON (e:Event) ASSERT e.ID IS UNIQUE;') #for implementation only (not required by schema or patterns)
-        runQuery(driver, 'CREATE CONSTRAINT ON (en:Entity) ASSERT en.uID IS UNIQUE;') #required by core pattern
-        runQuery(driver, 'CREATE CONSTRAINT ON (l:Log) ASSERT l.ID IS UNIQUE;') #required by core pattern
+        runQuery(driver, 'CREATE CONSTRAINT IF NOT EXISTS FOR (e:Event) REQUIRE e.ID IS UNIQUE;') #for implementation only (not required by schema or patterns)
+        runQuery(driver, 'CREATE CONSTRAINT IF NOT EXISTS FOR (en:Entity) REQUIRE en.uID IS UNIQUE;') #required by core pattern
+        runQuery(driver, 'CREATE CONSTRAINT IF NOT EXISTS FOR (l:Log) REQUIRE l.ID IS UNIQUE;') #required by core pattern
     
         end = time.time()
         perf = perf.append({'name':dataSet+'_event_import', 'start':last, 'end':end, 'duration':(end - last)},ignore_index=True)
