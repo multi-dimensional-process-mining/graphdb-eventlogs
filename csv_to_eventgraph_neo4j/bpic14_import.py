@@ -10,7 +10,7 @@ from neo4j import GraphDatabase
 
 ### begin config
 # connection to Neo4J database
-driver = GraphDatabase.driver("bolt://localhost:7687", auth=("neo4j", "1234"))
+driver = GraphDatabase.driver("bolt://localhost:7687", auth=("neo4j", "12341234"))
 # Neo4j can import local files only from its own import directory, see https://neo4j.com/docs/cypher-manual/current/clauses/load-csv/
 # Neo4j's default configuration enables import from local file directory
 #    if it is not enabled, change Neo4j'c configuration file: dbms.security.allow_csv_import_from_file_urls=true
