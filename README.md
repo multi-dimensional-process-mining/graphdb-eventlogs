@@ -16,7 +16,9 @@ Publications:
 
 
 ### [csv_to_eventgraph_kuzudb](./csv_to_eventgraph_kuzudb)
-Adaptation of the data model and query templates for import CSV event logs into an event knowledge graph (EKG) uzing [KuzuDB](https://kuzudb.com/). See [csv_to_eventgraph_kuzudb/README.txt](csv_to_eventgraph_kuzudb/README.txt)
+Adaptation of the data model and query templates for import CSV event logs into an event knowledge graph (EKG) uzing [KuzuDB](https://kuzudb.com/). 
+* Includes experiments for object-centric process querying (OCPQ) reaching state-of-the-art performance using an off-the-shelf graph data managemente system, see [OCPQ experiment results](./csv_to_eventgraph_kuzudb/README.md#ocpq-results)
+* See [csv_to_eventgraph_kuzudb/README.md](./csv_to_eventgraph_kuzudb/README.md)
 
 
 ### [exploration_bpic2017](./exploration_bpic2017)
