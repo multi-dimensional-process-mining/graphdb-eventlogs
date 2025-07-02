@@ -3,10 +3,6 @@ import datetime
 import pandas as df
 import numpy as np
 
-
-# db = kuzu.Database("./db_bpic17_ekg_basic")
-# conn = kuzu.Connection(db)
-
 def runQuery(conn: kuzu.Connection, query: str) -> kuzu.QueryResult:
 
     start = datetime.datetime.now()
@@ -99,7 +95,7 @@ def deleteParallelDirectlyFollows_Derived(conn: kuzu.Connection, derived_entity_
         DELETE df'''
     runQuery(conn, qDeleteDF)
 
-def infer_df(conn: kuzu.Connection):
+def infer_df(conn: kuzu.Connection, delete_parallel_df: bool = True):
 
     print("Removing DF from DB")
     runQuery(conn, "DROP TABLE IF EXISTS DF")
@@ -119,10 +115,11 @@ def infer_df(conn: kuzu.Connection):
         print(res.get_next())
 
     # delete parallel DF relations of derived entities
-    et_derived_pairs = getDerivedEntityTypes(conn)
-    for et_derived_pair in et_derived_pairs: #for each derived entity and one of its contributing entities
+    if delete_parallel_df:
+        et_derived_pairs = getDerivedEntityTypes(conn)
+        for et_derived_pair in et_derived_pairs: #for each derived entity and one of its contributing entities
 
-        # delete df relations of derived entity when in parallel with  contributing entity
-        deleteParallelDirectlyFollows_Derived(conn, et_derived_pair[0], et_derived_pair[1])
-        print(f'{et_derived_pair[0]} cleaned df wrt. {et_derived_pair[1]}')
+            # delete df relations of derived entity when in parallel with  contributing entity
+            deleteParallelDirectlyFollows_Derived(conn, et_derived_pair[0], et_derived_pair[1])
+            print(f'{et_derived_pair[0]} cleaned df wrt. {et_derived_pair[1]}')
 

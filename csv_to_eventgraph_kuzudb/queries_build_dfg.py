@@ -50,7 +50,7 @@ def aggregateDFrelationsFiltering(conn: kuzu.Connection, entity_type, event_cl, 
         MERGE ( c1 ) -[rel2:DF_C  {{EntityType:EType}}]-> ( c2 ) ON CREATE SET rel2.count=df_freq'''
     runQuery(conn, qCreateDFC)
     
-def prepateDFGtables(conn: kuzu.Connection):
+def prepareDFGtables(conn: kuzu.Connection):
     print("Removing DFG from DB")
     runQuery(conn, "DROP TABLE IF EXISTS OBSERVED")
     runQuery(conn, "DROP TABLE IF EXISTS DF_C")
