@@ -81,6 +81,11 @@ queries_build_dfg.py -
                      - :DF_C (aggregated directly-follows relation between
                        class nodes)
 
+..._typed.py - variants of scripts for importing CSV as EKG in KuzuDB as
+               strictly types nodes and relations, e.g., using node labele
+               :Application instead of :Entity node with property
+               EntityType="Application"
+
 How to use
 ----------
 
