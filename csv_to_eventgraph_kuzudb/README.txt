@@ -92,7 +92,7 @@ How to use
 For data import
 
 2. run bpicXX_prepare.py
-3. run bpicXX_import.py
+3. run bpicXX_import....py
 
 
 Examples of data querying
@@ -100,6 +100,18 @@ Examples of data querying
 
 bpic17_queries_....py
 
-Python scripts that query the graph of the BPIC17 dataset for properties and return GraphViz Dot visualizations of the quried graph.
+Python scripts that query the graph of the BPIC17 dataset for properties and return GraphViz Dot visualizations of the queried graph.
 
-- to be added
+bpic17_queries_ocpq_kuzu_db[_typed].py -
+            
+            perform Object-Centric Process Querying on BPIC'17 as defined in
+            
+            Küsters, A., van der Aalst, W.M.P. (2025). 
+            OCPQ: Object-Centric Process Querying and Constraints. 
+            https://doi.org/10.1007/978-3-031-92474-3_23
+
+            The scripts run all 7 of the OCPQ queries used in the paper against
+            kuzudb and measure execution times. For each query, several variants
+            are implemented and compared.
+
+            Results are listed in results_bpic17_queries_ocpq_kuzu_db[_typed].txt
